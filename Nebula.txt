@@ -152,7 +152,7 @@ MAC Address: 08:00:27:8A:D3:EF (Oracle VirtualBox virtual NIC)
 
 ---here we see a new page, joinus---
 
----when we go there we some credentials---
+---when we go there we see some credentials---
 
 username = admin
 password = d46df8e6a5627debf930f7b5c8f3b083
