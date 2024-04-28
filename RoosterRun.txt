@@ -174,6 +174,7 @@ password = homeandaway
 
 
 
+
 			GAINING FOOTHOLD
 
 
@@ -196,7 +197,7 @@ MMMNI  MMMMM   MMMMMMM   MMMMM  jMMMM
 MMMNI  MMMNM   MMMMMMM   MMMMM  jMMMM
 MMMNI  WMMMM   MMMMMMM   MMMM#  JMMMM
 MMMMR  ?MMNM             MMMMM .dMMMM
-MMMMNm `?MMM             MMMM` dMMMMM
+MMMMNm ?MMM             MMMM dMMMMM
 MMMMMMN  ?MM             MM?  NMMMMMN
 MMMMMMMMNe                 JMMMMMNMMM
 MMMMMMMMMMNm,            eMMMMMNMMNMM
@@ -568,7 +569,12 @@ done
 
 
 
+---here in this python script it says that whatever file is in the prepod folder it will be written into the
+prod folder---
+
+
 ---here it says that there is an app named run-parts that is being run, lets investigate that---
+
 
 
 matthieu@rooSter-Run:/opt/maintenance$ cd /usr/bin
@@ -614,10 +620,16 @@ DESCRIPTION
 
 
 ---so, this backup script copies every .sh file from pre-prod-tasks folder to prod-tasks folder and then 
-runs them---
+runs them, and in order for run-parts to be executed he file name should consist of uppercase ASCII letters 
+only lowercase letters---
 
 
 ---lets create a script and wait for the cron to run and gives us a shell as root---
+
+
+
+---I find a reverse connection bash that will give us a priv escalate---
+
 
 
 matthieu@rooSter-Run:/usr/bin$ cd /opt/maintenance/pre-prod-tasks
@@ -639,8 +651,8 @@ chmod 777 privesc.sh
 
 
 
----now if you remember in the man page of run-parts it said that the file should only have lowercase letters for
-it to work so once the file get copied to the prod-tasks folder we will remove the "."---
+---now if you remember in the man page of run-parts it said that the file should consist of have lowercase letters 
+for it to work so once the file get copied to the prod-tasks folder we will remove the "."---
 
 
 matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ cd ..
@@ -680,4 +692,8 @@ root.txt
 root@rooSter-Run:~# cat root.txt
 cat root.txt
 ---Root User Flag---
+
+
+
+
 
