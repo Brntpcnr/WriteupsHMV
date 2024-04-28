@@ -339,7 +339,7 @@ $config['timezone'] = 'Europe/Berlin';
 
 www-data@rooSter-Run:/var/www/html$ mysql -u admin -p
 mysql -u admin -p
-Enter password: j42W9kDq9dN9hK
+Enter password: 
 
 Welcome to the MariaDB monitor.  Commands end with ; or \g.
 
