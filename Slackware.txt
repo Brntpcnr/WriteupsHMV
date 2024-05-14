@@ -680,14 +680,14 @@ Usage: stegsnow [-C] [-Q] [-S] [-V | --version] [-h | --help]
 To_Jest_Bardzo_Trudne_Haslo                                                                                         
 
 
----The owner of the machine is kerszi,  this text is in polish so let's translate---
+--- this text is in polish so let's translate---
 
 
 To_Jest_Bardzo_Trudne_Haslo = This_Is_Very_Difficult_Password
 
 
 
----let's go with polish and become root---
+---let's try with polish and english to become root---
 
 
 
