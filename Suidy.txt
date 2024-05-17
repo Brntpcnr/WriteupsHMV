@@ -513,7 +513,7 @@ suidy.c
 
 theuser@suidy:/tmp$ gcc suidy.c -o suidyyyyy
 
----rename the file---
+---we compile the C file so that it can be executed---
 
 theuser@suidy:/tmp$ ls
 suidy.c
