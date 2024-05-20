@@ -1,1 +1,315 @@
+ENUMERATION
+			
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.61 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-16 23:13 +03
+Nmap scan report for 10.0.2.61
+Host is up (0.00078s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 37:d1:6f:b5:a4:96:e8:78:18:c7:77:d0:3e:20:4e:55 (ECDSA)
+|_  256 cf:5d:90:f3:37:3f:a4:e2:ba:d5:d7:25:c6:4a:a0:61 (ED25519)
+80/tcp open  http    Apache httpd 2.4.57 ((Debian))
+|_http-title: Deeper
+|_http-server-header: Apache/2.4.57 (Debian)
+MAC Address: 08:00:27:A0:FD:68 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.78 ms 10.0.2.61
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 42.20 seconds
+                    
+
+
+---open ssh and http ports---
+
+
+---let's run a gobuster scan---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.61 -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -x html,txt,php
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.61
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 666]
+/img                  (Status: 301) [Size: 304] [--> http://10.0.2.61/img/]
+/.html                (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 882240 / 882244 (100.00%)
+===============================================================
+Finished
+===============================================================
+          
+
+
+---I discover a new file named img, there are 3 images there but we can't get any further info from there---
+
+
+
+---I decide to inspect the website and look at the source code, I see a comment that says  'GO "deeper"', heh this
+gives us the clue to check the /deeper page---
+
+
+http://10.0.2.61/deeper/
+
+
+
+---After visiting this page we see a message that says you have to go deeper, so let's check the source code of this also---
+
+
+
+---We see a message " GO evendeeper ", so let's go even deeper--- 
+
+
+http://10.0.2.61/deeper/evendeeper/
+
+
+
+---The webpage says "start digging". We check the source code of this page and see---
+
+
+  USER .- .-.. .. -.-. . 
+
+
+  PASS 53586470624778486230526c5a58426c63673d3d 
+
+
+
+---seems like we got our credentials but in a encrypted way, start from the user---
+
+
+
+---It looks like morse code so I decide to check it, go to "https://morsedecoder.com/" and write this, we see the 
+username "ALICE"---
+
+
+---Now for the password, I go to "https://hashes.com/en/decrypt/hash" and write this hash, turns out it is a hex hash---
+
+---Go to "https://www.dataconvertertools.com/hex-decoder/" and after we decode this hex, we got another hash 
+"SWFtRGVlcEVub3VnaA==" I go to hashes.com to check this and see that this is a base64 hash, let's decode it---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# echo 'SXdpbGxHb0RlZXBlcg==' > hash.txt | base64 -d                    
+IwillGoDeeper                                                                                                 
+
+
+
+---Here we got our password also, so we have our credentials, let's login to ssh---
+
+
+	alice : IwillGoDeeper
+
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh alice@10.0.2.61       
+The authenticity of host '10.0.2.61 (10.0.2.61)' can't be established.
+ED25519 key fingerprint is SHA256:LsWOF4O2aDb/w6V7Z5VEAcjNfkxMmPOzyEIC7HMr91o.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.61' (ED25519) to the list of known hosts.
+alice@10.0.2.61's password: 
+
+
+alice@deeper:~$ ls
+user.txt
+
+alice@deeper:~$ cat user.txt
+---First User Flag---
+
+
+
+---we are in and got our first flag, let's keep on exploring---
+
+
+alice@deeper:~$ cd ..
+
+alice@deeper:/home$ ls
+alice  bob
+
+alice@deeper:/home$ cd bob
+
+
+---we see another user named bob, we can't access his files atm, let's continue---
+
+
+
+alice@deeper:~$ ls -la
+total 32
+drwxr--r-- 3 alice alice 4096 Aug 26  2023 .
+drwxr-xr-x 4 root  root  4096 Aug 25  2023 ..
+lrwxrwxrwx 1 alice alice    9 Aug 25  2023 .bash_history -> /dev/null
+-rw-r--r-- 1 alice alice  220 Aug 25  2023 .bash_logout
+-rw-r--r-- 1 alice alice 3526 Aug 25  2023 .bashrc
+-rw-r--r-- 1 alice alice   41 Aug 25  2023 .bob.txt
+drwxr-xr-x 3 alice alice 4096 Aug 26  2023 .local
+-rw-r--r-- 1 alice alice  807 Aug 25  2023 .profile
+-rw-r--r-- 1 alice alice   33 Aug 26  2023 user.txt
+
+alice@deeper:~$ cat .bob.txt 
+535746745247566c634556756233566e61413d3d
+
+
+
+---we see that there is another hash which also looks like hex hash, repeat the same process for this hash also and
+we will probably get bob's password---			
+			
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# echo 'SWFtRGVlcEVub3VnaA==' > user2hash.txt | base64 -d
+:)   
+
+
+
+---we got bob's password, login as him---
+
+	bob : :)
+
+
+
+
+alice@deeper:~$ su bob
+Password: 
+
+bob@deeper:/home/alice$ cd ..
+bob@deeper:/home$ cd bob
+
+bob@deeper:~$ ls -la
+total 28
+drwxr--r-- 3 bob  bob  4096 Aug 26  2023 .
+drwxr-xr-x 4 root root 4096 Aug 25  2023 ..
+lrwxrwxrwx 1 bob  bob     9 Aug 25  2023 .bash_history -> /dev/null
+-rw-r--r-- 1 bob  bob   220 Apr 23  2023 .bash_logout
+-rw-r--r-- 1 bob  bob  3526 Apr 23  2023 .bashrc
+drwxr-xr-x 3 bob  bob  4096 Aug 25  2023 .local
+-rw-r--r-- 1 bob  bob   807 Aug 25  2023 .profile
+-rw-r--r-- 1 bob  bob   215 Aug 26  2023 root.zip
+
+
+
+---we see root.zip file, this can be our key to get root access, lets download this file into our machine---
+
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# scp  bob@10.0.2.61:~/root.zip root.zip 
+
+bob@10.0.2.61's password: 
+root.zip                                                       100%  215    29.8KB/s   00:00    
+                            
+
+
+---let's use john to get the password of zip file---
+
+                                                            
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# zip2john root.zip > root.txt                                     
+ver 1.0 efh 5455 efh 7875 root.zip/root.txt PKZIP Encr: 2b chk, TS_chk, cmplen=33, decmplen=21, crc=2D649941 ts=BA81 cs=ba81 type=0
+
+                                                                                                 
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# john -w=/home/okina/wordlists/rockyou.txt root.txt               
+Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+bob              (root.zip/root.txt)    
+ 
+1g 0:00:00:00 DONE (2024-05-17 00:43) 20.00g/s 409600p/s 409600c/s 409600C/s christal..michelle4
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+
+
+---we learn the password of the zip file, it is bob---
+
+                                                          
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# john root.txt --show                                     
+root.zip/root.txt:bob:root.txt:root.zip::root.zip
+
+1 password hash cracked, 0 left
+                                  
+
+
+---Now let's unzip the zip and get the password---
+
+                                   
+                                                             
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# unzip root.zip    
+Archive:  root.zip
+[root.zip] root.txt password: 
+replace root.txt? [y]es, [n]o, [A]ll, [N]one, [r]ename: r
+new name: new_root.txt
+ extracting: new_root.txt            
+
+                                                                                                 
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/34- DEEPER LINUX CTF]
+└─# cat new_root.txt 
+root:  :)
+
+
+
+---and like that, we got the password of root :)---
+
+
+	root : :)
+
+
+bob@deeper:~$ su root
+Password: 
+
+root@deeper:/home/bob# cd /root
+
+root@deeper:~# ls
+root.txt
+
+root@deeper:~# cat root.txt 
+
+---Root User Flag---
+
+
 
