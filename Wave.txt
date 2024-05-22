@@ -456,7 +456,7 @@ authorized_keys  wave
 
 
 ---now I went to the socat interface and uploaded the authorized_keys, which contains our public key, the 
-private key couldn't be uploaded---
+private key can not be uploaded---
 
 
 
