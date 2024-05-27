@@ -106,7 +106,7 @@ Local user is in the coordinates
 
 
 ---I check the website and see the user waidroc, when we click we go to his github repo and we discover every user's credentials
-therefore ending the CTF :) But I'ma continue and finish this ctf as the way the creator wanted us to---
+therefore ending the CTF :) But I will continue and finish this ctf as the way the creator intended to---
 
 ---This page will be updated---
 
