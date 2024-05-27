@@ -1,0 +1,112 @@
+			ENUMERATION
+			
+
+---nmap---
+
+                                                                                           
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.68 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-27 18:14 +03
+Nmap scan report for NightCity.local (10.0.2.68)
+Host is up (0.0043s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 0        0            4096 Jun 09  2022 reminder [NSE: writeable]
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to 10.0.2.54
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 ce:ac:1c:04:d6:f6:64:d6:d9:9d:88:c9:0d:66:a9:45 (RSA)
+|   256 4f:f1:7b:69:5c:47:b2:91:b8:d2:2f:82:73:b7:fc:03 (ECDSA)
+|_  256 65:6b:3b:8c:89:81:4d:f3:98:98:5a:ed:57:cf:58:c9 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-title: NightCity Web Server
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+MAC Address: 08:00:27:AE:48:8E (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   4.31 ms NightCity.local (10.0.2.68)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 43.16 seconds
+                                               
+
+
+---I add NightCity.local to dns system---
+
+┌──(root㉿kali)-[/home/okina]
+└─# cat /etc/hosts
+127.0.0.1	localhost
+127.0.1.1	kali
+.
+.
+.
+.
+10.0.2.68	NightCity.local
+.
+.
+.
+.
+
+
+
+
+
+---anonymous ftp login allowed---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ftp 10.0.2.68        
+Connected to 10.0.2.68.
+220 Welcome to the NightCity Server!!
+Name (10.0.2.68:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> dir
+229 Entering Extended Passive Mode (|||61748|)
+150 Here comes the directory listing.
+drwxrwxrwx    2 0        0            4096 Jun 09  2022 reminder
+226 Directory send OK.
+ftp> cd reminder
+250 Directory successfully changed.
+ftp> dir
+229 Entering Extended Passive Mode (|||34571|)
+150 Here comes the directory listing.
+-rwxr-xr-x    1 0        0              33 Jun 09  2022 reminder.txt
+226 Directory send OK.
+
+
+ftp> more reminder.txt
+
+Local user is in the coordinates
+
+
+
+---I check the website and see the user waidroc, when we click we go to his github repo and we discover every user's credentials
+therefore ending the CTF :) But I'ma continue and finish this ctf as the way the creator wanted us to---
+
+---This page will be updated---
+
