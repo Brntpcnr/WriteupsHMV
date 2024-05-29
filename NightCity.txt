@@ -103,18 +103,12 @@ ftp> more reminder.txt
 
 Local user is in the coordinates
 
-
-
----I check the website and see the user waidroc, when we click we go to his github repo and we discover every user's credentials
-therefore ending the CTF :) But I'ma continue and finish this ctf the way the creator of the machine intended us to do so---
-
                   
 
 
 ---we got one more clue, let's continue with gobuster---
 
 
- 
 ┌──(root㉿kali)-[/home/okina]
 └─# gobuster dir -u http://10.0.2.68 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php
 ===============================================================
@@ -149,7 +143,6 @@ Progress: 882240 / 882244 (100.00%)
 Finished
 ===============================================================
                                               
-
 
 
 ---check the /secret directory and discover 3 photos, I download them and will check them later---
