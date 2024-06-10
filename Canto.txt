@@ -37,7 +37,7 @@ Nmap done: 1 IP address (1 host up) scanned in 46.52 seconds
 
 
 
---- The web site is made with wordpress, lets do some directory scanning ---
+--- The website is made with wordpress, lets do some directory scanning ---
 
 
 
