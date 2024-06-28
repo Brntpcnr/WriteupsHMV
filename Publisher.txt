@@ -227,8 +227,6 @@ drwxr-x--- 5 www-data www-data 4096 Dec 20  2023 spip
 -rw-r--r-- 1 root     root       35 Feb 10 21:20 user.txt
 
 cat user.txt
-fa229046d44eda6a3598c73ad96f4ca5 
-
 ---First User Flag---
 
 
