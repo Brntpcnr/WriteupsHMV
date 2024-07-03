@@ -33,14 +33,11 @@ PORT      STATE SERVICE      VERSION
 49685/tcp open  msrpc        Microsoft Windows RPC
 49710/tcp open  msrpc        Microsoft Windows RPC
 MAC Address: 08:00:27:37:9D:9F (Oracle VirtualBox virtual NIC)
-Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
-Device type: general purpose|phone|specialized
-Running (JUST GUESSING): Microsoft Windows 2016|2012|2022|Phone|10|Vista|2008|7 (95%)
-OS CPE: cpe:/o:microsoft:windows_server_2016 cpe:/o:microsoft:windows_server_2012:r2 cpe:/o:microsoft:windows cpe:/o:microsoft:windows_10 cpe:/o:microsoft:windows_vista::- cpe:/o:microsoft:windows_vista::sp1 cpe:/o:microsoft:windows_server_2008::sp1 cpe:/o:microsoft:windows_7
-Aggressive OS guesses: Microsoft Windows Server 2016 (95%), Microsoft Windows Server 2012 or Windows Server 2012 R2 (91%), Microsoft Windows Server 2022 (89%), Microsoft Windows Server 2012 R2 (87%), Microsoft Windows Phone 7.5 or 8.0 (87%), Microsoft Windows 10 1511 - 1607 (86%), Microsoft Windows Vista SP0 or SP1, Windows Server 2008 SP1, or Windows 7 (85%), Microsoft Windows Embedded Standard 7 (85%)
-No exact OS matches for host (test conditions non-ideal).
-Network Distance: 1 hop
-Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+.
+.
+.
+.
+.
 
 Host script results:
 | smb2-security-mode: 
