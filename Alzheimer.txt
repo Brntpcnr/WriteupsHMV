@@ -1,8 +1,6 @@
 			ENUMERATION
 			
-
 ---nmap---
-
                                                                                 
 ┌──(root㉿kali)-[/home/okina]
 └─# nmap 10.0.2.69 -sS -sC -sV -A -T4 -p-   
@@ -103,7 +101,6 @@ drwxrwxrwx 42 okina okina 4096 May 27 23:53 ..
 
 
 ---let's check that note---
-
                                                                          
 ┌──(root㉿kali)-[/home/…/Desktop/NOTLAR/HACKMYVM/39- ALZHEIMER LINUX CTF]
 └─# cat .secretnote.txt                         
