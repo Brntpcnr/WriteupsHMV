@@ -330,12 +330,8 @@ onida@atom:~$ ls
 user.txt
 
 onida@atom:~$ cat user.txt 
-f75390001fa2fe806b4e3f1e5dadeb2b
-
 ---First User Flag---			
-			
-
-
+		
 
 
 --- We got the first flag, now let's check for possible ways ---
@@ -417,25 +413,4 @@ root@atom:~# ls
 root.txt
 
 root@atom:~# cat root.txt
-d3a4fd660f1af5a7e3c2f17314f4a962
-
 ---Root User Flag---
-
-
-
-
-
-			
-			
-			
-TOOLS AND TECHNOLOGIES USED
-
-
-
-
-
-
-
-
-WHAT I LEARNED
-
